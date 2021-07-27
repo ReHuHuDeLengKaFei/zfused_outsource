@@ -1,0 +1,7 @@
+
+.svn/entries
+.svn/format
+*.svn-base
+*.db
+*.db-journal
+*.pyc
