@@ -13,12 +13,11 @@ import logging
 import re
 
 import requests
+
 httpsession = requests.session()
 _cloud_session = requests.session()
 
 __version__ = "v1"
-
-HAS_HISTORY_TABLE = ["asset", "assembly", "shot", "sequence", "task", "episode"]
 
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
@@ -50,8 +49,8 @@ class zFused(object):
     # 公司
     COMPANY_ID = 0
     
-    INTERNAL_SERVER_ADDR = None
-    INTERNAL_SERVER_PATH = None
+    INTERNAL_SERVER_ADDR = "http://47.103.77.93:80"
+    INTERNAL_SERVER_PATH = "{}/{}".format(INTERNAL_SERVER_ADDR, __version__)
 
     CLOUD_TRANS_SERVER_ADDR = None
     INTERNAL_TRANS_SERVER_ARRD = None
@@ -67,7 +66,6 @@ class zFused(object):
 
     def __init__(self, name, password ):
 
-        
         zFused.NAME = name
         zFused.PASSWORD = password
         
@@ -159,46 +157,10 @@ class zFused(object):
         server = "%s/%s" % (zFused.INTERNAL_SERVER_PATH, key)
         data_json = json.dumps(data)
         r = httpsession.post(server, data = data_json)
-
-        # cloud
-        _cloud_server = "%s/%s" % (zFused.CLOUD_SERVER_PATH, key)
-        try:
-            _cloud_session.post(_cloud_server, data = data_json)
-        except:
-            pass
         
-        try:
-            if r.status_code == 201:
-                if key not in HAS_HISTORY_TABLE:
-                    return eval(r.text), True
-                last_id = zFused.get(key)[-1]["Id"]
-                try:
-                    import zfused_api
-                    zfused_api.im.submit_message( "user",
-                                                  cls.USER_ID,
-                                                  [],
-                                                  { "msgtype": "new", 
-                                                    "new": {"object": key, "object_id": last_id} }, 
-                                                  "new",
-                                                  key,
-                                                  last_id )
-                except Exception as e:  
-                    logger.warning(e)
-
-                currentTime = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-                data_history = copy.deepcopy(data)
-                data_history["ChangeBy"] = zFused.USER_ID
-                data_history["ChangeTime"] = currentTime
-                data_history["{}Id".format(key.capitalize())] = last_id
-                _r = httpsession.post("{}_history".format(server), data = json.dumps(data_history))
-                if _r.status_code == 201:
-                    return eval(r.text), True
-                else:
-                    return r.text, False
-            else:
-                return r.text, False
-        except Exception as e:
-            logger.error(e)
+        if r.status_code == 201:
+            return eval(r.text), True
+        else:
             return r.text, False
             
     @classmethod
@@ -226,58 +188,11 @@ class zFused(object):
         new_data = copy.deepcopy(data)
         if "Id" in new_data.keys():
             new_data.pop("Id")
+
         data_json = json.dumps(new_data)
         r = httpsession.put(server, data = data_json)
 
-        # cloud
-        _cloud_server = "%s/%s/%s" % (zFused.CLOUD_SERVER_PATH, key, uid)
-        try:
-            _cloud_session.put(_cloud_server, data = data_json)
-        except:
-            pass
-
         if r.status_code == 200:
-            if key in HAS_HISTORY_TABLE and change_field != "":
-                currentTime = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-                _field = u"%sId" % key.capitalize()
-                data_history = copy.deepcopy(new_data)
-                data_history[u"%sId" % key.capitalize()] = uid
-                data_history[u"ChangeField"] = change_field
-                data_history[u"ChangeBy"] = cls.USER_ID
-                data_history[u"ChangeTime"] = currentTime
-                # data_history_json = json.dumps(data_history)
-                # r = httpsession.post( "%s/%s_history" %(zFused.INTERNAL_SERVER_PATH, key), data = data_history_json)
-                _history, _status = cls.post("{}_history".format(key), data_history)
-                # return _status
-                if _status:
-                    _last_id = _history["Id"]
-                    try:
-                        if send_message:
-                            import zfused_api
-                            zfused_api.im.submit_message( "user",
-                                                        cls.USER_ID,
-                                                        [],
-                                                        { "msgtype": "update", 
-                                                        "update": {"object": key, "object_id": uid, "object_history_id": _last_id} }, 
-                                                        "update",
-                                                        key,
-                                                        uid )
-                    except Exception as e:  
-                        logger.warning(e)
-            else:
-                try:
-                    if send_message:
-                        import zfused_api
-                        zfused_api.im.submit_message( "user",
-                                                    cls.USER_ID,
-                                                    [],
-                                                    { "msgtype": "update",
-                                                        "update": {"object": key, "object_id": uid} },
-                                                        "update",
-                                                    key,
-                                                    uid )
-                except Exception as e:  
-                    logger.warning(e)
             return True
         else:
             return False
@@ -287,23 +202,7 @@ class zFused(object):
         server = "%s/%s/%s" % (zFused.INTERNAL_SERVER_PATH, key, uid)
         r = httpsession.delete(server)
 
-        # cloud
-        _cloud_server = "%s/%s/%s" % (zFused.CLOUD_SERVER_PATH, key, uid)
-        try:
-            _cloud_session.delete(_cloud_server)
-        except:
-            pass
-
         if r.status_code == 200:
-            # delete history
-            if key not in HAS_HISTORY_TABLE:
-                return True
-            # get history id
-            _historys = zFused.get("{}_history".format(key), filter = {"%sId" % key.capitalize() : uid})
-
-            if _historys:
-                for _history in _historys:
-                    r = httpsession.delete("{}/{}_history/{}".format(zFused.INTERNAL_SERVER_PATH, key, _history["Id"]))
             return True
         else:
             return False
