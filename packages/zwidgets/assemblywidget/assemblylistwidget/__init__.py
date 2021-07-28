@@ -1,0 +1,1 @@
+from .assemblylistwidget import AssemblyListWidget

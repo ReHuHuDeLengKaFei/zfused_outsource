@@ -1,0 +1,214 @@
+QMainWindow{
+    font-family: Microsoft YaHei UI;
+    font: bold 12px;
+    background-color: #444444;
+    color: #FFFFFF;
+}
+
+QWidget{
+    background-color:transparent;
+}
+
+QFrame{
+    background-color: #353535;
+    color: #FFFFFF;
+    border: 0px solid gray;
+}
+
+QFrame#window_menu_frame{
+    background-color: #222222;
+    color: #EDEDED;
+}
+
+QFrame#operation_frame{
+    background-color: #000000;
+    color: #FFFFFF;
+}
+
+QTabWidget::pane { /* The tab widget frame */
+    border-top: 0px solid #C2C7CB;
+    background-color: #F1F1F1;
+}
+
+QTabWidget{
+    font-family: Microsoft YaHei UI;
+    font: bold 11px;
+    background-color: #F1F1F1;
+}
+
+QTabWidget::pane { /* The tab widget frame */
+    border-top: 0px solid #C2C7CB;
+}
+
+
+/*====================== QPushButton ======================*/
+QPushButton{
+    font-family: Microsoft YaHei UI;
+    font: bold 12px;
+    color: #FFFFFF;
+    background-color: #222222;
+    border: none;
+    qproperty-iconSize: 20px;
+}
+QPushButton:hover{
+    color: #DDDDDD;
+    background-color: #444444;
+}
+QPushButton:pressed{
+    color: #000000;
+    background-color: #3BAFDA;
+}
+
+QPushButton:disabled{
+background-color:#444444;
+}
+
+/*====================== window_title_button ======================*/
+QPushButton#window_title_button{
+    padding-left: 0;
+    font: bold 15px;
+    background-color: transparent;
+    color: #FFFFFF;
+}
+
+/*====================== icon_button ======================*/
+QPushButton#icon_button{
+    qproperty-iconSize: 20px;
+    Text-align: center;
+    border: 0px solid;
+    padding-left: 4px;
+    padding-right: 8px;
+}
+
+/*====================== title_button ======================*/
+QPushButton#title_button{
+    color: #666666;
+    qproperty-iconSize: 20px;
+    Text-align: left;
+    border: 0px solid;
+    padding-left: 4px;
+    background-color: #222222;
+}
+QPushButton#title_button:hover{
+    color: #666666;
+    background-color: #222222;
+}
+QPushButton#title_button:pressed{
+    color: #666666;
+    background-color: #222222;
+}
+
+/*====================== QCheckBox ======================*/
+QCheckBox{
+    font-family: Microsoft YaHei UI;
+    font: bold 12px;
+    color: #EEEEEE;
+    background-color: #353535;
+}
+
+QCheckBox:unchecked{ 
+    color: #999999; 
+}
+
+QCheckBox:disabled{
+    color:#444444;
+}
+
+/*====================== QScrollBar ======================*/
+QScrollBar:vertical{
+    width:14px;
+    background:rgba(240, 240, 240, 255);
+    margin:0px,0px,0px,0px;
+    padding-top:0px;
+    padding-bottom:0px;}
+QScrollBar::handle:vertical{
+    width:14px;
+    background:#A6A6A6;
+    border-radius:4px;
+    min-height:20;}
+QScrollBar::handle:vertical:hover{
+    width:14px;
+    background:#A6A6A6;
+    border-radius:4px;
+    min-height:20;}
+QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical{
+    background:rgba(240, 240, 240, 255);
+    border-radius:0px;}
+QScrollBar:horizontal{
+    height:14px;
+    background:rgba(240, 240, 240, 255);
+    margin:0px,0,0px,0;
+    padding-left:0px;
+    padding-right:0px;}
+QScrollBar::handle:horizontal{
+    height:14px;
+    background:#A6A6A6;
+    border-radius:4px;
+    min-width:20px;}
+QScrollBar::handle:horizontal:hover{
+    height:14px;
+    background:#A6A6A6;
+    border-radius:4px;
+    min-width:20;}
+QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{
+    background:rgba(240, 240, 240, 255);
+    border-radius:0px;}
+
+
+/*====================== label ======================*/
+QLabel{    
+    font-family: Microsoft YaHei UI;
+    font: bold 12px;
+    color: #DDDDDD;
+}
+
+/*====================== QTextEdit ======================*/
+QTextEdit{    
+    font-family: Microsoft YaHei UI;
+    font: bold 12px;
+    color: #ABABAB;
+    border-radius:0px;
+    background-color:#444444;
+}
+
+
+QListWidget{
+    background-color:#2b2b2b;
+}
+
+
+QMenu {
+  border: 1px solid #dadce0;
+  background: #FFFFFF;
+  border-radius: 0px;
+  padding: 0px 0px;
+}
+/*
+QMenu::icon {
+  margin: 4px 4px;
+  padding: 4px 4px;
+}
+*/
+
+QMenu::item  {
+  background: transparent;
+  border: 0 solid transparent;
+  color: #222222;
+  font-size: 12px;
+  margin: 2px 2px;
+  padding: 4px 4px;
+  height: 24px;
+  width: 200px;
+}
+QMenu::item:disabled {
+  background: transparent;
+  color: #C0C0C0;
+}
+QMenu::item:selected {
+  background: #c8c8c9;
+}
+QMenu::separator {
+  height: 1px;
+  background: #dadce0;
+  margin: 1px;
+}
