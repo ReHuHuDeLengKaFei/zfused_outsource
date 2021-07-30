@@ -100,25 +100,22 @@ def cache(project_id_list = [], extract_freeze = True):
     _status_ids = "|".join([str(_status_id["Id"]) for _status_id in _status_ids])
 
     if not project_id_list:
-        # _assets = zfused_api.zFused.get("asset", sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"StatusId__in": _status_ids})
-        # _asset_historys = zfused_api.zFused.get("asset_history")
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        # _asset_versions = zfused_api.zFused.get("version", filter = {"ProjectEntityType": "asset"}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join(map(str,project_id_list))
-        # _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids}, sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
-        # _asset_historys = zfused_api.zFused.get("asset_history", filter = {"ProjectId__in": _project_ids})
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        # _asset_versions = zfused_api.zFused.get("version", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
         list(map(lambda _asset: clear(Asset.global_tasks[_asset["Id"]]) if Asset.global_tasks[_asset["Id"]] else False, _assets))
-    # if _asset_historys:
-    #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
         list(map(lambda _task: Asset.global_tasks[_task["LinkId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
+    
     # cache tags
     _str_asset_ids = [str(_asset_id) for _asset_id in Asset.global_dict]
     _tag_links = zfused_api.zFused.get("tag_link", filter = {"LinkObject": "asset", "LinkId__in": "|".join(_str_asset_ids)}, fields = ["LinkId", "TagId"] )
