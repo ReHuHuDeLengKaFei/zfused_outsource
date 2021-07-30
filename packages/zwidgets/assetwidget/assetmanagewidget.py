@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class AssetManageWidget(panel.ShowPanelWidget):
-    reference_version = QtCore.Signal(int)
+    reference_by_attr = QtCore.Signal(int, int)
     def __init__(self, parent = None):
         super(AssetManageWidget, self).__init__(parent)
         self._build()
@@ -46,7 +46,7 @@ class AssetManageWidget(panel.ShowPanelWidget):
         self.verison_checkbox.stateChanged.connect(self._filter_asset_project_steps)
         self.refresh_button.clicked.connect(self._reload)
 
-        self.asset_step_widget.reference_version.connect(self.reference_version.emit)
+        self.asset_step_widget.reference_by_attr.connect(self.reference_by_attr.emit)
 
     def _reload(self):
         self.load_project_id(self._project_id)

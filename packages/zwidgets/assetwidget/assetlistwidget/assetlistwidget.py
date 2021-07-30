@@ -18,9 +18,6 @@ from . import iconitemdelegate,listview,listmodel
 __all__ = ["AssetListWidget"]
 
 
-import threading
-
-
 class AssetListWidget(QtWidgets.QFrame):
     asset_selected = QtCore.Signal(int)
     def __init__(self, parent = None):
@@ -42,10 +39,6 @@ class AssetListWidget(QtWidgets.QFrame):
     def load_project_id(self, project_id):
         """ 加载激活中任务
         """
-
-        # _thread = threading.Thread(target = zfused_api.task.cache, args = ( [project_id] ))
-        # _thread.start()
-
         _assets = zfused_api.asset.cache([project_id], False)
         # _tasks = zfused_api.task.cache([project_id])
         self.asset_model = listmodel.ListModel(_assets, self.listwidget)

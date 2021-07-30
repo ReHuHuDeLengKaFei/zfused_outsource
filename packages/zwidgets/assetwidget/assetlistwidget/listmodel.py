@@ -42,9 +42,9 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
         if not _tasks:
             return False
         for _task in _tasks:
-            _task_handle = zfused_api.task.Task(_task["Id"])
-            _versions = _task_handle.versions()
-            if _versions:
+            _task = zfused_api.task.Task(_task["Id"])
+            _last_version_id = _task.data().get("LastVersionId")
+            if _last_version_id:
                 return True
         return False
 
@@ -79,8 +79,6 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
                  self._filter_project_step(_data))
 
     def filterAcceptsColumn(self, sourceColumn, sourceParent):
-        # print self.headerData(0)
-
         index0 = self.sourceModel().index(0, sourceColumn, sourceParent)
         return True
 
