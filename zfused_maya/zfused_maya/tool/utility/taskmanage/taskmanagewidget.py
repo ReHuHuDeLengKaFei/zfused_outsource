@@ -29,8 +29,10 @@ class TaskManageWidget(window._Window):
         super(TaskManageWidget, self).__init__()
         self._build()
 
-        self.task_widget.task_panel_widget.received.connect(self._receive_file)
+        # self.task_widget.task_panel_widget.received.connect(self._receive_file)
+        
         self.task_widget.task_panel_widget.published.connect(self._publish_file)
+        self.task_widget.task_listwidget.published.connect(self._publish_file)
 
     def _build(self):
         self.resize(1600, 900)
@@ -39,14 +41,14 @@ class TaskManageWidget(window._Window):
         self.task_widget = taskmanagewidget.TaskManageWidget()
         self.set_central_widget(self.task_widget)
 
-    def _receive_file(self, mode, id):
-        """ load sel index file
-        :rtype: None
-        """
-        if mode == "version":
-            receivefile.receive_version_file(id)
-        elif mode == "task":
-            receivefile.assembly_file(id)
+    # def _receive_file(self, mode, id):
+    #     """ load sel index file
+    #     :rtype: None
+    #     """
+    #     if mode == "version":
+    #         receivefile.receive_version_file(id)
+    #     elif mode == "task":
+    #         receivefile.assembly_file(id)
 
     def _publish_file(self, mode, task_id, info):
         _task = zfused_api.task.Task(task_id)

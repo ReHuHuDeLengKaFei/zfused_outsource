@@ -42,7 +42,7 @@ class Window(QtWidgets.QMainWindow):
         self.help_button.clicked.connect(self._help_show)
 
     def set_title_name(self, name_text):
-        self.title_label.setText(u" [ {} ] ".format(name_text))
+        self.title_label.setText(u" {} ".format(name_text))
 
     def set_central_widget(self, widget):
         self.central_layout.addWidget(widget)

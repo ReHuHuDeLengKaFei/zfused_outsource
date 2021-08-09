@@ -31,7 +31,7 @@ class OperationWidget(QtWidgets.QFrame):
 
         :rtype: None
         """
-        self.task_receive_widget.load_task_id(task_id)
+        # self.task_receive_widget.load_task_id(task_id)
         self.task_publish_widget.load_task_id(task_id)
 
     def set_locked(self, is_lock):
@@ -56,6 +56,7 @@ class OperationWidget(QtWidgets.QFrame):
 
         self.task_receive_widget = taskreceivewidget.TaskReceiveWidget(self)
         self.operation_tabwidget.addTab(self.task_receive_widget, QtGui.QIcon(resource.get("icons","receive.png")), u"领取文件")
+        self.task_receive_widget.hide()
 
         self.task_publish_widget = taskpublishwidget.TaskPublishWidget(self)
         self.operation_tabwidget.addTab(self.task_publish_widget, QtGui.QIcon(resource.get("icons","publish.png")), u"上传文件")

@@ -20,16 +20,19 @@ __all__ = ["AssetListWidget"]
 
 class AssetListWidget(QtWidgets.QFrame):
     asset_selected = QtCore.Signal(int)
+    referenced = QtCore.Signal(int)
     def __init__(self, parent = None):
         super(AssetListWidget, self).__init__(parent)
         self._build()
 
         self.search_lineedit.search_clicked.connect(self._search)
-        self.listwidget.doubleClicked.connect(self._selected_asset)
 
-    def _selected_asset(self, index):
-        _data = index.data()
-        self.asset_selected.emit(_data.get("Id"))
+        self.listwidget.referenced.connect(self.referenced.emit)
+        # self.listwidget.doubleClicked.connect(self._selected_asset)
+
+    # def _selected_asset(self, index):
+    #     _data = index.data()
+    #     self.asset_selected.emit(_data.get("Id"))
 
     def _search(self, text):
         """ search task

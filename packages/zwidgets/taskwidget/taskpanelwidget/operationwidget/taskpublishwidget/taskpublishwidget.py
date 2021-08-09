@@ -45,45 +45,43 @@ class TaskPublishWidget(QtWidgets.QFrame):
         self.new_publish_checkbox.setChecked(True)
         self.publish_type_tabwidget.setCurrentIndex(0)
 
-        _active_statu_ids = zfused_api.status.working_status_ids()
-        if _task_handle.data()["StatusId"] not in _active_statu_ids:
-            self.publish_type_tabwidget.setHidden(True)
-            self.error_publish_widget.setHidden(False)
-            return
+        # _active_statu_ids = zfused_api.status.working_status_ids()
+        # if _task_handle.data()["StatusId"] not in _active_statu_ids:
+        #     self.publish_type_tabwidget.setHidden(True)
+        #     self.error_publish_widget.setHidden(False)
+        #     return
 
-        _versions = _task_handle.versions()
-        if _versions:
-            _last_version = _versions[-1]
-            if _last_version["IsApproval"] == 0:
-                self.error_publish_widget.set_error_info(u"上次发布版本未审核，无法发布上传")
-                self.publish_type_tabwidget.setHidden(True)
-                self.error_publish_widget.setHidden(False)
-                return
+        # _versions = _task_handle.versions()
+        # if _versions:
+        #     _last_version = _versions[-1]
+        #     if _last_version["IsApproval"] == 0:
+        #         self.error_publish_widget.set_error_info(u"上次发布版本未审核，无法发布上传")
+        #         self.publish_type_tabwidget.setHidden(True)
+        #         self.error_publish_widget.setHidden(False)
+        #         return
 
-        # 上传时间段
-        # plan start time
-        _start_time = _task_handle.start_time()
-        # plan end time
-        _end_time = _task_handle.end_time()
-        if not _start_time or not _end_time:
-            self.error_publish_widget.set_error_info(u"任务无预计制作周期(起始结束时间),请联系制片")
-            self.publish_type_tabwidget.setHidden(True)
-            self.error_publish_widget.setHidden(False)
-            return False
-        _start_time_text = _start_time.strftime("%Y-%m-%d %H:%M:%S")
-        _end_time_text = _end_time.strftime("%Y-%m-%d %H:%M:%S")
-        c_t = time.strftime('%Y-%m-%d %H:%M:%S')
-        if not _start_time_text < c_t < _end_time_text:
-            self.error_publish_widget.set_error_info(u"当前不再任务制作周期内,请联系制片")
-            self.publish_type_tabwidget.setHidden(True)
-            self.error_publish_widget.setHidden(False)
-            return False
+        # # 上传时间段
+        # _start_time = _task_handle.start_time()
+        # _end_time = _task_handle.end_time()
+        # if not _start_time or not _end_time:
+        #     self.error_publish_widget.set_error_info(u"任务无预计制作周期(起始结束时间),请联系制片")
+        #     self.publish_type_tabwidget.setHidden(True)
+        #     self.error_publish_widget.setHidden(False)
+        #     return False
+        # _start_time_text = _start_time.strftime("%Y-%m-%d %H:%M:%S")
+        # _end_time_text = _end_time.strftime("%Y-%m-%d %H:%M:%S")
+        # c_t = time.strftime('%Y-%m-%d %H:%M:%S')
+        # if not _start_time_text < c_t < _end_time_text:
+        #     self.error_publish_widget.set_error_info(u"当前不再任务制作周期内,请联系制片")
+        #     self.publish_type_tabwidget.setHidden(True)
+        #     self.error_publish_widget.setHidden(False)
+        #     return False
 
         self.publish_type_tabwidget.setHidden(False)
         self.error_publish_widget.setHidden(True)
 
         self.new_publish_widget.load_task_id(task_id)
-        self.fix_publish_widget.load_task_id(task_id)
+        # self.fix_publish_widget.load_task_id(task_id)
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)

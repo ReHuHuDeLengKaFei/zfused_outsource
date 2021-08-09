@@ -55,29 +55,29 @@ class TaskPanelWidget(QtWidgets.QFrame):
         self.link_widget.load_task_id(task_id)
         self.operation_widget.load_task_id(task_id)
 
-        if self._task_handle.data().get("ProphetValue") == -1:
-            self.lock_label.showNormal()
-            self.lock_label.setText(u" 此任务由《先知系统》锁定，须由《先知系统》锁定人解锁！")
-            self.operation_widget.set_locked(False)
-        elif self._task_handle.is_locked():
-            self.lock_label.showNormal()
-            _user_handle = zfused_api.user.User(self._task_handle.data().get("LockedBy"))
-            self.lock_label.setText(u" 此任务被 {} 锁定，须由锁定人 {} 解锁！".format( _user_handle.name_code(), _user_handle.name_code() ))
-            self.operation_widget.set_locked(False)
-        else:
-            self.lock_label.hide()
-            self.operation_widget.set_locked(True)
+        # if self._task_handle.data().get("ProphetValue") == -1:
+        #     self.lock_label.showNormal()
+        #     self.lock_label.setText(u" 此任务由《先知系统》锁定，须由《先知系统》锁定人解锁！")
+        #     self.operation_widget.set_locked(False)
+        # elif self._task_handle.is_locked():
+        #     self.lock_label.showNormal()
+        #     _user_handle = zfused_api.user.User(self._task_handle.data().get("LockedBy"))
+        #     self.lock_label.setText(u" 此任务被 {} 锁定，须由锁定人 {} 解锁！".format( _user_handle.name_code(), _user_handle.name_code() ))
+        #     self.operation_widget.set_locked(False)
+        # else:
+        #     self.lock_label.hide()
+        #     self.operation_widget.set_locked(True)
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
         _layout.setSpacing(0)
         _layout.setContentsMargins(0,0,0,0)
 
-        self.lock_label = QtWidgets.QLabel()
-        self.lock_label.setFixedHeight(20)
-        self.lock_label.setStyleSheet("QLabel{background-color:rgba(253, 174, 23);color:#000000}")
-        self.lock_label.setText(u" 此任务由《先知系统》锁定，须由《先知系统》锁定人解锁！")
-        _layout.addWidget(self.lock_label)
+        # self.lock_label = QtWidgets.QLabel()
+        # self.lock_label.setFixedHeight(20)
+        # self.lock_label.setStyleSheet("QLabel{background-color:rgba(253, 174, 23);color:#000000}")
+        # self.lock_label.setText(u" 此任务由《先知系统》锁定，须由《先知系统》锁定人解锁！")
+        # _layout.addWidget(self.lock_label)
 
         # entity widget
         self.link_widget = linkwidget.LinkWidget()

@@ -26,16 +26,15 @@ class TaskManageWidget(panel.ShowPanelWidget):
         
         self.task_panel_widget = taskpanelwidget.TaskPanelWidget()
         self.load_panel_widget("task panel", self.task_panel_widget)
-
-        self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)
+        # self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)
         self.filter_widget._step_changed.connect(self._filter_step)
 
-    def _show_panel(self, model_index):
-        """ show panel 
-        """
-        _task_data = model_index.data()
-        self.task_panel_widget.load_task_id(_task_data["Id"])
-        self.show_panel()
+    # def _show_panel(self, model_index):
+    #     """ show panel 
+    #     """
+    #     _task_data = model_index.data()
+    #     self.task_panel_widget.load_task_id(_task_data["Id"])
+    #     self.show_panel()
         
     def load_project_id(self, project_id):
         self.task_listwidget.load_project_id(project_id)
