@@ -29,8 +29,6 @@ def trans( func ):
         global _socket
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.connect(get_internal_trans_server_addr())
-        # Turn $gMainPane Off:
-        # mel.eval("paneLayout -e -manage false $gMainPane")
         try:
             return func( *args, **kwargs )
         except Exception as e:
