@@ -39,14 +39,13 @@ class AssetListWidget(QtWidgets.QFrame):
         """
         self.asset_proxy_model.search(text)
 
+    @zfused_api.reset
     def load_project_id(self, project_id):
         """ 加载激活中任务
         """
         _assets = zfused_api.asset.cache([project_id], False)
-        # _tasks = zfused_api.task.cache([project_id])
         self.asset_model = listmodel.ListModel(_assets, self.listwidget)
         self.asset_proxy_model.setSourceModel(self.asset_model)
-        # self.asset_list_view.setModel(self.asset_proxy_model)
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)

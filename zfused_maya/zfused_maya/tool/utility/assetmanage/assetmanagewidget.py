@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import logging
 
-from Qt import QtWidgets, QtGui, QtCore
+import maya.cmds as cmds
 
 import zfused_api
 
@@ -14,7 +14,6 @@ from zwidgets.assetwidget import assetmanagewidget
 
 from zfused_maya.ui.widgets import window
 
-import maya.cmds as cmds
 import zfused_maya.node.core.attr as attr
 
 __all__ = ["AssetManageWidget"]
@@ -35,13 +34,12 @@ class AssetManageWidget(window._Window):
         # asset type
         _type = _version.project_entity().type()
         _type_code = _type.code()
+        _type_code = "{}_group".format(_type_code)
         if not cmds.objExists(_type_code):
             cmds.createNode("transform", name = _type_code)
 
         _task = _version.task()
         _project_step = _task.project_step()
-        # _key_output_attr = _project_step.key_output_attr()
-        # print(output_attr_id)
         _output_attr = zfused_api.attr.Output(output_attr_id)
 
         _production_file = _version.production_file()

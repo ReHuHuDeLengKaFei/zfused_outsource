@@ -1,21 +1,23 @@
-{    
-    "technology":
+{
+    "animation":[
+            {   "name":"开启/关闭屏显信息",
+                "code":"ON/OFF HUD",
+                "title":"开启/关闭屏显信息\nON/OFF HUD",
+                "cmd":"import zfused_maya.tool.animation.playblast_hud as ph;_v = ph.HUD(ph.get_maya_hud());_v.change_hud_state()",
+                "color":"#81C2D6",
+                "category":"常用"}
+    ],
+    "model":
         [
-            {   "name":"脚本代码",
-                "code":"script code",
-                "title":"脚本代码\nScript Code",
-                "cmd":"import zfused_maya.tool.technology.scriptcode.scriptcodewidget as scriptcodewidget;reload(scriptcodewidget);ui = scriptcodewidget.ScriptCodeWidget();ui.show()",
+            {   "name":"模型分组",
+                "code":"model arrange",
+                "title":"模型分组\nModel Arrange",
+                "cmd":"import zfused_maya.tool.modeling.modelArrange as modelArrange;ui = modelArrange.Ui();ui.showUi()",
                 "color":"#81C2D6",
-                "category":"code"
-            },
-            {   "name":"批量上传",
-                "code":"batch publish",
-                "title":"批量上传\nBatch Publish",
-                "cmd":"import zfused_maya.tool.technology.batchpublish.batchpublishwidget as batchpublishwidget;reload(batchpublishwidget);ui = batchpublishwidget.BatchPublishWidget();ui.show()",
-                "color":"#81C2D6",
-                "category":"code"
-            }
+                "category":"分组"}
         ],
+
+
     "utility":
         [
             {   "name":"重载插件",
@@ -44,18 +46,6 @@
                 "cmd":"from zfused_maya.tool.utility.assemblymanage import assemblymanagewidget;ui = assemblymanagewidget.AssemblyManageWidget();ui.show()",
                 "color":"#820019",
                 "category":"场景装配"},
-            {   "name":"场景(装配)管理",
-                "code":"assembly management",
-                "title":"场景(装配)管理\nscene assembly manage",
-                "cmd":"import zfused_maya.tool.utility.assemblymanagewidget as assemblymanagewidget;ui = assemblymanagewidget.AssemblyManageWidget();ui.show()",
-                "color":"#0FF77B",
-                "category":"场景"},
-            {   "name":"场景(装配)元素管理",
-                "code":"assembly element management",
-                "title":"集合(装配)元素管理\nAssembly Element Manage",
-                "cmd":"import zfused_maya.tool.utility.assemblyelementmanage as assemblyelementmanage;ui = assemblyelementmanage.AssemblyElementManageWidget();ui.show()",
-                "color":"#04277B",
-                "category":"场景"},
             {   "name":"任务管理",
                 "code":"task_management",
                 "title":"任务管理\nTask Manage",
@@ -67,12 +57,7 @@
                 "title":"资产库\nLibrary",
                 "cmd":"from zfused_maya.tool.utility.librarywidget import librarywidget;ui = librarywidget.LibraryWidget();ui.show()",
                 "color":"#2c168b",
-                "category":"library" },
-            {   "name":"funnyflux公司工具",
-                "code":"funnyflux_setup",
-                "title":"funnyflux公司工具\nfunnyflux_setup",
-                "cmd":"import zfused_maya.tool.utility.funnyflux.funnyflux_setup as funnyflux_setup;funnyflux_setup.set_funnyflux_tool()",
-                "color":"#81C2D6",
-                "category":"通用" }
+                "category":"library" }
         ]
+
 }
