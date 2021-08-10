@@ -17,4 +17,3 @@ def get(*args):
     :rtype: str 
     """
     return os.path.join("{}/resources".format(RESOURCE_DIRNAME), *args).replace(os.sep, "/")
-    # return os.path.join(":/resources", *args).replace(os.sep, "/")
