@@ -37,20 +37,21 @@ class main_menu(object):
             cmds.deleteUI("zfused_outsource_menu")
 
         cmds.setParent("MayaWindow")
-        cmds.menu("zfused_outsource_menu", label="zfused_outsource", to=True)
-        cmds.menuItem(label="zfused_outsource",d=True)
+        cmds.menu("zfused_outsource_menu", label=u"zfused_outsource", to=True)
+        cmds.menuItem(label=u"zfused_outsource",d=True)
 
-        base_item=cmds.menuItem(label=u"{}".format(current_project), subMenu=True, to=True)
-        print base_item
 
-        all_project=zfused_api.zFused.get("project_company")
-        # for _project in all_project:
-        #     _project_id =_project.get("ProjectId")
-        #     _task_handle = zfused_api.project.Project(str(_project_id))
-        #     _project_code=_task_handle.full_code()
-        #     _cmd="import zfused_maya.core.record as record; record.write_project_id({})".format(_project_id)
+
+        # #current_project_itme
+        # project_item=current_project
         #
-        #     cmds.menuItem(label=u"{}".format(_project_code),command=_cmd)
+        # cmds.menuItem(label=u"{}".format(project_item),to=True,en=True)
+        # cmds.menuItem(d=True)
+
+
+        cmds.menuItem(label=u"{}".format(current_project), subMenu=True, to=True)
+        all_project=zfused_api.zFused.get("project_company")
+
         all_project_id_list=[]
         for _project in all_project:
             _id = _project.get("ProjectId")
@@ -58,16 +59,17 @@ class main_menu(object):
 
         for project_id in list(set(all_project_id_list)):
             _task_handle = zfused_api.project.Project(str(project_id))
-            _project_code=_task_handle.name()
+            _project_name=_task_handle.name()
+
             #_cmd="import zfused_maya.core.record as record; record.write_project_id({};))".format(project_id)
             _cmd=self._function(project_id)
+            _project_code=_task_handle.code()
+            cmds.menuItem(label=_project_code,d=True)
 
-            cmds.menuItem(label=u"{}".format(_project_code),command=_cmd)
+            cmds.menuItem(label=u"{}".format(_project_name),command=_cmd)
+
         cmds.setParent("zfused_outsource_menu", menu=True)
 
-
-
-        # for base_menu in _dict.get("utility"):
 
         #utility
         utility_menu="utility"
@@ -85,6 +87,7 @@ class main_menu(object):
             cmds.menuItem(d=True)
 
         cmds.setParent("zfused_outsource_menu", menu=True)
+
 
 
         #model

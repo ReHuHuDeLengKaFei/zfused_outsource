@@ -1,5 +1,6 @@
 # coding:utf-8
 # --author-- lanhua.zhou
+
 from __future__ import print_function
 from functools import wraps
 
@@ -46,7 +47,7 @@ class zFused(object):
     USER = None
     USER_ID = 0
     
-    # 公司
+    # company
     COMPANY_ID = 0
     
     INTERNAL_SERVER_ADDR = "http://47.103.77.93:80"
@@ -60,7 +61,7 @@ class zFused(object):
     
     MQ_SERVER_ADDR = None
 
-    # 新配置云空间
+    # cloud server
     CLOUD_SERVER_ADDR = "http://47.103.77.93:80"
     CLOUD_SERVER_PATH = "{}/{}".format(CLOUD_SERVER_ADDR, __version__)
 
@@ -69,13 +70,6 @@ class zFused(object):
         zFused.NAME = name
         zFused.PASSWORD = password
         
-        # zFused.INTERNAL_SERVER_PATH = "{}/{}".format(api_server_addr, __version__)
-        # zFused.CLOUD_TRANS_SERVER_ADDR = cloud_trans_server_addr if cloud_trans_server_addr else "{}:7005".format(_host)
-        # zFused.INTERNAL_TRANS_SERVER_ADDR = internal_trans_server_addr if internal_trans_server_addr else "{}:7005".format(_host)
-        # zFused.CLOUD_IMAGE_SERVER_ADDR = cloud_image_server_addr if cloud_image_server_addr else "http://{}:7006".format(_host)
-        # zFused.INTERNAL_IMAGE_SERVER_ADDR = internal_image_server_addr if internal_image_server_addr else "http://{}:7006".format(_host)
-        # zFused.MQ_SERVER_ADDR = mq_server_addr if mq_server_addr else "{}:5672".format(_host)
-
     @classmethod
     def Login(cls, name, key):
         _zfused = zFused( name, key )
@@ -166,7 +160,6 @@ class zFused(object):
     @classmethod
     def put(cls, key, uid, data, change_field = "", send_message = True):
         server = "%s/%s/%s" % (zFused.INTERNAL_SERVER_PATH, key, uid)
-        # 更改数据时间 误差8小时机制
         for _key, _item in data.items():
             try:
                 # python3 has no unicode
