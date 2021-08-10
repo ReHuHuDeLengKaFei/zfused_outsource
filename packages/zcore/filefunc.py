@@ -73,7 +73,6 @@ def receive_file(src, dst):
         return False
     _ztranser_addr = get_internal_trans_server_addr()
     arg = u'"{}" {} get {} {}'.format(_publish_exe, _ztranser_addr, _src_file, _dst_file)
-    # print(arg)
     arg = arg.encode(locale.getdefaultlocale()[1])
 
     # publish info temp
