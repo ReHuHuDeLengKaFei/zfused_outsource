@@ -76,8 +76,6 @@ def receive_file(src, dst):
     # print(arg)
     arg = arg.encode(locale.getdefaultlocale()[1])
 
-    #logger.info(arg)
-
     # publish info temp
     _publish_temp = tempfile.SpooledTemporaryFile(bufsize = 1024)
     _file_no = _publish_temp.fileno()
