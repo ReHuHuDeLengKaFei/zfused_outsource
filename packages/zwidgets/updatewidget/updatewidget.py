@@ -76,7 +76,7 @@ class UpdateWidget(QtWidgets.QFrame):
         # self.step = 0
 
     def _analyse(self):
-        self._title_label.setText("获取服务器数据,分析中...")
+        self._title_label.setText(u"获取服务器数据,分析中...")
         QtWidgets.QApplication.processEvents()
 
         _script_files = {}
@@ -84,14 +84,14 @@ class UpdateWidget(QtWidgets.QFrame):
         _outsource_scripts = zfused_api.zFused.get("outsource_scripts", fields = ["Name", "MD5", "Path"])
         _outsource_files_num = len(_outsource_scripts)
 
-        self._title_label.setText("获取服务器数据,总计 {} ".format(_outsource_files_num))
+        self._title_label.setText(u"获取服务器数据,总计 {} ".format(_outsource_files_num))
         QtWidgets.QApplication.processEvents()
 
         self._progress_widget.setRange(0, _outsource_files_num)
 
         for _index, _script in enumerate(_outsource_scripts):
             
-            self._title_label.setText("{}/{} 分析是否需要更新 {}".format(_index + 1, _outsource_files_num, _script.get("Name")))
+            self._title_label.setText(u"{}/{} 分析是否需要更新 {}".format(_index + 1, _outsource_files_num, _script.get("Name")))
             self._progress_widget.setValue(_index + 1)
             QtWidgets.QApplication.processEvents()
 
@@ -116,18 +116,22 @@ class UpdateWidget(QtWidgets.QFrame):
                 print((_server_script_path, _local_script_path))
                 _script_files[_script.get("Name")] = [_server_script_path, _local_script_path]
 
-                self._receive_label.setText("下载中。。。")
+                self._receive_label.setText(u"下载中。。。")
                 QtWidgets.QApplication.processEvents()
                 # 
                 filefunc.receive_file(_server_script_path, _local_script_path)
             else:
-                self._receive_label.setText("无需更新")
+                self._receive_label.setText(u"无需更新")
 
         self._receive_label.hide()
-        self._title_label.setText("已更新完成")
+        self._title_label.setText(u"已更新完成")
         self.operation_widget.showNormal()
 
     def _build(self):
+        self.setWindowTitle(u"zFused outsource 更新...")
+
+        self.resize(400,60)
+
         _layout = QtWidgets.QVBoxLayout(self)
 
 

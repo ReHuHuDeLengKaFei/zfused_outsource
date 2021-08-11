@@ -5,9 +5,15 @@
                 "title":"开启/关闭屏显信息\nON/OFF HUD",
                 "cmd":"import zfused_maya.tool.animation.playblast_hud as ph;_v = ph.HUD(ph.get_maya_hud());_v.change_hud_state()",
                 "color":"#81C2D6",
-                "category":"常用"}
+                "category":"常用"},
+            {   "name"    :"拍屏插件",
+                "code"    :"playblast", 
+                "title"   :"拍屏\nZPlayBlast",
+                "cmd"     :"from zfused_maya.tool.animation import playblast;ui = playblast.PlaybastTool();ui.show()",
+                "color"   :"#343D46",
+                "category":"拍屏"}
     ],
-    "model":
+    "modeling":
         [
             {   "name":"模型分组",
                 "code":"model arrange",
@@ -16,21 +22,12 @@
                 "color":"#81C2D6",
                 "category":"分组"}
         ],
-
-
     "utility":
         [
             {   "name":"重载插件",
                 "code":"refresh",
                 "title":"重新登陆\nRefresh And Reload",
-                "cmd":"zfused_login()",
-                "color":"#81C2D6",
-                "category":"通用"
-            },
-            {   "name":"修复插件",
-                "code":"reapir",
-                "title":"修复界面\nRepair",
-                "cmd":"import zfused_maya.interface.launch as launch;launch.repair()",
+                "cmd":"from zfused_maya.core import init;init.clear()",
                 "color":"#81C2D6",
                 "category":"通用"
             },
@@ -58,6 +55,15 @@
                 "cmd":"from zfused_maya.tool.utility.librarywidget import librarywidget;ui = librarywidget.LibraryWidget();ui.show()",
                 "color":"#2c168b",
                 "category":"library" }
+        ],
+    "help":
+        [
+            {   "name":"更新",
+                "code":"update",
+                "title":"更新\nupdate",
+                "cmd":"from zwidgets.updatewidget import updatewidget;from zfused_maya.core import tomaya;ui = updatewidget.UpdateWidget();ui.show()",
+                "color":"#81C2D6",
+                "category":"分组"}
         ]
 
 }

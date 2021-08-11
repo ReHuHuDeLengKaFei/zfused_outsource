@@ -25,6 +25,8 @@ def GetMayaPoint(mayaName):
         ptr = OpenMayaUI.MQtUtil.findLayout(mayaName)
     if ptr is None:
         ptr = OpenMayaUI.MQtUtil.findMenuItem(mayaName)
+    if ptr is None:
+        ptr = OpenMayaUI.MQtUtil.findMenu(mayaName)
     if ptr is not None:
         return QtCompat.wrapInstance(int(ptr), QtCore.QObject)
 

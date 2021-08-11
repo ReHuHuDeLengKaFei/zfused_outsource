@@ -33,3 +33,35 @@ def cut_image(video, image):
     if not os.path.isfile(image):
         return False
     return True
+
+
+def convert_video(inVideo, outVideo):
+    """ convet video 
+
+    :rtype: bool
+    """
+    _ffmpeg_exe = os.path.join(PLUGIN_DIRNAME,"ffmpeg/ffmpeg.exe")
+    # _command = u'%s -i "%s" -vcodec h264 -x264opts keyint=1 -y "%s"'%(_ffmpeg_exe, inVideo, outVideo)
+    _command = u'%s -i "%s" -vcodec h264 -x264opts keyint=1 -y "%s"'%(_ffmpeg_exe, inVideo, outVideo)
+    print(_command)
+    _command = _command.encode(locale.getdefaultlocale()[1])
+    #_process = subprocess.Popen(_command, shell = True)
+    #_process.communicate()
+    subprocess.call(_command)
+    if not os.path.isfile(outVideo):
+        return False
+    return True
+
+
+def mergeVideo(filename, fps, size, images, audio = None, offset = None, time = None):
+    _ffmpeg_exe = os.path.join(PLUGIN_DIRNAME,"ffmpeg/ffmpeg.exe")
+    if audio:
+        cmd = '%s -y -r %s -f image2 -s %s -i %s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p -t %s %s'%(_ffmpeg_exe, fps, size, images, offset, audio, time, filename)
+    else:
+        cmd = '%s -y -r %s -f image2 -s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p %s'%(_ffmpeg_exe, fps, size,images, filename)
+
+    _process = subprocess.Popen(cmd, shell = True)
+    _process.communicate()
+    if not os.path.isfile(filename):
+        return False
+    return True
