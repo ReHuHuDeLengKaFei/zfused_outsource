@@ -6,6 +6,7 @@ from functools import partial
 import sys
 
 
+
 def clear():
     # remove class
     for k in sorted(k for k, m in sys.modules.items() if m and k.startswith('zfused_maya')):

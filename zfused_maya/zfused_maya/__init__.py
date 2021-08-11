@@ -4,7 +4,9 @@
 import os
 import sys
 
-__version__ = "0.0.1"
+import maya.cmds as cmds
+
+__version__ = "0.1.1"
 
 _resource = None
 
@@ -16,8 +18,13 @@ sys.path.insert(0,os.path.dirname(DIRNAME))
 sys.path.insert(0,"{}/packages".format(DIRNAME))
 
 
+from .interface import menubar
+
+# 
+def login():
+    menubar.rebuild()
+
 def _get_maya_version():
-    import maya.cmds as cmds
     version = cmds.about(q=True, version=True)
     os = cmds.about(q=True, os=True)
     return "maya-%s-%s" % (version, os)
