@@ -417,6 +417,11 @@ class Task(_Entity):
         _path = "{}/{}".format(_link_path, self.path())
         return _path
 
+    def transfer_path(self):
+        _link_path = self.project_entity().transfer_path()
+        _path = "{}/{}".format(_link_path, self.path())
+        return _path
+
     def backup_path(self):
         """get task backup path
         rtype: str

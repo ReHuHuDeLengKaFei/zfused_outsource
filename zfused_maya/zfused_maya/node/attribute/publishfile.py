@@ -50,17 +50,18 @@ def publish_file(*args, **kwargs):
         else:
             return False
 
+    _infomation = {}
     # 提交publish文件
-    _value = publish_backup(task_id, infomation)
+    _value = publish_transfer(_task_id, _infomation)
     if not _value:
-        cmds.confirmDialog(message=u"上传备份文件失败")
+        cmds.confirmDialog(message=u"上传交接文件失败")
         return False  
     
-    cmds.confirmDialog(message=u"提取成功\n{}".format("ds"))
+    cmds.confirmDialog(message=u"交接文件上传成功\n{}".format("ds"))
 
 
 
-def publish_backup(task_id, infomation={}, fix_version=False):
+def publish_transfer(task_id, infomation={}, fix_version=False):
     """ 上传任务备份文件
     """
 

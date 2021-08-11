@@ -170,16 +170,16 @@ class Project(_Entity):
             return "#FFFFFF"
         return self.profile["Color"]
 
+    def status(self):
+        return zfused_api.status.Status(self._data.get("StatusId"))
+
     def status_id(self):
         """ get status id 
-        
         """
         return self._data["StatusId"]
 
     def start_time(self):
-        """
-        get start time
-
+        """get start time
         rtype: datetime.datetime
         """
         _time_text = self.profile["StartTime"]
@@ -204,6 +204,10 @@ class Project(_Entity):
         if not _production_path:
             _production_path = self.config.get("Root")
         return _production_path
+
+    def transfer_path(self):
+        _transfer_path = self.config.get("TransferPath")
+        return _transfer_path
 
     def backup_path(self):
         _backup_path = self.config.get("BackupPath")

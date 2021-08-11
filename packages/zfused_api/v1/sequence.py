@@ -281,6 +281,11 @@ class Sequence(_Entity):
         _path = "{}/{}".format(_production_project_path, self.path())
         return _path
 
+    def transfer_path(self):
+        _project_transfer_path = self.project().transfer_path()
+        _path = "{}/{}".format(_project_transfer_path, self.path())
+        return _path
+
     def backup_path(self):
         """
         get sequence backup path

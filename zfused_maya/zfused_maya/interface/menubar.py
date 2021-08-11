@@ -51,9 +51,11 @@ def build():
     _all_project_id_list = [_project.get("ProjectId") for _project in _all_project]
     for _project_id in list(set(_all_project_id_list)):
         _project = zfused_api.project.Project(_project_id)
-        _project_name = _project.name()
-        cmds.menuItem(label = "", divider = True, parent = "zfused_project")
-        cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
+        _status = _project.status()
+        if _status.category() == "in progress":
+            _project_name = _project.name()
+            cmds.menuItem(label = "", divider = True, parent = "zfused_project")
+            cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
 
     cmds.menuItem(label = u"", divider=True, parent = "zfused_outsource")
     for _menu_title in menu.MENU_KEY:
