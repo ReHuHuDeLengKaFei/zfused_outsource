@@ -50,11 +50,11 @@ class zFused(object):
     # company
     COMPANY_ID = 0
     
-    INTERNAL_SERVER_ADDR = "http://47.103.77.93:80"
-    INTERNAL_SERVER_PATH = "{}/{}".format(INTERNAL_SERVER_ADDR, __version__)
+    INTERNAL_API_SERVER_ADDR = "http://47.103.77.93:80"
+    INTERNAL_API_SERVER_PATH = "{}/{}".format(INTERNAL_API_SERVER_ADDR, __version__)
 
-    CLOUD_TRANS_SERVER_ADDR = None
-    INTERNAL_TRANS_SERVER_ARRD = None
+    CLOUD_TRANS_SERVER_ADDR = "47.103.77.93:7005"
+    INTERNAL_TRANS_SERVER_ADDR = "47.103.77.93:7005"
 
     CLOUD_IMAGE_SERVER_ADDR = "http://47.103.77.93:7006"
     INTERNAL_IMAGE_SERVER_ARRD = "http://47.103.77.93:7006"
@@ -94,7 +94,7 @@ class zFused(object):
         """get data
         rtype: list
         """
-        server = "%s/%s" % (zFused.INTERNAL_SERVER_PATH, key)
+        server = "%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key)
         # cloud server
         _cloud_server = "%s/%s" % (zFused.CLOUD_SERVER_PATH, key)
         params = {}
@@ -130,7 +130,7 @@ class zFused(object):
         """get data
         rtype: dict
         """
-        server = "{}/{}/{}".format(zFused.INTERNAL_SERVER_PATH, key, id)
+        server = "{}/{}/{}".format(zFused.INTERNAL_API_SERVER_PATH, key, id)
         headers = {'content-type': 'application/json'}
         try:
             r = httpsession.get(server, verify=True, headers=headers)
@@ -148,7 +148,7 @@ class zFused(object):
         """get data
         rtype: bool
         """
-        server = "%s/%s" % (zFused.INTERNAL_SERVER_PATH, key)
+        server = "%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key)
         data_json = json.dumps(data)
         r = httpsession.post(server, data = data_json)
         
@@ -159,7 +159,7 @@ class zFused(object):
             
     @classmethod
     def put(cls, key, uid, data, change_field = "", send_message = True):
-        server = "%s/%s/%s" % (zFused.INTERNAL_SERVER_PATH, key, uid)
+        server = "%s/%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key, uid)
         for _key, _item in data.items():
             try:
                 # python3 has no unicode
@@ -192,7 +192,7 @@ class zFused(object):
 
     @classmethod
     def delete(cls, key, uid):
-        server = "%s/%s/%s" % (zFused.INTERNAL_SERVER_PATH, key, uid)
+        server = "%s/%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key, uid)
         r = httpsession.delete(server)
 
         if r.status_code == 200:
