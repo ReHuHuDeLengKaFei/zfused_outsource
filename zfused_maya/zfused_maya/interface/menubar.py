@@ -31,12 +31,11 @@ def change_project(project_id):
 def build():
     """build zfused maya menu 
     """
-
+    # ===============================================================
     # main menu
     cmds.menu("zfused_outsource", parent = "MayaWindow", label = "zFused outsource", tearOff = True)
     _menu_data = menu.get_menu_data()
 
-    # cmds.menuItem(label = u"项目", divider=True, parent = "zfused_outsource")
     # project menu
     _project_id = record.current_project_id()
     if _project_id:
