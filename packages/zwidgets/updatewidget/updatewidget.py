@@ -98,8 +98,8 @@ class UpdateWidget(QtWidgets.QFrame):
             _script_path = _script.get("Path")
             _script_md5 = _script.get("MD5")
             
-            _server_script_path = "{}{}".format(_server_path, _script_path)
-            _local_script_path = "{}{}".format( _local_path, _script_path )
+            _server_script_path = u"{}{}".format(_server_path, _script_path)
+            _local_script_path = u"{}{}".format( _local_path, _script_path )
             
             _is_exist = False
             if os.path.isfile(_local_script_path):
