@@ -54,18 +54,6 @@ def receive_file(src, dst):
     
     :rtype: str
     """
-
-    '''
-    if not os.path.isfile(src):
-        return False
-    _dst_path = os.path.dirname(dst)
-    if not os.path.isdir(_dst_path):
-        os.makedirs(_dst_path)
-    shutil.copy(src, dst)
-    if os.path.isfile(dst):
-        return True
-    return False
-    '''
     _src_file = src
     _dst_file = dst
     _publish_exe = get_transer_exe()
