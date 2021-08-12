@@ -24,6 +24,25 @@ class Check(object):
     """
     value = False
 
+
+def tree_name():
+    """ 检查模型结构名称
+    """
+    _task_id = record.current_task_id()
+    if not _task_id:
+        return False, u"未选择制作任务\n"
+    _task = zfused_api.task.Task(_task_id)
+    _project_entity = _task.project_entity()
+    _name = _project_entity.file_code()
+    for _i in cmds.ls(tr = 1):
+        try:
+            _asset_name = cmds.getAttr("%s.treeName"%_i)
+            if _asset_name == _name:
+                return True, _asset_name
+        except:
+            pass
+    return False, u"文件大纲组命名与任务名不匹配,任务名为 {} \n".format(_name)
+
 def defult_asset_node():
     nodes=cmds.ls("defaultLegacyAssetGlobals")
     if not nodes:
@@ -31,9 +50,7 @@ def defult_asset_node():
     _info=u"存在不应存在的修型节点，请处理\n"
     for _node in nodes:
         _info +=_node
-
     return False,_info
-
 
 def null_reference():
     _references = cmds.ls(rf=True)
