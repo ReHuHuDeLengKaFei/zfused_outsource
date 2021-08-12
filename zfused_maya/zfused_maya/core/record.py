@@ -36,8 +36,11 @@ def current_task_id():
 
 def write_project_id(project_id):
     _interface = Interface()
-    _interface.write("current_project_id",project_id)
+    _interface.write("current_project_id", project_id)
 
+def write_task_id(task_id):
+    _interface = Interface()
+    _interface.write("current_task_id", task_id)
 
 def _cache_dir():
     USER_CACHE_DIR = None
