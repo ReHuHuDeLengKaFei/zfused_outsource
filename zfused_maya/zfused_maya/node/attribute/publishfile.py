@@ -12,6 +12,8 @@ import maya.cmds as cmds
 
 import zfused_api
 
+from zfused_maya.core import record
+
 from zfused_maya.node.core import check
 
 from zfused_maya.ui.widgets import checkwidget
@@ -26,6 +28,9 @@ def publish_file(*args, **kwargs):
     :rtype: bool
     """
     _task_id = args[0]
+    
+    record.write_task_id(_task_id)
+    
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity()
     _project_step = _task.project_step()
