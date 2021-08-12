@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import locale
 import subprocess
 
 PATH = os.path.abspath("./plugins")
