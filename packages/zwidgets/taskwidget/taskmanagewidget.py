@@ -2,6 +2,8 @@
 # --author-- lanhua.zhou
 from __future__ import print_function
 
+import os
+import shutil
 import logging
 
 from Qt import QtWidgets, QtGui, QtCore
@@ -16,6 +18,15 @@ from . import filterwidget
 __all__ = ["TaskManageWidget"]
 
 logger = logging.getLogger(__name__)
+
+
+# ====================================================
+# delete unused folder
+_dir = os.path.dirname(__file__)
+_del_path = "{}/taskpanelwidget".format(_dir)
+if os.path.isdir(_del_path):
+    shutil.rmtree(_del_path)
+# ====================================================
 
 
 class TaskManageWidget(panel.ShowPanelWidget):
