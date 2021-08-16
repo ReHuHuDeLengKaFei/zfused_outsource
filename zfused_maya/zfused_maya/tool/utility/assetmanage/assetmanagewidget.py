@@ -43,11 +43,12 @@ class AssetManageWidget(window._Window):
         _output_attr = zfused_api.attr.Output(output_attr_id)
 
         _production_file = _version.production_file()
+        _production_file = ".".join(_production_file.split(".{:0>4d}.".format(_version.index())))
 
         _ori_assemblies = cmds.ls(assemblies=True)
         rf = cmds.file(_production_file, r = True, ns = _task.file_code())
         rfn = cmds.referenceQuery(rf, rfn = True)
-        attr.set_node_attr(rfn, _output_attr.id(), _version.id(), "false")
+        # attr.set_node_attr(rfn, _output_attr.id(), _version.id(), "false")
         _new_assemblies = cmds.ls(assemblies=True)
         _asset_tops = list(set(_new_assemblies) - set(_ori_assemblies))
         if _asset_tops:

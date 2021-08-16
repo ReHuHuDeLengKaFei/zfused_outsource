@@ -212,3 +212,17 @@ QMenu::separator {
   background: #dadce0;
   margin: 1px;
 }
+
+QLineEdit{
+    font: bold 12px;
+    color: #DDDDDD;
+    border: 1px solid #555555;
+    border-bottom: 1px solid #555555;
+}
+
+QComboBox{
+    font: bold 12px;
+    color: #DDDDDD;
+    border: 1px solid #555555;
+    border-bottom: 1px solid #555555;
+}

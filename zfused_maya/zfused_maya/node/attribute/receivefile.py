@@ -17,7 +17,6 @@ import zfused_maya.node.core.attr as attr
 logger = logging.getLogger(__file__)
 
 
-
 def receive_file(*args, **kwargs):
     """ receive file
         base receive file script

@@ -124,8 +124,6 @@ def get_node_attr(node):
     return _attr_data
 
 
-
-
 def _fix_node(node):
     """ 
     """

@@ -27,6 +27,8 @@ class AssetStepWidget(QtWidgets.QFrame):
 
         self.version_listwidget.list_view.clicked.connect(self._load_version)
 
+        self.reference_button.clicked.connect(self._reference_file)
+
     def _reference_file(self, output_attr_id):
         """ reference version file
         """
@@ -40,9 +42,10 @@ class AssetStepWidget(QtWidgets.QFrame):
         self.version_combobox.clear()
         self._index_version = {}
         self.description_textedit.clear()
-        # remove operation
-        for i in range(self.operation_layout.count()):
-            self.operation_layout.itemAt(i).widget().deleteLater()
+
+        # # remove operation
+        # for i in range(self.operation_layout.count()):
+        #     self.operation_layout.itemAt(i).widget().deleteLater()
 
     def load_project_step_id(self, project_step_id):
         """ load project step id
@@ -69,18 +72,18 @@ class AssetStepWidget(QtWidgets.QFrame):
         # get files
         self.version_listwidget.load_versions(_versions)
 
-        # output attrs
-        _output_attrs = _project_step.output_attrs()
-        if _output_attrs:
-            for _output_attr in _output_attrs:
-                if _project_step.is_new_attribute_solution():
-                    _output_attr = zfused_api.attr.Output(_output_attr.get("Id"))
-                else:
-                    _output_attr = zfused_api.outputattr.OutputAttr(_output_attr.get("Id"))
-                _operation_widget = OperationWidget()
-                _operation_widget.load_output_attr(_output_attr)
-                _operation_widget.referenced.connect(self._reference_file)
-                self.operation_layout.addWidget(_operation_widget)
+        # # output attrs
+        # _output_attrs = _project_step.output_attrs()
+        # if _output_attrs:
+        #     for _output_attr in _output_attrs:
+        #         if _project_step.is_new_attribute_solution():
+        #             _output_attr = zfused_api.attr.Output(_output_attr.get("Id"))
+        #         else:
+        #             _output_attr = zfused_api.outputattr.OutputAttr(_output_attr.get("Id"))
+        #         _operation_widget = OperationWidget()
+        #         _operation_widget.load_output_attr(_output_attr)
+        #         _operation_widget.referenced.connect(self._reference_file)
+        #         self.operation_layout.addWidget(_operation_widget)
 
     def load_asset_id(self, asset_id):
         self._asset_id = asset_id
@@ -97,7 +100,7 @@ class AssetStepWidget(QtWidgets.QFrame):
         self.description_textedit.clear()
         _data = version_index.data()
         self.description_textedit.setText(_data["Description"])
-        # self.file_name_label.setText(_data["FilePath"])
+        self.file_name_label.setText(_data["FilePath"])
 
     def _build(self):
         self.resize(160, 200)
@@ -154,18 +157,18 @@ class AssetStepWidget(QtWidgets.QFrame):
         _layout.addWidget(self.operation_widget)
         self.operation_widget.setObjectName("operation_widget")
         self.operation_widget.setMinimumHeight(30)
-        self.operation_layout = QtWidgets.QVBoxLayout(self.operation_widget)
+        self.operation_layout = QtWidgets.QHBoxLayout(self.operation_widget)
         self.operation_layout.setContentsMargins(0,0,0,0)
-        # # file name
-        # self.file_name_label = QtWidgets.QLabel()
-        # self.operation_layout.addWidget(self.file_name_label)
-        # self.operation_layout.addStretch(True)
-        # # reference file
-        # self.reference_button = QtWidgets.QPushButton()
-        # self.reference_button.setObjectName("reference_button")
-        # self.reference_button.setFixedSize(100,30)
-        # self.reference_button.setText(u"参考文件")
-        # self.operation_layout.addWidget(self.reference_button)
+        # file name
+        self.file_name_label = QtWidgets.QLabel()
+        self.operation_layout.addWidget(self.file_name_label)
+        self.operation_layout.addStretch(True)
+        # reference file
+        self.reference_button = QtWidgets.QPushButton()
+        self.reference_button.setObjectName("reference_button")
+        self.reference_button.setFixedSize(100,30)
+        self.reference_button.setText(u"参考文件")
+        self.operation_layout.addWidget(self.reference_button)
         
         
 

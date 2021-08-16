@@ -11,8 +11,6 @@ import maya.cmds as cmds
 
 from zcore import transfer,zfile,filefunc
 
-# import zfused_maya.core.filefunc as filefunc
-
 logger = logging.getLogger(__file__)
 
 

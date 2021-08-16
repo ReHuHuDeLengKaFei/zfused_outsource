@@ -28,11 +28,11 @@ class AssetListWidget(QtWidgets.QFrame):
         self.search_lineedit.search_clicked.connect(self._search)
 
         self.listwidget.referenced.connect(self.referenced.emit)
-        # self.listwidget.doubleClicked.connect(self._selected_asset)
+        self.listwidget.doubleClicked.connect(self._selected_asset)
 
-    # def _selected_asset(self, index):
-    #     _data = index.data()
-    #     self.asset_selected.emit(_data.get("Id"))
+    def _selected_asset(self, index):
+        _data = index.data()
+        self.asset_selected.emit(_data.get("Id"))
 
     def _search(self, text):
         """ search task

@@ -83,6 +83,15 @@ def receive_file(src, dst):
 
 
 def publish_file(src, dst, del_src = False):
+    _dst_dir = os.path.dirname(dst)
+    if not os.path.isdir(_dst_dir):
+        os.makedirs(_dst_dir)
+    _copy = shutil.copyfile(src, dst)
+    if _copy:
+        return True
+    return False
+
+def _publish_file(src, dst, del_src = False):
     """ 上传文件
     
     :pargarms: src 源文件
