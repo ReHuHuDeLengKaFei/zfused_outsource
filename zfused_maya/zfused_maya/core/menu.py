@@ -13,7 +13,7 @@ MENU_FILE = "{}/conf/menu.json".format(MENU_DIRNAME)
 
 MENU_KEY = [ "utility", 
              "modeling", 
-            # "shading",
+            "shading",
             # "rigging", 
             # "assembly", 
              "animation", 

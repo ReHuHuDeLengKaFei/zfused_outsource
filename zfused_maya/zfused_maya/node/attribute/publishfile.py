@@ -99,11 +99,11 @@ def publish_transfer(task_id, infomation={}, fix_version=False):
     _transfer_file = "%s/%s.%s" % (_transfer_path, _file_code, _file_suffix)
 
     # # get publish file path
-    # _temp_path = _task_handle.temp_path()
-    # _publish_file = "%s/%s.%04d.%s" % (_temp_path, _file_code, _file_suffix)
-    # _publish_file_dir = os.path.dirname(_publish_file)
-    # if not os.path.isdir(_publish_file_dir):
-    #     os.makedirs(_publish_file_dir)
+    _temp_path = _task_handle.temp_path()
+    _publish_file = "%s/%s.%s" % (_temp_path, _file_code, _file_suffix)
+    _publish_file_dir = os.path.dirname(_publish_file)
+    if not os.path.isdir(_publish_file_dir):
+        os.makedirs(_publish_file_dir)
 
     # 移出transfer之前文件
     try:
@@ -113,7 +113,7 @@ def publish_transfer(task_id, infomation={}, fix_version=False):
     
     try:
         # save publish file
-        # cmds.file(rename=_publish_file)
+        cmds.file( rename = _publish_file )
         cmds.file(save=True, type=_file_type, f=True, options="v=0;")
 
         # publish texture
@@ -165,11 +165,12 @@ def publish_transfer(task_id, infomation={}, fix_version=False):
         cmds.file(save=True, type=_file_type, f=True, options="v=0;")
 
         # publish file
-        _result = filefunc.publish_file(_current_file, _transfer_file)
+        _result = filefunc.publish_file(_publish_file, _transfer_file)
 
     except Exception as e:
         logger.error(e)
         return False
+
     cmds.file(new=True, f=True)
-    cmds.file(_current_file, o=True, f=True, pmt=False)
+    # cmds.file(_current_file, o=True, f=True, pmt=False)
     return True

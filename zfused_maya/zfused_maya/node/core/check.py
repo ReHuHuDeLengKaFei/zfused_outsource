@@ -17,13 +17,45 @@ import zfused_api
 
 import zfused_maya.core.record as record 
 
-from . import texture
+from . import texture,shadingengine
+
 
 class Check(object):
     """ check base object
     """
     value = False
 
+def engine_color():
+    # get shading engines
+    _nodes = shadingengine.nodes()
+    _error_nodes = []
+    for _node in _nodes:
+        if not cmds.objExists("{}.shadingcolor".format(_node)):
+            _error_nodes.append(_node)
+    if _error_nodes:
+        info = u"存在未赋予shadingcolor的材质引擎,请用材质引擎颜色插件检查\n"
+        for _node in _error_nodes:
+            info += "{}\n".format(_node)
+        return False, info
+    return True, None
+
+def engine_shader():
+    # get shading engines
+    _nodes = shadingengine.nodes()
+    _error_nodes = []
+    for _node in _nodes:
+        _ori_material = cmds.listConnections("{}.surfaceShader".format(_node), s=True)
+        if not _ori_material:
+            continue
+        _ori_material = _ori_material[0]
+        if _ori_material.startswith("zfused_shading_color_"):
+            _error_nodes.append(_node)
+    if _error_nodes:
+        info = u"存在zfused_shading_color材质,请用材质引擎颜色插件检查\n"
+        for _node in _error_nodes:
+            info += "{}\n".format(_node)
+        return False, info
+    return True, None
 
 def tree_name():
     """ 检查模型结构名称
