@@ -270,6 +270,24 @@ class Shot(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    def sequence_id(self):
+        return self._data.get("SequenceId")
+
+    def sequence(self):
+        _sequence_id = self.sequence_id()
+        if _sequence_id:
+            return zfused_api.sequence.Sequence(_sequence_id)
+        return None
+
+    def episode_id(self):
+        return self._data.get("EpisodeId")
+
+    def episode(self):
+        _episode_id = self.episode_id()
+        if _episode_id:
+            return zfused_api.episode.Episode(_episode_id)
+        return None
+
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
