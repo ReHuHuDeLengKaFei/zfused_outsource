@@ -38,11 +38,13 @@ class AssemblyManageWidget(window._Window):
         if not cmds.objExists(_type_code):
             cmds.createNode("transform", name = _type_code)
 
-        _production_file = _version.production_file()
-
         _task = _version.task()
         _project_step = _task.project_step()
         _key_output_attr = _project_step.key_output_attr()
+
+        _production_file = _version.production_file()
+        _production_file = ".".join(_production_file.split(".{:0>4d}.".format(_version.index())))
+        print(_production_file)
 
         _ori_assemblies = cmds.ls(assemblies=True)
         rf = cmds.file(_production_file, r = True, ns = _task.file_code())
