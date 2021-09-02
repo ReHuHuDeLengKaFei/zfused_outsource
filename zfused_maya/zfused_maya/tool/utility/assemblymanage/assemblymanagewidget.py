@@ -30,7 +30,6 @@ class AssemblyManageWidget(window._Window):
 
         self.assembly_widget.reference_version.connect(self._reference)
 
-
     def _reference(self, version_id):
         _version = zfused_api.version.Version(version_id)
 
