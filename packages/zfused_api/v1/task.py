@@ -16,10 +16,14 @@ from . import worktime
 logger = logging.getLogger(__name__)
 
 def new_production_file(files, task_id, attr_output_id, index = 0, relative_entity_type = "", relative_entity_id = 0, relative_name_sapce = ""): 
+    if not files:
+        return
+        
     _task_handle = Task(task_id)
     _project_id = _task_handle.data().get("ProjectId")
     _project_step_id = _task_handle.data().get("ProjectStepId")
     _project_step_attr_id = attr_output_id
+
     _project_entity_type = _task_handle.data().get("ProjectEntityType")
     _project_entity_id = _task_handle.data().get("ProjectEntityId")
     _project_step_handle = zfused_api.step.ProjectStep(_project_step_id)
@@ -34,15 +38,22 @@ def new_production_file(files, task_id, attr_output_id, index = 0, relative_enti
 
     # remove production file if exists
     _production_files = zfused_api.zFused.get( "production_file", 
-                                               filter = { "TaskId": task_id } )
-                                                          # "Index": _index, 
-                                                          #"ProjectStepAttrId": _project_step_attr_id } )
+                                               filter = { "TaskId": task_id,
+                                                          "ProjectStepAttrId": _project_step_attr_id } )
     if _production_files:
         for _file in _production_files:
             zfused_api.zFused.delete("production_file", _file["Id"])
-    
+
+    # remove record files
+    _production_files = zfused_api.zFused.get( "production_file_record", 
+                                               filter = { "TaskId": task_id,
+                                                          "Index": _index,
+                                                          "ProjectStepAttrId": _project_step_attr_id } )
+    if _production_files:
+        for _file in _production_files:
+            zfused_api.zFused.delete("production_file_record", _file["Id"])
+
     # new file
-    print(task_id, _index)
     _created_id = zfused_api.zFused.USER_ID
     _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     for _file in files:
@@ -56,6 +67,30 @@ def new_production_file(files, task_id, attr_output_id, index = 0, relative_enti
         _file_width = _file.get("width")
         _file_height = _file.get("height")
         zfused_api.zFused.post( key = "production_file",
+                                data = { "ProjectId": _project_id,
+                                         "ProjectStepId": _project_step_id,
+                                         "ProjectStepAttrId": _project_step_attr_id,
+                                         "ProjectEntityType": _project_entity_type,
+                                         "ProjectEntityId": _project_entity_id,
+                                         "TaskId": task_id,
+                                         "Index": _index,
+                                         "RelativeEntityType": _relative_entity_type,
+                                         "RelativeEntityId": _relative_entity_id,
+                                         "RelativeNameSpace": _relative_name_space,
+                                         "SoftwareId": _software_id,
+                                         "MD5": _file_md5,
+                                         "Path": _file_path,
+                                         "Name": _file_name,
+                                         "Format": _file_format,
+                                         "Suffix": _file_suffix,
+                                         "Size": _file_size,
+                                         "ThumbnailPath": _file_thumbnail_path,
+                                         "Width": _file_width,
+                                         "Height": _file_height,
+                                         "CreatedBy": _created_id,
+                                         "CreatedTime": _created_time } )
+
+        zfused_api.zFused.post( key = "production_file_record",
                                 data = { "ProjectId": _project_id,
                                          "ProjectStepId": _project_step_id,
                                          "ProjectStepAttrId": _project_step_attr_id,
@@ -113,8 +148,22 @@ def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, s
                                                                      "CreatedTime": currentTime })
     # _task = zfused_api.zFused.get("task", filter = {"SelfObject":"task","Name": name,"ProjectStepId": project_step_id,"ProjectId":project_id,"StepId":step_id,"StatusId":status_id,"CreateBy":create_id,"AssignedTo":assigned_id,"Object":link_obj,"LinkId":link_id,"SoftwareId":software_id,"Description":description, "IsOutsource":outsource})
     if _status:
-        return _task["Id"], "%s create success"%name
-    return False,"%s create error"%name     
+
+        _task = Task(_task["Id"])
+        _project_entity = _task.project_entity()
+        zfused_api.im.submit_message( "user",
+                                      zfused_api.zFused.USER_ID,
+                                      _project_entity.user_ids(),
+                                      { "msgtype": "new", 
+                                      "new": {"object": "task", "object_id": _task.id()} }, 
+                                      "new",
+                                      _project_entity.object(),
+                                      _project_entity.id(),
+                                      _project_entity.object(),
+                                      _project_entity.id() )
+
+        return _task.id(), "%s create success"%name
+    return False,"%s create error"%name
 
 def delete(task_id):
     """ delete task from task id
@@ -416,7 +465,7 @@ class Task(_Entity):
         _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"]).production_path()
         _path = "{}/{}".format(_link_path, self.path())
         return _path
-
+        
     def transfer_path(self):
         _link_path = self.project_entity().transfer_path()
         _path = "{}/{}".format(_link_path, self.path())
@@ -585,7 +634,143 @@ class Task(_Entity):
         _notes.sort(key = get_sort)
 
         return _notes
+
+    def submit_external_approval( self, name, 
+                                        file_path,
+                                        # user_id,
+                                        approver_id = [],
+                                        cc_id = [],
+                                        description = None ):
+        _approver_id = approver_id[-1]
+        _create_by = zfused_api.zFused.USER_ID
+        _create_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _user_id = _create_by
+        _project_id = self.project_id()
+        _step_id = self.project_step().step_id()
+        _project_step_id = self.project_step_id()
+        _project_entity_type = self.project_entity_type()
+        _project_entity_id = self.project_entity_id()
+        _task_id = self._id
+        # index
+        _all_version = self.get("version", filter = {"TaskId": self._data["Id"]})
+        _index = 0
+        if _all_version:
+            _last_version = _all_version[-1]
+            if _last_version["IsApproval"] == 1:
+                _index = len(_all_version) + 1
+            else:
+                # _last_version["Introduction"] = introduction
+                _last_version["Description"] = description
+                _last_version["UserId"] = _create_by
+                # _last_version["CreateTime"] = _create_time
+                _last_version["IsApproval"] = 0
+                _last_version["CreatedBy"] = _create_by
+                _last_version["CreatedTime"] = _create_time
+                # _last_version["Record"] = record
+                self.put("version", _last_version["Id"], _last_version)
+        else:
+            _index = 1
+        if _index:
+            _last_version, _status = self.post(key = "version", data = { "Name": name,
+                                                                         "ProjectId":_project_id,
+                                                                         "StepId":_step_id,
+                                                                         "ProjectStepId": _project_step_id,
+                                                                         "ProjectEntityType": _project_entity_type,
+                                                                         "ProjectEntityId": _project_entity_id,
+                                                                         "Object":_project_entity_type,
+                                                                         "LinkId":_project_entity_id,
+                                                                         "TaskId":_task_id,
+                                                                         "Index":_index,
+                                                                         "Thumbnail":"",
+                                                                         "ThumbnailPath":"",
+                                                                         "Description":description,
+                                                                         "Introduction":"",
+                                                                         "Record": "",
+                                                                         "CreatedBy": _create_by,
+                                                                         "CreatedTime": _create_time,
+                                                                         "FilePath":file_path,
+                                                                         "MovePath":"",
+                                                                         "IsNegligible": 0,
+                                                                         "IsApproval": 0, 
+                                                                         "UserId": _create_by,
+                                                                         "CreateTime": _create_time,
+                                                                         "IsExternal": 1 } )
+            if not _status:
+                return False, "{} submit error".format(name)
+        _version_id = _last_version["Id"]
+        print(_version_id)
+
+        # 提交最后版本id
+        self.update_last_version_id(_version_id)
+
+        # 提交审查人员
+        _value, _status = self.post(key = "approval", data = { "Object": "version", 
+                                                               "ObjectId": _version_id, 
+                                                               "ApproverId": _approver_id,
+                                                               "Status":"0",
+                                                               "SubmitterId": _user_id,
+                                                               "SubmitTime": _create_time,
+                                                               "CreatedBy": _user_id,
+                                                               "CreatedTime": _create_time,
+                                                               "ThumbnailPath": "",
+                                                               "Description": description,
+                                                               "Introduction": "",
+                                                               "Record": "" })
+        if not _status:
+            return False,"%s approval create error"%name
+        _approver_id = _value["Id"]
+
+        # 抄送人员
+        if cc_id:
+            for _cc_id in cc_id:
+                self.post(key = "cc", data = { "Object": "version",
+                                               "ObjectId": _version_id, 
+                                               "UserId": _cc_id,
+                                               "CreatedBy": _user_id,
+                                               "CreatedTime": _create_time })
+
+        # 组成员 新添加组成员
+        _user_ids = list(set(approver_id + cc_id + [_user_id]))
+        _group_users = self.get("group_user", filter = {"EntityType":"task", "EntityId":self._id})
+        if _group_users:
+            for _group_user in _group_users:
+                _user_id_un = int(_group_user["UserId"])
+                if _user_id_un in _user_ids:
+                    _user_ids.remove(_user_id_un)
+        if _user_ids:
+            for _user_id_un in _user_ids:
+                self.post( "group_user", { "EntityType":"task", 
+                                           "EntityId":self._id, 
+                                           "UserId":_user_id_un,
+                                           "CreatedBy": _user_id,
+                                           "CreatedTime": _create_time })
         
+        _user_ids = list(set(approver_id + cc_id + [_user_id]))
+        #  发送通知信息
+        _user_id = zfused_api.zFused.USER_ID
+        zfused_api.im.submit_message( "user",
+                                      _user_id,
+                                      _user_ids, #approver_id + cc_id + [_user_id],
+                                      {"entity_type": "version",
+                                       "entity_id": _version_id},
+                                      "approval", 
+                                      "approval",
+                                      _approver_id,
+                                      "task",
+                                      self._id )
+        
+        # 修改为审批状态
+        _approval_status_ids = zfused_api.status.approval_status_ids()
+        if _approval_status_ids:
+            _strs = [str(_approval_status_id) for _approval_status_id in _approval_status_ids]
+            _status_list = zfused_api.zFused.get("project_status", filter = {"ProjectId": self._data["ProjectId"], "StatusId__in":"|".join(_strs)})
+            if _status_list:
+                self.update_status(_status_list[0]["StatusId"])        
+        self.update_approval_status("0")
+
+        return _version_id, "%s submit approval success"%name
+
+    
     def submit_approval( self, name,
                                file_path, 
                                user_id,
@@ -655,12 +840,15 @@ class Task(_Entity):
                                                                          "CreateTime": _create_time } )
             if not _status:
                 return False, "{} submit error".format(name)
-            # _last_version = _last_version[0]
         _version_id = _last_version["Id"]
         
+        # 提交最后版本id
+        self.update_last_version_id(_version_id)
+
         # 提交任务图片
         if not self._data.get("ThumbnailPath"):
             self.update_thumbnail_path(thumbnail_path)
+
         # 提交project_entity缩略图
         try:
             _project_entity = self.project_entity()
@@ -686,20 +874,21 @@ class Task(_Entity):
 
         # 提交审查人员
         _value, _status = self.post(key = "approval", data = { "Object": "version", 
-                                                               "ObjectId":_version_id, 
-                                                               "ApproverId":_approver_id,
+                                                               "ObjectId": _version_id, 
+                                                               "ApproverId": _approver_id,
                                                                "Status":"0",
-                                                               "SubmitterId":_user_id,
-                                                               "SubmitTime":_create_time,
+                                                               "SubmitterId": _user_id,
+                                                               "SubmitTime": _create_time,
                                                                "CreatedBy": _user_id,
                                                                "CreatedTime": _create_time,
                                                                "ThumbnailPath": thumbnail_path,
-                                                               "Description":description,
-                                                               "Introduction":introduction,
+                                                               "Description": description,
+                                                               "Introduction": introduction,
                                                                "Record": record })
         if not _status:
             return False,"%s approval create error"%name
         _approver_id = _value["Id"]
+
         # 抄送人员
         if cc_id:
             for _cc_id in cc_id:
@@ -835,6 +1024,9 @@ class Task(_Entity):
                 return False, "{} submit error".format(name)
             # _last_report = _text[]
         _report_id = _text["Id"]
+
+        # 提交最后版本id
+        self.update_last_report_id(_report_id)
 
         # 提交任务图片
         self.update_thumbnail_path(thumbnail_path)
@@ -979,6 +1171,7 @@ class Task(_Entity):
         _project_step = self.project_step()
         _input_attrs = _project_step.input_attrs()
         _is_new_attribute_solution = _project_step.is_new_attribute_solution()
+        # print(_is_new_attribute_solution)
         # get input project step 
         # _input_attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._data["ProjectStepId"]})
         if not _input_attrs:
@@ -996,8 +1189,8 @@ class Task(_Entity):
                         _attr_output = zfused_api.attr.Output(_attr_output_id)
                         _attr_output_project_step_id = _attr_output.project_step_id()
                         _tasks = self.get("task",filter = { "ProjectStepId":_attr_output_project_step_id, 
-                                                          "ProjectEntityType":self.project_entity_type(), 
-                                                          "ProjectEntityId": self.project_entity_id() })
+                                                            "ProjectEntityType":self.project_entity_type(), 
+                                                            "ProjectEntityId": self.project_entity_id() })
                         # 任务状态机制?
                         if _tasks:
                             tasks[_attr_conn["Id"]] += _tasks
@@ -1550,7 +1743,7 @@ class Task(_Entity):
         else:
             return False
 
-    def submit_task_time(self, date, hours):
+    def submit_task_time(self, date, hours, description = ""):
         _date = date
         _user_id = zfused_api.zFused.USER_ID
         _hours = hours
@@ -1560,6 +1753,7 @@ class Task(_Entity):
             # return 
             _data = _times[0]
             _data["ProductionTime"] = _hours
+            _data["Description"] = description
             zfused_api.zFused.put("task_time", _data["Id"], _data)
         else:
             _current_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -1572,8 +1766,10 @@ class Task(_Entity):
                                                                             "ProjectEntityId": self.data().get("ProjectEntityId"),
                                                                             "TaskId": self._id,
                                                                             "ProductionTime": _hours,
+                                                                            "Description": description,
                                                                             "CreatedBy": _user_id,
                                                                             "CreatedTime": _current_time })
+
         _times = zfused_api.zFused.get( "task_time", filter = {"UserId":_user_id, "TaskId": self._id} )
         if _times:
             _hours_all = 0
@@ -1649,6 +1845,33 @@ class Task(_Entity):
         self.global_dict[self._id]["Percent"] = value
         self._data["Percent"] = value
         v = self.put("task", self._data["Id"], self._data, "percent")
+        if v:
+            return True
+        else:
+            return False
+
+    def update_last_version_id(self, version_id):
+        print("更新last version id", version_id)
+        if self._id not in self.global_dict:
+            self.global_dict[self._id] = self._data
+        if self.global_dict[self._id]["LastVersionId"] == version_id:
+            return True
+        self.global_dict[self._id]["LastVersionId"] = version_id
+        self._data["LastVersionId"] = version_id
+        v = self.put("task", self._data["Id"], self._data, "", False)
+        if v:
+            return True
+        else:
+            return False
+
+    def update_last_report_id(self, report_id):
+        if self._id not in self.global_dict:
+            self.global_dict[self._id] = self._data
+        if self.global_dict[self._id]["LastReportId"] == report_id:
+            return True
+        self.global_dict[self._id]["LastReportId"] = report_id
+        self._data["LastReportId"] = report_id
+        v = self.put("task", self._data["Id"], self._data)
         if v:
             return True
         else:

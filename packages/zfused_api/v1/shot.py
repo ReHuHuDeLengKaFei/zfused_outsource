@@ -525,6 +525,42 @@ class Shot(_Entity):
         else:
             return _tasks
 
+    def user_ids(self):
+        _user_ids = [zfused_api.zFused.USER_ID]
+
+        _project_step_ids = self.project().task_step_ids()
+        if _project_step_ids:
+            for _project_step_id in _project_step_ids:
+                _project_step = zfused_api.step.ProjectStep(_project_step_id)
+                _user_ids += _project_step.review_user_ids() + _project_step.cc_user_ids() + _project_step.approvalto_user_ids()
+
+        _tasks = self.tasks()
+        if _tasks:
+            for _task in _tasks:
+                _task = zfused_api.task.Task(_task.get("Id"))
+                _project_step = _task.project_step()
+                _user_ids += [_task.assigned_to()]
+
+        _group_user_ids = list(set(_user_ids))
+        # insert 
+        _user_id = zfused_api.zFused.USER_ID
+        _create_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _group_users = self.get("group_user", filter = {"EntityType":self._type, "EntityId":self._id})
+        if _group_users:
+            for _group_user in _group_users:
+                _user_id_un = int(_group_user["UserId"])
+                if _user_id_un in _group_user_ids:
+                    _group_user_ids.remove(_user_id_un)
+        if _group_user_ids:
+            for _user_id_un in _group_user_ids:
+                self.post( "group_user", { "EntityType":self._type, 
+                                           "EntityId":self._id, 
+                                           "UserId":_user_id_un,
+                                           "CreatedBy": _user_id,
+                                           "CreatedTime": _create_time })
+
+        return list(set(_user_ids))
+
     def _tasks(self, project_step_id_list = []):
         """ get task 
         """
@@ -705,5 +741,18 @@ class Shot(_Entity):
         #                                    "IsOutsource":0})
         if _status:
             self.global_tasks[self._id].append(_task)
-            return _task["Id"], "%s create success"%_task_name
+
+            _task = zfused_api.task.Task(_task["Id"])
+            zfused_api.im.submit_message( "user",
+                                        zfused_api.zFused.USER_ID,
+                                        self.user_ids(),
+                                        { "msgtype": "new", 
+                                        "new": {"object": "task", "object_id": _task.id()} }, 
+                                        "new",
+                                        self.object(),
+                                        self.id(),
+                                        self.object(),
+                                        self.id() )
+
+            return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name    

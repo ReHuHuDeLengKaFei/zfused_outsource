@@ -244,6 +244,8 @@ class Version(_Entity):
         """ get production file
         :rtype: str
         """
+        if self.is_external():
+            return self._data.get("FilePath")
         _task_handle = zfused_api.task.Task(self._data["TaskId"])
         _path = _task_handle.production_path()
         _file_name = self._data["FilePath"]
@@ -330,3 +332,6 @@ class Version(_Entity):
 
     def approval_status(self):
         return str(self.global_dict[self._id]["IsApproval"])
+
+    def is_external(self):
+        return self._data.get("IsExternal")

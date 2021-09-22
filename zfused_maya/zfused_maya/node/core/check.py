@@ -15,7 +15,7 @@ import pymel.core as pm
 
 import zfused_api 
 
-import zfused_maya.core.record as record 
+from zfused_maya.core import record 
 
 from . import texture,shadingengine
 
@@ -24,6 +24,18 @@ class Check(object):
     """ check base object
     """
     value = False
+
+
+def geometry_structure():
+    # 获取当前的任务
+    _task_id = record.current_task_id()
+    _task = zfused_api.task.Task(_task_id)
+    _project_entity = _task.project_entity()
+    _property = _project_entity.property("geometry")
+    if not _property:
+        return True, _
+    # get current geometry
+        
 
 def engine_color():
     # get shading engines
@@ -83,22 +95,6 @@ def defult_asset_node():
     for _node in nodes:
         _info +=_node
     return False,_info
-
-def null_reference():
-    _references = cmds.ls(rf=True)
-    _null_reference = []
-    if not _references:
-        return True, None
-    info = u"存在无用的reference节点:\n"
-    for _reference in _references:
-        try:
-            cmds.referenceQuery(_reference, f=1)
-        except:
-            info += _reference + "\n"
-            _null_reference.append(_reference)
-    if len(_null_reference) == 0:
-        return True, None
-    return False, info
 
 def standard_surface():
     _default_materials = ["lambert1", "particleCloud1", "standardSurface1"]
@@ -239,7 +235,6 @@ def rendering_group():
             value = cmds.getAttr("%s.rendering"%dag)
             if value:
                 rendering.append(dag)
-    #return rendering
     if not rendering:
         info = u"文件组织结构错误,请用分组工具分组整合文件\n"
         return False, info
@@ -254,7 +249,7 @@ def camera_name():
     _name = _obj_handle.file_code()
     info = u"当前摄像机名称与任务名{}不匹配\n".format(_name)
     if not cmds.ls("*%s*"%_name, type = "camera"):
-        return False,info    
+        return False,info
     return True,None
 
 def file_name():
@@ -281,12 +276,6 @@ def file_node():
             info += "{}\n".format(_file_node)
         return False, info
     return True, None
-
-def reference_file_node():
-    """ check reference file
-
-    """
-    pass
 
 def texture_path():
     """ check texture file path
@@ -344,18 +333,6 @@ def camera():
             if _is_extra:
                 continue
             info += "{}\n".format(_camera)
-        return False,info
-    return True,None
-
-def reference():
-    """ check reference file
-
-    """
-    _references = cmds.ls(type = "reference")
-    if _references:
-        info = "场景存在参考文件\n"
-        for _reference in _references:
-            info += "{}\n".format(_reference)
         return False,info
     return True,None
 
@@ -572,3 +549,56 @@ def normal_lock():
         return False,info
     else:
         return True,None
+
+
+# =======================================================================================================
+# reference
+# 检查maya关于reference相关检查
+def null_reference():
+    _references = cmds.ls(rf=True)
+    _null_reference = []
+    if not _references:
+        return True, None
+    info = u"存在无用的reference节点:\n"
+    for _reference in _references:
+        try:
+            cmds.referenceQuery(_reference, f=1)
+        except:
+            info += _reference + "\n"
+            _null_reference.append(_reference)
+    if len(_null_reference) == 0:
+        return True, None
+    return False, info
+
+def reference():
+    """ check reference file
+    """
+    _references = cmds.ls(type = "reference")
+    if _references:
+        info = "场景存在参考文件\n"
+        for _reference in _references:
+            info += "{}\n".format(_reference)
+        return False,info
+    return True,None
+
+def reference_file_node():
+    """ check reference file
+    """
+    pass
+
+def unrecord_reference_file():
+    """检查文件中未记录在zf数据库的文件
+    """
+    _un_record = []
+    _reference_nodes = cmds.ls(rf = True)
+    info = "场景存在参考文件非zf登记文件\n"
+    _is_unrecord = False
+    for _node in _reference_nodes:
+        _file_path = cmds.referenceQuery(_node, f = True, wcn = True)
+        _production_files = zfused_api.zFused.get("production_file_record", filter = {"Path": _file_path})
+        if not _production_files:
+            _is_unrecord = True
+            info += "{}\n".format(_node)
+    if _is_unrecord:
+        return False, info
+    return True,None

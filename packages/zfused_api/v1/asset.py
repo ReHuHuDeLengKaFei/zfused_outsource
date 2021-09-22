@@ -42,10 +42,8 @@ def new(project_id, name, code, type_id, status_id, active = "true", create_by =
                                                                      "TypeId": type_id,
                                                                      "Description":description,
                                                                      "StatusId":status_id,
-                                                                     # "CreateTime":_current_time, 
                                                                      "StartTime":"0001-01-01T00:00:00Z", 
                                                                      "EndTime":"0001-01-01T00:00:00Z",
-                                                                     # "CreateBy":_create_by_id,
                                                                      "Active":active,
                                                                      "CreatedBy":_create_by_id,
                                                                      "CreatedTime":_current_time })
@@ -100,22 +98,25 @@ def cache(project_id_list = [], extract_freeze = True):
     _status_ids = "|".join([str(_status_id["Id"]) for _status_id in _status_ids])
 
     if not project_id_list:
+        # _assets = zfused_api.zFused.get("asset", sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"StatusId__in": _status_ids})
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
-        # _asset_versions = zfused_api.zFused.get("version", filter = {"ProjectEntityType": "asset"}, sortby = ["ProjectStepId"], order = ["asc"])
+        # _asset_historys = zfused_api.zFused.get("asset_history")
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join(map(str,project_id_list))
+        # _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids}, sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
-        # _asset_versions = zfused_api.zFused.get("version", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        # _asset_historys = zfused_api.zFused.get("asset_history", filter = {"ProjectId__in": _project_ids})
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
         list(map(lambda _asset: clear(Asset.global_tasks[_asset["Id"]]) if Asset.global_tasks[_asset["Id"]] else False, _assets))
+    # if _asset_historys:
+    #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
         list(map(lambda _task: Asset.global_tasks[_task["LinkId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
-    
     # cache tags
     _str_asset_ids = [str(_asset_id) for _asset_id in Asset.global_dict]
     _tag_links = zfused_api.zFused.get("tag_link", filter = {"LinkObject": "asset", "LinkId__in": "|".join(_str_asset_ids)}, fields = ["LinkId", "TagId"] )
@@ -234,6 +235,9 @@ class Asset(_Entity):
         if _type_id:
             return zfused_api.types.Types(_type_id)
         return None
+
+    def type_id(self):
+        return self._data.get("TypeId")
 
     def project(self):
         _project_id = self._data.get("ProjectId")
@@ -496,6 +500,42 @@ class Asset(_Entity):
         else:
             return _tasks
 
+    def user_ids(self):
+        _user_ids = [zfused_api.zFused.USER_ID]
+
+        _project_step_ids = self.project().task_step_ids()
+        if _project_step_ids:
+            for _project_step_id in _project_step_ids:
+                _project_step = zfused_api.step.ProjectStep(_project_step_id)
+                _user_ids += _project_step.review_user_ids() + _project_step.cc_user_ids() + _project_step.approvalto_user_ids()
+
+        _tasks = self.tasks()
+        if _tasks:
+            for _task in _tasks:
+                _task = zfused_api.task.Task(_task.get("Id"))
+                _project_step = _task.project_step()
+                _user_ids += [_task.assigned_to()]
+
+        _group_user_ids = list(set(_user_ids))
+        # insert 
+        _user_id = zfused_api.zFused.USER_ID
+        _create_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _group_users = self.get("group_user", filter = {"EntityType":self._type, "EntityId":self._id})
+        if _group_users:
+            for _group_user in _group_users:
+                _user_id_un = int(_group_user["UserId"])
+                if _user_id_un in _group_user_ids:
+                    _group_user_ids.remove(_user_id_un)
+        if _group_user_ids:
+            for _user_id_un in _group_user_ids:
+                self.post( "group_user", { "EntityType":self._type, 
+                                           "EntityId":self._id, 
+                                           "UserId":_user_id_un,
+                                           "CreatedBy": _user_id,
+                                           "CreatedTime": _create_time })
+
+        return list(set(_user_ids))
+
     def _tasks(self, project_step_id_list = []):
         """ get task 
         """
@@ -587,7 +627,6 @@ class Asset(_Entity):
 
     def create_project_step_task(self, project_step_id):
         """ create default task
-
         """
         _project_step_id = project_step_id
         # project id
@@ -610,7 +649,6 @@ class Asset(_Entity):
         _link_id = self._id
         _software_id = _project_step_handle.data()["SoftwareId"]
         _current_time = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-
 
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
@@ -647,7 +685,20 @@ class Asset(_Entity):
             if not self.global_tasks[self._id]:
                 self.global_tasks[self._id] = []
             self.global_tasks[self._id].append(_task)
-            return _task["Id"], "%s create success"%_task_name
+
+            _task = zfused_api.task.Task(_task["Id"])
+            zfused_api.im.submit_message( "user",
+                                        zfused_api.zFused.USER_ID,
+                                        self.user_ids(),
+                                        { "msgtype": "new", 
+                                        "new": {"object": "task", "object_id": _task.id()} }, 
+                                        "new",
+                                        self.object(),
+                                        self.id(),
+                                        self.object(),
+                                        self.id() )
+
+            return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name
 
     def derivatives(self):

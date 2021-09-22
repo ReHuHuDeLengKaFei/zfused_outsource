@@ -67,6 +67,12 @@ class TaskTime(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    def code(self):
+        return self.task().code()
+
+    def name_code(self):
+        return self.task().name_code()
+
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
@@ -107,3 +113,6 @@ class TaskTime(_Entity):
         #     if _thumbnail_path.startswith("storage"):
         #         return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
         # return None
+
+    def description(self):
+        return self._data.get("Description")

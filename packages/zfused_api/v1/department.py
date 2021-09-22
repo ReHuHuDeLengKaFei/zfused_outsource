@@ -32,7 +32,6 @@ def new_department(name, code, parent_id = 0):
 
     _current_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     _created_by = zfused_api.zFused.USER_ID
-    print(name, code, parent_id)
     _value, _status = zfused_api.zFused.post(key = "department", data = { "Name": name,
                                                                      "Code": code,
                                                                      "Pid": parent_id,

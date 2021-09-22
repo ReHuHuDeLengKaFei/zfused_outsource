@@ -109,6 +109,11 @@ def cache(project_id_list = []):
     return _projects
 
 
+# class ProjectDocument(_Entity):
+#     def __init__(self, entity_id, entity_data = None):
+#         super(Project, self).__init__("project", entity_id, entity_data)
+
+
 class Project(_Entity):
     global_dict = {}
     config_dict = {}
@@ -175,11 +180,14 @@ class Project(_Entity):
 
     def status_id(self):
         """ get status id 
+        
         """
         return self._data["StatusId"]
 
     def start_time(self):
-        """get start time
+        """
+        get start time
+
         rtype: datetime.datetime
         """
         _time_text = self.profile["StartTime"]
@@ -371,5 +379,9 @@ class Project(_Entity):
             return _project_software_id, True
         return "add software {} error".format(software_id), False
 
+    def fps(self):
+        return self.config.get("Fps")
 
+    def resolution(self):
+        return [self.config.get("ImageWidth"), self.config.get("ImageHeight")]
 

@@ -114,12 +114,13 @@ class ProjectStep(_Entity):
         """ return step color
             step数据库需要增加color属性,调用project step color效率低
         """
-        _color = self._data["Color"]
+        _color = self._data.get("Color")
         if _color:
             return _color
-        # get project step color
-        _step_handle = Step(self._data["StepId"])
-        return _step_handle.color()
+        else:
+            # get project step color
+            _step_handle = Step(self._data["StepId"])
+            return _step_handle.color()
 
     def sort(self):
         return self._data["Sort"]
@@ -135,6 +136,12 @@ class ProjectStep(_Entity):
 
     def project_step_type(self):
         return self._data.get("Object")
+
+    def step_id(self):
+        return self._data.get("StepId")
+
+    def step(self):
+        return Step(self._data.get("StepId"))
 
     def default_path(self):
         _path = "{}/{}".format(self.code(), self.software().code())
@@ -235,7 +242,8 @@ class ProjectStep(_Entity):
         """
         _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
         if not _attrs:
-            _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
+            # _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
+            _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id})
             if _attrs:
                 return True
         return False
@@ -260,7 +268,6 @@ class ProjectStep(_Entity):
 
     def input_attrs(self):
         """获取输出属性
-        
         :rtype: str
         """
         _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})

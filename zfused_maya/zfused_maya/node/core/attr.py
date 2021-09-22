@@ -60,8 +60,11 @@ def set_node_attr(node, output_attr_id, version_id, is_local = "false"):
                  type="string")
     
     _project_step = _task_handle.project_step()
+    # print(_project_step.is_new_attribute_solution())
+    # print(output_attr_id)
     if _project_step.is_new_attribute_solution():
         _output_attr_handle = zfused_api.attr.Output(output_attr_id)
+        # print(_output_attr_handle.data())
     else:
         _output_attr_handle = zfused_api.outputattr.OutputAttr(output_attr_id)
     cmds.setAttr("{}.output_attr".format(node), str(_output_attr_handle.code()), type = "string")
@@ -124,29 +127,43 @@ def get_node_attr(node):
     return _attr_data
 
 
+
+
 def _fix_node(node):
     """ 
     """
     if cmds.nodeType(node) == "reference":
         # get reference file
         _file = cmds.referenceQuery(node, f = True, wcn = True)
-        _zfused_files = zfused_api.zFused.get("files", filter = {"LinkObject":"task", "FilePath": _file})
-        if _zfused_files:
-            _link_file = _zfused_files[0]
+        _production_files = zfused_api.zFused.get("production_file_record", filter = {"Path": _file})
+        if _production_files:
+            _production_file = _production_files[-1]
+            _index = _production_file.get("Index")
+            _task_id = _production_file.get("TaskId")
+            _attr_id = _production_file.get("ProjectStepAttrId")
+            _versions = zfused_api.zFused.get("version", filter = {"TaskId": _task_id, "Index": _index})
+            set_node_attr(node, _attr_id, _versions[-1]["Id"], is_local = "false")
+            return
+
+        _files = []
+        _link_files = zfused_api.zFused.get("files", filter = {"LinkObject":"task", "FilePath": _file})
+        if _link_files:
+            _files += _link_files
+        if _files:
+            _link_file = _files[-1]
             _task_id = _link_file["LinkId"]
             _index = _link_file["Index"]
-            _task_handle = zfused_api.task.Task(_task_id)
-            _project_step_id = _task_handle.data()["ProjectStepId"]
+            _task = zfused_api.task.Task(_task_id)
+            _project_step_id = _task.project_step_id()
             _versions = zfused_api.zFused.get("version", filter = {"TaskId": _task_id, "Index": _index})
-            #_version_id = _versions[0]["Id"]
             _project_step_handle = zfused_api.step.ProjectStep(_project_step_id)
             _output_attrs = _project_step_handle.output_attrs()
             _step_code = os.path.basename(os.path.dirname(_link_file["FilePath"]))
             for _output_attr in _output_attrs:
                 if _step_code == _output_attr["Code"]:
                     _output_attr_id = _output_attr["Id"]
-
             set_node_attr(node, _output_attr_id, _versions[-1]["Id"], is_local = "false")
+            
         # else:
         #     _path = os.path.dirname(_file)
         #     _object_code = os.path.basename(_file.split(".")[0])
