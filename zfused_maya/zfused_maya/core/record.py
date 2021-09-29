@@ -20,6 +20,13 @@ def ztransfer_server_addr():
         return _server_addr
     return ""
     
+def current_company_id():
+    _interface = Interface()
+    _company_id = _interface.get("current_company_id")
+    if _company_id:
+        return _company_id
+    return 0
+
 def current_project_id():
     _interface = Interface()
     _project_id = _interface.get("current_project_id")
@@ -41,6 +48,10 @@ def write_project_id(project_id):
 def write_task_id(task_id):
     _interface = Interface()
     _interface.write("current_task_id", task_id)
+
+def write_company_id(task_id):
+    _interface = Interface()
+    _interface.write("current_company_id", task_id)
 
 def _cache_dir():
     USER_CACHE_DIR = None

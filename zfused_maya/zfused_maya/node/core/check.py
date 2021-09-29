@@ -17,8 +17,7 @@ import zfused_api
 
 from zfused_maya.core import record 
 
-from . import texture,shadingengine
-
+from . import texture,shadingengine,renderinggroup
 
 class Check(object):
     """ check base object
@@ -244,9 +243,9 @@ def camera_name():
     _task_id = record.current_task_id()
     if not _task_id:
         return False, info
-    _task_handle = zfused_api.task.Task(_task_id)
-    _obj_handle = zfused_api.objects.Objects(_task_handle.data()["Object"], _task_handle.data()["LinkId"])
-    _name = _obj_handle.file_code()
+    _task = zfused_api.task.Task(_task_id)
+    _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["Object"], _task.data()["LinkId"])
+    _name = _project_entity.file_code()
     info = u"当前摄像机名称与任务名{}不匹配\n".format(_name)
     if not cmds.ls("*%s*"%_name, type = "camera"):
         return False,info
@@ -257,11 +256,11 @@ def file_name():
     _task_id = record.current_task_id()
     if not _task_id:
         return False, _info
-    _task_handle = zfused_api.task.Task(_task_id)
-    _obj_handle = zfused_api.objects.Objects(_task_handle.data()["Object"], _task_handle.data()["LinkId"])
-    _name = _obj_handle.file_code()
+    _task = zfused_api.task.Task(_task_id)
+    _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["Object"], _task.data()["LinkId"])
+    _name = _project_entity.file_code()
     _file_name = cmds.file(q = True, sn = True)
-    if not os.path.basename(_file_name).startswith(_name):
+    if _name not in os.path.basename(_file_name):
         return False,_info    
     return True,None
 
@@ -335,38 +334,9 @@ def camera():
             info += "{}\n".format(_camera)
         return False,info
     return True,None
-
-def equal_namespace():
-    _rf_nodes = cmds.ls( rf = True )
-
-    _rf_ns_node = {}
-    _error_rf_nodes = []
-    for _rf_node in _rf_nodes:
-        _inr = cmds.referenceQuery(_rf_node, inr = True)
-        if not _inr:
-            try:
-                _namespace = cmds.referenceQuery(_rf_node, namespace = True)
-                if _namespace not in _rf_ns_node.keys():
-                    _rf_ns_node[_namespace] = _rf_node
-                else:
-                    _error_rf_nodes.append((_rf_node, _rf_ns_node[_namespace]))
-            except:
-                try:
-                    cmds.lockNode(_rf_node, lock=False)
-                    cmds.delete(_rf_node)
-                except:
-                    pass
-    # return _error_rf_nodes
-    if _error_rf_nodes:
-        info = "场景存在namespace相同参考\n"
-        for _error_rf_node in _error_rf_nodes:
-            info += "{} - {}\n".format(_error_rf_node[0],_error_rf_node[1])
-        return False,info
-    return True,None
     
 def light():
     """ check light
-
     """
     _lights = cmds.ls(type = cmds.listNodeTypes("light"))
     
@@ -550,6 +520,40 @@ def normal_lock():
     else:
         return True,None
 
+# =======================================================================================================
+# key animation
+# 检查maya关于key帧的相关检查
+def useless_key():
+    ''' 检查是否存在错误位置的k帧
+        缓存是从geometry组开始发布的
+        该组的父组不允许存在任何k帧信息
+    '''
+    def get_key_attr(grp,_list = []):
+        checkattr = set(["visibility","translateX","translateY","translateZ","rotateX","rotateY","rotateZ","scaleX","scaleY","scaleZ"])
+        while True:
+            grp = cmds.listRelatives(grp, p = 1,f = 1,type = "transform")
+            if not grp:
+                break
+            else:
+                grp = grp[0]
+                _usedAttr = cmds.listConnections(grp,p = 1,c = 1,d = 0)
+                if _usedAttr:
+                    _checkattr = list(set([i[len(i.split(".")[0])+1:] for i in _usedAttr[::2]])&checkattr)
+                    if _checkattr:
+                        _list.append(grp)
+        return _list
+    _rendergrps = renderinggroup.nodes()
+    if not _rendergrps:
+        return True,None
+    key_attr = []
+    for _rendergrp in _rendergrps:
+        get_key_attr(_rendergrp, key_attr)
+    if not key_attr:
+        return True,None
+    _info = u"存在错误的k帧位置，请使用控制器重新k帧并移除错误k帧信息\n"
+    _info += "\n".join(key_attr)
+    return False,_info
+
 
 # =======================================================================================================
 # reference
@@ -601,4 +605,33 @@ def unrecord_reference_file():
             info += "{}\n".format(_node)
     if _is_unrecord:
         return False, info
+    return True,None
+
+def equal_namespace():
+    """ 检查文件中存在相同namespace
+    """
+    _rf_nodes = cmds.ls( rf = True )
+    _rf_ns_node = {}
+    _error_rf_nodes = []
+    for _rf_node in _rf_nodes:
+        _inr = cmds.referenceQuery(_rf_node, inr = True)
+        if not _inr:
+            try:
+                _namespace = cmds.referenceQuery(_rf_node, namespace = True)
+                if _namespace not in _rf_ns_node.keys():
+                    _rf_ns_node[_namespace] = _rf_node
+                else:
+                    _error_rf_nodes.append((_rf_node, _rf_ns_node[_namespace]))
+            except:
+                try:
+                    cmds.lockNode(_rf_node, lock=False)
+                    cmds.delete(_rf_node)
+                except:
+                    pass
+    # return _error_rf_nodes
+    if _error_rf_nodes:
+        info = "场景存在namespace相同参考\n"
+        for _error_rf_node in _error_rf_nodes:
+            info += "{} - {}\n".format(_error_rf_node[0],_error_rf_node[1])
+        return False,info
     return True,None

@@ -18,11 +18,20 @@ sys.path.insert(0,os.path.dirname(DIRNAME))
 sys.path.insert(0,"{}/packages".format(DIRNAME))
 
 
-from .interface import menubar
+from .interface import menubar,company
+from zfused_maya.ui.widgets import window
+from zfused_maya.core import record
 
 # 
 def login():
-    menubar.rebuild()
+    # 
+    _company_id = record.current_company_id()
+    if _company_id:
+        _res = True
+    else:
+        _,_res = company.SetCompanyWidget.set_company(window._Window())
+    if _res:
+        menubar.rebuild()
 
 def _get_maya_version():
     version = cmds.about(q=True, version=True)
