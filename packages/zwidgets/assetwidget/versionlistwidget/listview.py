@@ -15,8 +15,8 @@ class ListView(QtWidgets.QListView):
         self.setSpacing(5)
 
         self.setMouseTracking(True)
-        #self.setSelectionRectVisible(True)
-        self.setViewMode(QtWidgets.QListView.IconMode)
+        # self.setSelectionRectVisible(True)
+        # self.setViewMode(QtWidgets.QListView.IconMode)
         self.setResizeMode(QtWidgets.QListView.Adjust)
         self.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
