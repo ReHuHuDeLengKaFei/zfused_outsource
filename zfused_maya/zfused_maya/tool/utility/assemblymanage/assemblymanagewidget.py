@@ -46,7 +46,8 @@ class AssemblyManageWidget(window._Window):
         print(_production_file)
 
         _ori_assemblies = cmds.ls(assemblies=True)
-        rf = cmds.file(_production_file, r = True, ns = _task.file_code())
+        _ns = "{}__ns__00".format(_task.file_code())
+        rf = cmds.file(_production_file, r = True, ns = _ns)
         rfn = cmds.referenceQuery(rf, rfn = True)
         attr.set_node_attr(rfn, _key_output_attr["Id"], _version.id(), "false")
         _new_assemblies = cmds.ls(assemblies=True)
