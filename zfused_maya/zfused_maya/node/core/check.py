@@ -17,7 +17,7 @@ import zfused_api
 
 from zfused_maya.core import record 
 
-from . import texture,shadingengine,renderinggroup
+from . import texture,shadingengine,renderinggroup,property
 
 class Check(object):
     """ check base object
@@ -26,15 +26,20 @@ class Check(object):
 
 
 def geometry_structure():
+    """模型几何体结构检查
+    """
     # 获取当前的任务
     _task_id = record.current_task_id()
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity()
     _property = _project_entity.property("geometry")
     if not _property:
-        return True, _
+        return True, None
     # get current geometry
-        
+    _geometry = property.get_geometrys()
+    if _geometry != _property:
+        return False, u"文件几何体结构与资产文件结构不统一,请修正统一\n"
+    return True, None
 
 def engine_color():
     # get shading engines
@@ -242,7 +247,7 @@ def rendering_group():
 def camera_name():
     _task_id = record.current_task_id()
     if not _task_id:
-        return False, info
+        return False, u"没有任务ID"
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["Object"], _task.data()["LinkId"])
     _name = _project_entity.file_code()
@@ -514,7 +519,7 @@ def normal_lock():
         if cmds.polyNormalPerVertex(tempvtx,q = 1,allLocked = 1)[0]:
             lockmesh.append(_mesh)
     if lockmesh:
-        info = u"模型法线被锁定，请修改\n"
+        info = u"模型法线被锁定，请修改；或者存在重合点，请合并重合点\n"
         info += "\n".join(cmds.listRelatives(lockmesh,p = 1))
         return False,info
     else:
