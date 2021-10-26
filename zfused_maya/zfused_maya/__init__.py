@@ -30,8 +30,9 @@ def login():
         _res = True
     else:
         _,_res = company.SetCompanyWidget.set_company(window._Window())
-    if _res:
-        menubar.rebuild()
+    # if _res:
+    print(_res)
+    menubar.rebuild()
 
 def _get_maya_version():
     version = cmds.about(q=True, version=True)

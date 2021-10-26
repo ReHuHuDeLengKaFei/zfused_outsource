@@ -31,6 +31,13 @@
                 "color":"#81C2D6",
                 "category":"通用"
             },
+            {   "name":"设置制作公司",
+                "code":"setting company",
+                "title":"设置制作公司\nsetting company",
+                "cmd":"from zfused_maya.interface import company;from zfused_maya.ui.widgets import window;company.SetCompanyWidget.set_company(window._Window())",
+                "color":"#81C2D6",
+                "category":"通用"
+            },
             {   "name":"资产管理",
                 "code":"assets management",
                 "title":"资产管理\nAsset Manage",
