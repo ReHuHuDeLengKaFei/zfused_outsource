@@ -20,6 +20,19 @@ __all__ = ["IconButton", "ThumbnailButton"]
 logger = logging.getLogger(__name__)
 
 
+class Button(QtWidgets.QPushButton):
+    def __init__(self, parent = None):
+        super(Button, self).__init__(parent)
+
+    def enterEvent(self, event):
+        super(Button, self).enterEvent(event)
+        self.setCursor(QtCore.Qt.PointingHandCursor)
+
+    def leaveEvent(self, event):
+        super(Button, self).leaveEvent(event)
+        self.setCursor(QtCore.Qt.ArrowCursor)
+
+
 class IconButton(QtWidgets.QPushButton):
     def __init__(self, parent = None, normal_icon = None, hover_icon = None, pressed_icon = None):
         super(IconButton, self).__init__(parent)

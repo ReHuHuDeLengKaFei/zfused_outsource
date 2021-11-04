@@ -9,6 +9,8 @@ from Qt import QtWidgets, QtGui, QtCore
 
 from zcore import resource
 
+from . import button
+
 
 class Window(QtWidgets.QMainWindow):
     def __init__(self, parent = None):
@@ -36,10 +38,10 @@ class Window(QtWidgets.QMainWindow):
         self.title_widget.hide()
 
     def set_title(self, title):
-        self.title_label.setText(u" [ {} ] ".format(title))
+        self.title_label.setText(u"  {}  ".format(title))
 
     def set_title_name(self, name_text):
-        self.title_label.setText(u" [ {} ] ".format(name_text))
+        self.title_label.setText(u"  {}  ".format(name_text))
 
     def add_central_widget(self, widget):
         self.central_layout.addWidget(widget)
@@ -59,10 +61,6 @@ class Window(QtWidgets.QMainWindow):
         self._help_url = url
 
     def mousePressEvent(self, event):
-        #super(IndexWidget, self).mousePressEvent(event)
-        # _pos = event.pos()
-        # if not self.title_widget.rect().contains(_pos):
-        #     return
         self.__is_press = True
         if event.button() == QtCore.Qt.LeftButton:
             self.__drag_position = event.globalPos() - self.pos()
@@ -226,22 +224,16 @@ class Window(QtWidgets.QMainWindow):
         self.title_layout.addWidget(self.close_widegt)
         self.close_layout = QtWidgets.QHBoxLayout(self.close_widegt)
         self.close_layout.setContentsMargins(0, 0, 0, 0)
+        self.close_layout.setSpacing(18)
         
-        # self.min_button = _Button(self.close_widegt, resource.get("icons", "minimize.png"), 
-        #                                              resource.get("icons", "minimize_hover.png"), 
-        #                                              resource.get("icons", "minimize_hover.png"))
-        # self.min_button.setObjectName("min_button")
-        # self.min_button.setFlat(True)
-        # self.min_button.setMaximumSize(15, 15)
-        # self.min_button.setMinimumSize(15, 15)
-        # self.max_button = _Button(self.close_widegt, resource.get("icons", "maximize.png"), 
-        #                                              resource.get("icons", "maximize_hover.png"), 
-        #                                              resource.get("icons", "maximize_hover.png"))
-        # self.max_button.setObjectName("max_button")
-        # self.max_button.setFlat(True)
-        # self.max_button.setMinimumSize(15, 15)
-        # self.max_button.setMaximumSize(15, 15)
-        #
+        self.video_button = button.Button()
+        self.video_button.hide()
+        self.video_button.setText(r"视频讲解")
+        self.video_button.setFixedHeight(24)
+        self.video_button.setIcon(QtGui.QIcon(resource.get("icons", "media.png")))
+        self.video_button.setStyleSheet("QPushButton{background-color:transparent;}")
+        self.close_layout.addWidget(self.video_button)
+
         self.close_button = _Button(self.close_widegt, resource.get("icons", "close.png"), 
                                                        resource.get("icons", "close_hover.png"), 
                                                        resource.get("icons", "close_hover.png"))
@@ -280,6 +272,9 @@ class Window(QtWidgets.QMainWindow):
 class _Button(QtWidgets.QPushButton):
     def __init__(self, parent=None, normal_icon=None, hover_icon=None, pressed_icon=None):
         super(_Button, self).__init__(parent)
+        
+        self.setStyleSheet("QPushButton{background-color:transparent;}")
+
         self._normal_icon = QtGui.QIcon(normal_icon)
         self._hover_icon = QtGui.QIcon(hover_icon)
         self._pressed_icon = QtGui.QIcon(pressed_icon)

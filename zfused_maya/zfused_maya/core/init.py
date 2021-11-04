@@ -17,3 +17,4 @@ def clear():
         del sys.modules[k]
     for k in sorted(k for k, m in sys.modules.items() if m and k.startswith('zwidgets')):
         del sys.modules[k]
+
