@@ -25,13 +25,13 @@ from zfused_maya.core import record
 # 
 def login():
     # 
-    _company_id = record.current_company_id()
-    if _company_id:
-        _res = True
-    else:
-        _,_res = company.SetCompanyWidget.set_company(window._Window())
-    # if _res:
-    print(_res)
+    # _company_id = record.current_company_id()
+    # if _company_id:
+    #     _res = True
+    # else:
+    #     _,_res = company.SetCompanyWidget.set_company(window._Window())
+    # # if _res:
+    # print(_res)
     menubar.rebuild()
 
 def _get_maya_version():

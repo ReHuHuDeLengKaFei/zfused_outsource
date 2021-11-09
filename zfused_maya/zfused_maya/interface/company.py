@@ -42,6 +42,7 @@ class SetCompanyWidget(dialog.Dialog):
         dialog = SetCompanyWidget(parent)
         # dialog.user_list_widget.load(group_type, group_id)
         result = dialog.exec_()
+        print(result)
         return (dialog.company(), result)
 
     def accept(self):
@@ -49,13 +50,13 @@ class SetCompanyWidget(dialog.Dialog):
         _company_text = self.company_lineedit.text()
         if _company_text not in self._company_dict.keys():
             self.set_tip(u"此公司名称不存在，请联系制片", -1)
-            return
+            return False
         _company_id = self._company_dict[_company_text]
         record.write_company_id(_company_id)
-        self.close()
+        super(SetCompanyWidget, self).accept()
 
     def company(self):
-        pass
+        return record.current_company_id()
 
     def showEvent(self, event):
         # get all company

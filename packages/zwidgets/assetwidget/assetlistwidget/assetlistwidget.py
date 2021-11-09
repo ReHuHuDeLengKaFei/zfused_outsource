@@ -49,8 +49,8 @@ class AssetListWidget(QtWidgets.QFrame):
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
-        _layout.setContentsMargins(0,0,0,0)
-        _layout.setSpacing(0)
+        _layout.setContentsMargins(2,2,2,2)
+        _layout.setSpacing(2)
 
         self.contant_widget = QtWidgets.QFrame()
         _layout.addWidget(self.contant_widget)

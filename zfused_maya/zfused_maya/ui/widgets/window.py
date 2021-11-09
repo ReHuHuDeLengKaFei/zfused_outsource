@@ -10,13 +10,26 @@ from zwidgets.widgets import window
 
 import zfused_maya
 
-from zfused_maya.core import tomaya
+from zfused_maya.core import tomaya, record
 
 
 class _Window(window.Window):
     def __init__(self, parent = None):
         super(_Window, self).__init__(parent = tomaya.GetMayaMainWindowPoint())
         self.name_button.setText("zFused for maya {}".format(zfused_maya.version()))
+
+    def showEvent(self, event):
+        # 判定是否设置公司
+        _company_id = record.current_company_id()
+        print(_company_id)
+        if not _company_id:
+            # 设置公司
+            from zfused_maya.interface import menubar
+            _res = menubar.change_company()
+            if not _company_id:
+                self.close()
+                return 
+        super(_Window, self).showEvent(event)
 
 
 class Window(QtWidgets.QMainWindow):

@@ -27,6 +27,16 @@ def change_project(project_id):
     if cmds.menu("zfused_project", q=True, exists=True):
         cmds.menu("zfused_project", e = True, label = zfused_api.project.Project(project_id).name())
 
+def change_company():
+    from zfused_maya.interface import company
+    from zfused_maya.ui.widgets import window
+    _company_id, _res = company.SetCompanyWidget.set_company(window._Window())
+    print(_company_id, _res)
+    if _res:
+        record.write_company_id(_company_id)
+        if cmds.menuItem("zfused_company", q=True, exists=True):
+            cmds.menuItem("zfused_company", e = True, label = zfused_api.company.Company(_company_id).name())
+    return _res
 
 def build():
     """build zfused maya menu 
@@ -57,6 +67,14 @@ def build():
             cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
 
     cmds.menuItem(label = u"", divider=True, parent = "zfused_outsource")
+    _company_id = record.current_company_id()
+    if _company_id:
+        _company_name = zfused_api.company.Company(_company_id).name()
+    else:
+        _company_name = u"未设置公司"
+    cmds.menuItem("zfused_company", label=u"{}".format(_company_name), command = "from zfused_maya.interface import menubar;menubar.change_company();", parent = "zfused_outsource")
+    cmds.menuItem(label = u"", divider=True, parent = "zfused_outsource")
+
     for _menu_title in menu.MENU_KEY:
         cmds.menuItem( _menu_title, 
                        label = _menu_title,

@@ -131,7 +131,7 @@ class AssetManageWidget(panel.ShowPanelWidget):
         _layout.addWidget(self.splitter)
         # 过滤面板
         self.filter_widget = filterwidget.FilterWidget(self.splitter)
-        self.filter_widget.setMaximumWidth(200)
+        self.filter_widget.setMaximumWidth(250)
         # 资产列表面板
         self.asset_list_widget = assetlistwidget.AssetListWidget(self.splitter)
         
