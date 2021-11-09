@@ -6,13 +6,19 @@ QMainWindow{
 }
 
 QWidget{
+    font-family: Microsoft YaHei UI;
     background-color:transparent;
 }
 
 QFrame{
+    font-family: Microsoft YaHei UI;
     background-color: #353535;
     color: #FFFFFF;
     border: 0px solid gray;
+}
+
+QFrame:disabled{
+background-color:#444444;
 }
 
 QFrame#window_menu_frame{
@@ -25,13 +31,7 @@ QFrame#operation_frame{
     color: #FFFFFF;
 }
 
-QTabWidget::pane { /* The tab widget frame */
-    border-top: 0px solid #C2C7CB;
-    background-color: #F1F1F1;
-}
-
 QTabWidget{
-    font-family: Microsoft YaHei UI;
     font: bold 11px;
     background-color: #F1F1F1;
 }
@@ -40,10 +40,18 @@ QTabWidget::pane { /* The tab widget frame */
     border-top: 0px solid #C2C7CB;
 }
 
+QTabBar::tab {
+    background-color: #222222;
+    color: #AAAAAA;
+}
+QTabBar::tab:selected {
+    background-color: #666666;
+    color: #DDDDDD;
+}
+
 
 /*====================== QPushButton ======================*/
 QPushButton{
-    font-family: Microsoft YaHei UI;
     font: bold 12px;
     color: #FFFFFF;
     background-color: #222222;
@@ -100,7 +108,6 @@ QPushButton#title_button:pressed{
 
 /*====================== QCheckBox ======================*/
 QCheckBox{
-    font-family: Microsoft YaHei UI;
     font: bold 12px;
     color: #EEEEEE;
     background-color: #353535;
@@ -157,14 +164,12 @@ QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{
 
 /*====================== label ======================*/
 QLabel{    
-    font-family: Microsoft YaHei UI;
     font: bold 12px;
     color: #DDDDDD;
 }
 
 /*====================== QTextEdit ======================*/
 QTextEdit{    
-    font-family: Microsoft YaHei UI;
     font: bold 12px;
     color: #ABABAB;
     border-radius:0px;
@@ -196,7 +201,7 @@ QMenu::item  {
   color: #222222;
   font-size: 12px;
   margin: 2px 2px;
-  padding: 4px 4px;
+  padding: 4px 24px;
   height: 24px;
   width: 200px;
 }
@@ -225,4 +230,56 @@ QComboBox{
     color: #DDDDDD;
     border: 1px solid #555555;
     border-bottom: 1px solid #555555;
+}
+
+
+/* 
+===============================================================
+//QTreeView
+===============================================================
+*/
+QTreeView {
+    border: 0px;
+    background-color: #282828;
+}
+QTreeView::item{
+    margin: 0px 0px 0px 0px;
+    color: rgb(0,0,0);
+    border:none;
+    border-bottom: 1px solid #555555;
+    background-color: transparent;
+}
+QTreeView::item:focus{
+    border: 0px;
+}
+
+QTreeView::branch{
+    margin: 0px 0px 0px 0px;
+    height: 36;
+    color: white;
+    border-bottom: 1px solid #555555;
+    background-color: transparent;
+}
+QTreeView::item:hover{
+    background-color: rgb(69, 69, 70);
+}
+QTreeView::item:selected{
+    background-color: rgb(69, 69, 70);
+}
+QTreeView::branch:hover{
+    background-color: rgb(69, 69, 70, 0);
+}
+QTreeView::branch:selected{
+    background-color: rgb(69, 69, 70);
+}
+
+/* 
+===============================================================
+//QHeaderView
+===============================================================
+*/
+QHeaderView {
+    show-decoration-selected: 1;
+    border-top: 0px;
+    background-color: #252525;
 }

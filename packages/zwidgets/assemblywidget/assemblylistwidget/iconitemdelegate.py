@@ -74,22 +74,19 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
                 0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
             painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
-        # 绘制 type
+        # 绘制 name
         self._font.setPixelSize(13)
         self._font.setBold(True)
         painter.setFont(self._font)
-        # _type = _assembly.type()
-        # painter.setPen(QtGui.QPen(QtGui.QColor(_type.color())))
-        _link_full_name = _assembly.full_name().replace("/"," - ") # _assembly.name_code()
+        painter.setPen(QtGui.QPen(QtGui.QColor("#333333")))
+        _link_full_name = _assembly.full_name().replace("/"," - ")
         _link_rect = QtCore.QRectF( _thumbnail_rect.x() + self._extend_width,
                                    _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
                                    _thumbnail_rect.width() - self._extend_width*2 ,
                                    20 )
         painter.drawText(_link_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _link_full_name)
 
-        # 绘制 type
-        # self._font.setBold(False)
-        # painter.setFont(self._font)
+        # 绘制 code
         painter.setPen(QtGui.QPen(QtGui.QColor("#666666")))
         _step_rect = QtCore.QRectF( _link_rect.x(),
                                    _link_rect.y() + _link_rect.height() + self._spacing,
