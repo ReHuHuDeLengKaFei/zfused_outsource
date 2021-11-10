@@ -11,8 +11,15 @@
                 "title"   :"拍屏\nZPlayBlast",
                 "cmd"     :"from zfused_maya.tool.animation import playblast;ui = playblast.PlaybastTool();ui.show()",
                 "color"   :"#343D46",
-                "category":"拍屏"}
-    ],
+                "category":"拍屏"},
+            {
+            	"name"	  :"场景道具位置更新",
+            	"code"    :"scene_position",
+            	"title"   :"场景道具位置更新 \n scene_position",
+            	"cmd"	  :"from zfused_maya.tool.animation.sceneposition import position_repair;ui =position_repair.position_repair_ui();ui.show()",
+            	"color"   :"#343D46",
+                "category":"工具"}
+                ],
     "modeling":
         [
             {   "name":"模型分组",
