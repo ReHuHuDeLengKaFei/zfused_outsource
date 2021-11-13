@@ -31,21 +31,19 @@ def change_company():
     from zfused_maya.interface import company
     from zfused_maya.ui.widgets import window
     _company_id, _res = company.SetCompanyWidget.set_company(window._Window())
-    print(_company_id, _res)
+    # print(_company_id, _res)
     if _res:
         record.write_company_id(_company_id)
         if cmds.menuItem("zfused_company", q=True, exists=True):
             cmds.menuItem("zfused_company", e = True, label = zfused_api.company.Company(_company_id).name())
+
+        _build_project_menu()
+        
     return _res
 
-def build():
-    """build zfused maya menu 
-    """
-    # ===============================================================
-    # main menu
-    cmds.menu("zfused_outsource", parent = "MayaWindow", label = "zFused outsource", tearOff = True)
-    _menu_data = menu.get_menu_data()
-
+def _build_project_menu():
+    if cmds.menu("zfused_project", q = True, exists = True):
+        cmds.deleteUI("zfused_project")
     # project menu
     _project_id = record.current_project_id()
     if _project_id:
@@ -56,16 +54,25 @@ def build():
                     parent = "MayaWindow", 
                     tearOff = True,
                     version = cmds.about(q=True, version=True) )
-    _all_project=zfused_api.zFused.get("project_company")
-    _all_project_id_list = [_project.get("ProjectId") for _project in _all_project]
-    for _project_id in list(set(_all_project_id_list)):
-        _project = zfused_api.project.Project(_project_id)
-        _status = _project.status()
-        if _status.category() == "in progress":
-            _project_name = _project.name()
-            cmds.menuItem(label = "", divider = True, parent = "zfused_project")
-            cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
+    _all_projects = zfused_api.zFused.get("project_company", filter = {"CompanyId": record.current_company_id()})
+    if _all_projects:
+        _all_project_id_list = [_project.get("ProjectId") for _project in _all_projects]
+        for _project_id in list(set(_all_project_id_list)):
+            _project = zfused_api.project.Project(_project_id)
+            _status = _project.status()
+            if _status.category() == "in progress":
+                _project_name = _project.name()
+                cmds.menuItem(label = "", divider = True, parent = "zfused_project")
+                cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
 
+
+def build():
+    """build zfused maya menu 
+    """
+    # ===============================================================
+    # main menu
+    cmds.menu("zfused_outsource", parent = "MayaWindow", label = "zFused outsource", tearOff = True)
+    _menu_data = menu.get_menu_data()
     cmds.menuItem(label = u"", divider=True, parent = "zfused_outsource")
     _company_id = record.current_company_id()
     if _company_id:
@@ -100,6 +107,8 @@ def build():
                                    parent=_menu_title, command = data["cmd"])
         cmds.menuItem(divider=True, parent="zfused_outsource")
 
+    # project menu
+    _build_project_menu()
 
 def delete():
     if cmds.menu("zfused_outsource", q=True, exists=True):
