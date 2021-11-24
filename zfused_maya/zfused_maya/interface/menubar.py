@@ -65,7 +65,6 @@ def _build_project_menu():
                 cmds.menuItem(label = "", divider = True, parent = "zfused_project")
                 cmds.menuItem(label=u"{}".format(_project_name), command = "from zfused_maya.interface import menubar;menubar.change_project({});".format(_project_id))
 
-
 def build():
     """build zfused maya menu 
     """
