@@ -18,6 +18,13 @@
             	"title"   :"场景道具位置更新 \n scene_position",
             	"cmd"	  :"from zfused_maya.tool.animation.sceneposition import position_repair;ui =position_repair.position_repair_ui();ui.show()",
             	"color"   :"#343D46",
+                "category":"工具"},
+            {
+                "name"	  :"批量导出摄像机",
+                "code"    :"export camera",
+                "title"   :"批量导出摄像机 \n export_camera",
+                "cmd"	  :"from zfused_maya.tool.animation import export_camera;ui =export_camera.ExportCamera();ui.show()",
+                "color"   :"#343D46",
                 "category":"工具"}
                 ],
     "modeling":

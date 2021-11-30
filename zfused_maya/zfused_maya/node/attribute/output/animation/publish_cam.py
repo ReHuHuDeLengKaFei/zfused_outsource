@@ -23,11 +23,14 @@ def export_cam_ma(export_dir):
     export_path = export_dir + export_name + '.ma'
     cam = get_cam_list()[0]
     select(cam, r = True)
-    
-    exportSelected(export_path, type = 'mayaAscii')
+    _cam =exportSelected(export_path, type = 'mayaAscii')
+    if os.path.isfile(_cam):
+        return True
+
 
 def export_cam_dir(seq_dir, export_dir):
     file_list = os.listdir(seq_dir)
+    cam_list =[]
     for filename in file_list:
         file_path = seq_dir + '/' + filename
         if os.path.isfile(file_path):
@@ -35,5 +38,17 @@ def export_cam_dir(seq_dir, export_dir):
                 openFile(file_path, force = True)
                 try:
                     export_cam_ma(export_dir)
-                except:
+                    cam_list.append(filename)
+
+                except Exception as e:
+                    print(e)
                     pass
+
+    #0 全部导出成功  1 部分导出成功  2 全部没有导出成功
+    if cam_list:
+        if len(cam_list)==len(file_list):
+            return 0
+        else:
+            return 1
+    else:
+        return 2
