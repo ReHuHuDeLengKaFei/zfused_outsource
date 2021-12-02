@@ -65,9 +65,10 @@ class AssetStepWidget(QtWidgets.QFrame):
         # project version
         _versions = self._asset_handle.project_step_versions(project_step_id)
         _versions.reverse()
-        for _index, _version in enumerate(_versions) :
-            self.version_combobox.addItem(str(len(_versions) - _index))
-            self._index_version[str(len(_versions) - _index)] = _version
+        
+        # for _index, _version in enumerate(_versions) :
+        #     self.version_combobox.addItem(str(len(_versions) - _index))
+        #     self._index_version[str(len(_versions) - _index)] = _version
 
         # get files
         self.version_listwidget.load_versions(_versions)
