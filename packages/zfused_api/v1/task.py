@@ -383,6 +383,22 @@ class Task(_Entity):
         """
         return self._data["Level"]
 
+    def update_level(self, index):
+        """
+        """ 
+        if self._id not in self.global_dict:
+            self.global_dict[self._id] = self._data
+        if self.global_dict[self._id]["Level"] == index:
+            return True
+
+        self.global_dict[self._id]["Level"] = index
+        self._data["Level"] = index
+        v = self.put("task", self._data["Id"], self._data, "level")
+        if v:
+            return True
+        else:
+            return False
+
     def priority(self):
         return self._data["Priority"]
 
@@ -637,7 +653,6 @@ class Task(_Entity):
 
     def submit_external_approval( self, name, 
                                         file_path,
-                                        # user_id,
                                         approver_id = [],
                                         cc_id = [],
                                         description = None ):

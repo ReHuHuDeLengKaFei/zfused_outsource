@@ -8,7 +8,7 @@
                 "category":"常用"},
             {   "name"    :"拍屏插件",
                 "code"    :"playblast", 
-                "title"   :"拍屏\nZPlayBlast",
+                "title"   :"拍屏\nZPlayBlast(即将弃用)",
                 "cmd"     :"from zfused_maya.tool.animation import playblast;ui = playblast.PlaybastTool();ui.show()",
                 "color"   :"#343D46",
                 "category":"拍屏"},
@@ -25,7 +25,13 @@
                 "title"   :"批量导出摄像机 \n export_camera",
                 "cmd"	  :"from zfused_maya.tool.animation import export_camera;ui =export_camera.ExportCamera();ui.show()",
                 "color"   :"#343D46",
-                "category":"工具"}
+                "category":"工具"},
+            {   "name"    :"拍屏",
+    			"code"    :"flipbook",
+	            "title"   :"拍屏\nflipbook",
+	            "cmd"     :"from zfused_maya.tool.technology.playblast import playblast_maya;reload(playblast_maya);ui = playblast_maya.Playblast();ui.show()",
+	            "color"   :"#7FFF00",
+	            "category":"拍屏"}
                 ],
     "modeling":
         [

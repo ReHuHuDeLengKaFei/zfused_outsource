@@ -275,8 +275,41 @@ class ProjectStep(_Entity):
             _attrs = self.get("attr_input", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []
 
+    def init_script(self):
+        return self._data.get("InitScript")
+
+    def update_init_script(self, script):
+        self.global_dict[self._id]["InitScript"] = script
+        self._data["InitScript"] = script
+        v = self.put("project_step", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
+    def compute_script(self):
+        return self._data.get("ComputeScript")
+
+    def update_compute_script(self, script):
+        self.global_dict[self._id]["ComputeScript"] = script
+        self._data["ComputeScript"] = script
+        v = self.put("project_step", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
     def forbidden_script(self):
         return self._data.get("ForbiddenScript")
+
+    def update_forbidden_script(self, script):
+        self.global_dict[self._id]["ForbiddenScript"] = script
+        self._data["ForbiddenScript"] = script
+        v = self.put("project_step", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
 
     def property_script(self):
         return self._data.get("PropertyScript")

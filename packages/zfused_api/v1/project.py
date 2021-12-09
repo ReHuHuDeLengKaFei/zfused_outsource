@@ -385,3 +385,21 @@ class Project(_Entity):
     def resolution(self):
         return [self.config.get("ImageWidth"), self.config.get("ImageHeight")]
 
+    def variables(self, key = ""):
+        self.config = self.get_one( "project_config", self.config.get("Id") )
+        _property = self.config.get("Variables")
+        if not _property:
+            return {}
+        if key:
+            return eval(_property).get(key)
+        return eval(_property)
+
+    def update_variables(self, key, value):
+        _property = self.variables()
+        _property[key] = value
+        self.config["Variables"] = str(_property)
+        v = self.put("project_config", self.config["Id"], self.config, "Variables")
+        if v:
+            return True
+        else:
+            return False

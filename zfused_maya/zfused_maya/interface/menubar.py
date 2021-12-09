@@ -105,6 +105,7 @@ def build():
                     cmds.menuItem( data["name"], label = data["title"],
                                    parent=_menu_title, command = data["cmd"])
         cmds.menuItem(divider=True, parent="zfused_outsource")
+    cmds.menuItem("about", label=u"关于zFused", command = "", parent = "zfused_outsource")
 
     # project menu
     _build_project_menu()
