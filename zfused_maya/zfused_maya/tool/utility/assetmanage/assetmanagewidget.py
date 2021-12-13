@@ -68,5 +68,6 @@ class AssetManageWidget(window._Window):
 
     def showEvent(self, event):
         _project_id = record.current_project_id()
-        self.asset_widget.load_project_id(_project_id)
+        _company_id = record.current_company_id()
+        self.asset_widget.load_project_id(_project_id, _company_id)
         super(AssetManageWidget, self).showEvent(event)

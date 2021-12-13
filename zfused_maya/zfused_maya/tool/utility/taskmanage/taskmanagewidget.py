@@ -64,5 +64,6 @@ class TaskManageWidget(window._Window):
 
     def showEvent(self, event):
         _project_id = record.current_project_id()
-        self.task_widget.load_project_id(_project_id)
+        _company_id = record.current_company_id()
+        self.task_widget.load_project_id(_project_id, _company_id)
         super(TaskManageWidget, self).showEvent(event)

@@ -47,8 +47,8 @@ class TaskManageWidget(panel.ShowPanelWidget):
         self.task_panel_widget.load_task_id(_task_data["Id"])
         self.show_panel()
         
-    def load_project_id(self, project_id):
-        self.task_listwidget.load_project_id(project_id)
+    def load_project_id(self, project_id, company_id = 0):
+        self.task_listwidget.load_project_id(project_id, company_id)
         self.filter_widget.load_project_id(project_id)
 
     def _search(self):

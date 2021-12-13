@@ -35,6 +35,7 @@ class AssetManageWidget(panel.ShowPanelWidget):
         self.load_panel_widget("asset panel", self.asset_step_widget)
 
         self._project_id = 0
+        self._company_id = 0
         self._asset_id = 0
         self._project_step_id = 0
 
@@ -49,11 +50,12 @@ class AssetManageWidget(panel.ShowPanelWidget):
         self.asset_step_widget.reference_by_attr.connect(self.reference_by_attr.emit)
 
     def _reload(self):
-        self.load_project_id(self._project_id)
+        self.load_project_id(self._project_id, self._company_id)
 
-    def load_project_id(self, project_id):
+    def load_project_id(self, project_id, company_id = 0):
         self._project_id = project_id
-        self.asset_list_widget.load_project_id(project_id)
+        self._company_id = company_id
+        self.asset_list_widget.load_project_id(project_id, company_id)
         self.filter_widget.load_project_id(project_id)
 
     def _search(self):

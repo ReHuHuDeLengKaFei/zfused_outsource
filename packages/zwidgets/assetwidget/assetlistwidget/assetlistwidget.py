@@ -40,7 +40,7 @@ class AssetListWidget(QtWidgets.QFrame):
         self.asset_proxy_model.search(text)
 
     @zfused_api.reset
-    def load_project_id(self, project_id):
+    def load_project_id(self, project_id, company_id = 0):
         """ 加载激活中任务
         """
         _assets = zfused_api.asset.cache([project_id], False)

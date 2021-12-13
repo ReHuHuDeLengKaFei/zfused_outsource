@@ -32,17 +32,20 @@ class TaskListWidget(QtWidgets.QFrame):
         self.task_proxy_model.search(text)
         #self.setFocus()
 
-    def load_project_id(self, project_id):
+    def load_project_id(self, project_id, company_id = 0):
         """ 加载激活中任务
 
         """
         zfused_api.zFused.RESET = True
         _current_project_id = project_id
+        _current_company_id = company_id
         # 获取项目外包公司id
-        _project_companys = zfused_api.zFused.get("project_company", filter = {"ProjectId": project_id})
-        _company_ids = [str(_project_company.get("CompanyId")) for _project_company in _project_companys]
+        # _project_companys = zfused_api.zFused.get("project_company", filter = {"ProjectId": project_id})
+        # _company_ids = [str(_project_company.get("CompanyId")) for _project_company in _project_companys]
         
-        _tasks = zfused_api.zFused.get("task", filter={"ProjectId": _current_project_id, "IsOutsource__in":"|".join(_company_ids)}, sortby = ["Name"], order = ["asc"])
+        # _tasks = zfused_api.zFused.get("task", filter={"ProjectId": _current_project_id, "IsOutsource__in":"|".join(_company_ids)}, sortby = ["Name"], order = ["asc"])
+        _tasks = zfused_api.zFused.get("task", filter = {"ProjectId": _current_project_id, "IsOutsource": _current_company_id}, sortby = ["Name"], order = ["asc"])
+
         model = listmodel.ListModel(_tasks, self.listwidget)
         self.task_proxy_model.setSourceModel(model)
         zfused_api.zFused.RESET = False
