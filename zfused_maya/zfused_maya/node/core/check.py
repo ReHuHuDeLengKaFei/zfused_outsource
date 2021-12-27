@@ -24,7 +24,30 @@ class Check(object):
     """
     value = False
 
+# =======================================================================================================
+# 通用检查
+# 检查maya关于通用检查
 
+def useless_camera():
+    """ check camera
+    """
+    _extra_camera = ["facial_cam"]
+    _cameras = cmds.ls(type = "camera")
+    _left_cameras = list(set(_cameras) - set(["frontShape","topShape","perspShape","sideShape"]))
+    if _left_cameras:
+        info = "场景存在多余摄像机\n"
+        for _camera in _left_cameras:
+            _is_extra = False
+            for _cam in _extra_camera:
+                if _cam in _camera:
+                    _is_extra = True
+            if _is_extra:
+                continue
+            info += "{}\n".format(_camera)
+        return False,info
+    return True,None
+
+# 检查几何体结构是否一致
 def geometry_structure():
     """模型几何体结构检查
     """
@@ -41,6 +64,7 @@ def geometry_structure():
         return False, u"文件几何体结构与资产文件结构不统一,请修正统一\n"
     return True, None
 
+# 检查是否存在引擎材质颜色 
 def engine_color():
     # get shading engines
     _nodes = shadingengine.nodes()
@@ -118,7 +142,7 @@ def standard_surface():
 def lost_material():
     _polygons = cmds.ls(type = "mesh", ni = True)
     _is_error = False
-    info = u"场景存在mesh丢失质球(lost material)\n"
+    info = u"场景存在mesh丢失材质球(lost material)\n"
     for _polygon in _polygons:
         _sgs = cmds.listConnections(_polygon, type = "shadingEngine")
         if not _sgs:
@@ -164,7 +188,6 @@ def material_assign_faces():
         return False, info
     return True, None
 
-
 def lock_file():
     _is_lock = cmds.file(q = True, lf = True)
     if _is_lock:
@@ -209,7 +232,6 @@ def check_history():
         return False,info
 
     return True, None
-
 
 def multi_rendering_group():
     rendering = []
@@ -271,7 +293,6 @@ def file_name():
 
 def file_node():
     """ check file node is not null
-
     """
     _file_nodes = texture.error_nodes()        
     if len(_file_nodes) > 1:
@@ -298,7 +319,6 @@ def texture_path():
 
 def animation_layer():
     """ check animation layer
-
     """
     _lays = cmds.ls(type = "animLayer")
     if len(_lays) > 0:
@@ -310,7 +330,6 @@ def animation_layer():
 
 def unknown_node():
     """ check unknown nodes
-
     """
     _nodes = cmds.ls(type = "unknown")
     if len(_nodes) > 0:
@@ -322,7 +341,6 @@ def unknown_node():
 
 def camera():
     """ check camera
-
     """
     _extra_camera = ["facial_cam"]
     _cameras = cmds.ls(type = "camera")
@@ -354,7 +372,6 @@ def light():
 
 def anim_curve():
     """ check anim curves
-
     """
     _cures = cmds.ls(type = 'animCurve')
     if _cures:
@@ -378,7 +395,6 @@ def display_layer():
 
 def render_layer():
     """ check render layer
-
     """
     import pymel.core as core
     _layers = [Layer for Layer in core.ls(type = 'renderLayer') if not core.referenceQuery(Layer, isNodeReferenced = True) and Layer.name() != 'defaultRenderLayer']
@@ -514,9 +530,12 @@ def normal_lock():
     if not meshs:
         return True,None
     for _mesh in meshs:
-        _allvtx = cmds.polyEvaluate(_mesh,v = 1)   
-        tempvtx = "{}.vtx[{}]".format(_mesh,randint(0,_allvtx))
-        if cmds.polyNormalPerVertex(tempvtx,q = 1,allLocked = 1)[0]:
+        try:
+            _allvtx = cmds.polyEvaluate(_mesh,v = 1)   
+            tempvtx = "{}.vtx[{}]".format(_mesh,randint(0,_allvtx))
+            if cmds.polyNormalPerVertex(tempvtx,q = 1,allLocked = 1)[0]:
+                lockmesh.append(_mesh)
+        except:
             lockmesh.append(_mesh)
     if lockmesh:
         info = u"模型法线被锁定，请修改；或者存在重合点，请合并重合点\n"
@@ -564,6 +583,8 @@ def useless_key():
 # reference
 # 检查maya关于reference相关检查
 def null_reference():
+    """null reference node
+    """
     _references = cmds.ls(rf=True)
     _null_reference = []
     if not _references:
@@ -638,5 +659,36 @@ def equal_namespace():
         info = "场景存在namespace相同参考\n"
         for _error_rf_node in _error_rf_nodes:
             info += "{} - {}\n".format(_error_rf_node[0],_error_rf_node[1])
+        return False,info
+    return True,None
+
+def postfix_group():
+    """ 检查所有组名是否后缀为_group
+    """
+    _node_list = cmds.ls(et='transform')
+    _gro_list = []
+    _is_error = False
+    info = u"场景存在不是以_group为后缀的组名\n"
+    
+    for i in _node_list:
+        _child = cmds.listRelatives(i,c=True,type='shape')
+        if _child == None:
+            _gro_list.append(i)
+    for j in _gro_list:
+        #info = '...\n'
+        _gro_name = str(j)
+        if _gro_name.endswith('_group') == False :
+            info += u"{}\n".format(_gro_name)
+            _is_error = True
+    if _is_error :
+        return False,info
+    return True,None
+
+def scene_path():
+    """ 检查场景路径
+    """
+    _scene_path = cmds.file(sceneName = True, query = True)
+    if not all(ord(c) < 128 for c in _scene_path):
+        info = "场景路径有中文\n"
         return False,info
     return True,None

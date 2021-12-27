@@ -304,7 +304,7 @@ class _Entity(zFused):
         if not _property:
             return {}
         if key:
-            return eval(_property.get(key))
+            return eval(_property).get(key)
         return eval(_property)
 
     def update_property(self, key, value):

@@ -74,7 +74,13 @@
                 "title":"资产库\nLibrary",
                 "cmd":"from zfused_maya.tool.utility.librarywidget import librarywidget;ui = librarywidget.LibraryWidget();ui.show()",
                 "color":"#2c168b",
-                "category":"library" }
+                "category":"library" },
+            {   "name":"项目环节检查",
+                "code":"project step check",
+                "title":"项目环节检查\nproject step check",
+                "cmd":"from zfused_maya.tool.utility.check_manage import check_manage_widget;ui = check_manage_widget.CheckManageWidget();ui.show()",
+                "color":"#dd001b",
+                "category":"工具"}
         ],
     "shading":
         [
