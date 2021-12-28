@@ -73,7 +73,10 @@ class Hud_Frame(QtWidgets.QFrame):
                 painter.drawText( _hud_rect, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter, text )
             else:
                 painter.drawText( _hud_rect, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter, text )
-        
+        # _width =_rect.width()
+        # _height =_rect.height()
+        # painter.drawRect(_width*0.05,_height*0.05,_width*0.9,_height*0.9)
+        #
         painter.end()
 
     def resizeEvent(self,event):

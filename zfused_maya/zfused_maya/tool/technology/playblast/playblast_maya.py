@@ -386,6 +386,8 @@ class Playblast(window._Window):
                 painter.drawText(_hud_rect, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter, text)
             else:
                 painter.drawText(_hud_rect, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter, text)
+
+        painter.drawRect(_width*0.05,_height*0.05,_width*0.9,_height*0.9)
         
         painter.end()
 
