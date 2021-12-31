@@ -46,10 +46,9 @@ class AssetManageWidget(window._Window):
         _production_file = ".".join(_production_file.split(".{:0>4d}.".format(_version.index())))
 
         _ori_assemblies = cmds.ls(assemblies=True)
-        _ns = "{}__ns__00".format(_task.file_code())
+        _ns = "{}__ns__00".format(_task.project_entity().file_code())
         rf = cmds.file(_production_file, r = True, ns = _ns)
         rfn = cmds.referenceQuery(rf, rfn = True)
-        # attr.set_node_attr(rfn, _output_attr.id(), _version.id(), "false")
         _new_assemblies = cmds.ls(assemblies=True)
         _asset_tops = list(set(_new_assemblies) - set(_ori_assemblies))
         if _asset_tops:

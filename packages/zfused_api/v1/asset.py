@@ -187,7 +187,6 @@ class Asset(_Entity):
 
     def file_code(self):
         """ task version file name
-
         :rtype: str
         """
         return self.code().replace("/", "_")

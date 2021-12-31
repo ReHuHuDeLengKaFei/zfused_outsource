@@ -321,7 +321,17 @@ class Task(_Entity):
         """ get file name
         :rtype: str
         """
-        return self.project_entity().file_code()
+        _code = self.project_entity().file_code()
+
+        _project_entity = zfused_api.zFused.get("project_entity", filter = { "ProjectId": self._data.get("ProjectId"),
+                                                                             "Code": self.object()} )
+        if _project_entity:
+            _project_entity = _project_entity[0]
+            _custom_file_code = _project_entity.get("CustomFileCode")
+            if _custom_file_code:
+                _code = self.get_custom(_custom_file_code)
+        
+        return _code
 
     def project(self):
         _project_id = self._data.get("ProjectId")
@@ -1785,7 +1795,7 @@ class Task(_Entity):
                                                                             "CreatedBy": _user_id,
                                                                             "CreatedTime": _current_time })
 
-        _times = zfused_api.zFused.get( "task_time", filter = {"UserId":_user_id, "TaskId": self._id} )
+        _times = zfused_api.zFused.get( "task_time", filter = {"TaskId": self._id} )
         if _times:
             _hours_all = 0
             for _time in _times:

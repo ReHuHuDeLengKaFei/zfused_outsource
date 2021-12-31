@@ -357,7 +357,7 @@ class Playblast(window._Window):
         _font.setBold(self._temp_config.get("bold"))
         _font.setPixelSize(self._temp_config.get("font-size"))
         painter.setFont(_font)
-
+        painter.drawRect(_width*0.05,_height*0.05,_width*0.9,_height*0.9)
         _margin = self._temp_config.get("margin")
         _text_height = self._temp_config.get("text-height")
         for _hud in self._temp_config.get("hud"):
@@ -387,7 +387,7 @@ class Playblast(window._Window):
             else:
                 painter.drawText(_hud_rect, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter, text)
 
-        painter.drawRect(_width*0.05,_height*0.05,_width*0.9,_height*0.9)
+
         
         painter.end()
 

@@ -277,6 +277,16 @@ class _Entity(zFused):
                 custom_path = custom_path.replace(_re, _re_value)
         return custom_path
 
+    def get_custom(self, custom):
+        _re_com = re.compile(r"(\{.*?\})")
+        _re_list = re.findall(_re_com, custom)
+        if _re_list:
+            for _re in _re_list:
+                exec("global _re_value;_re_value = {}".format(_re.replace("{","").replace("}", "")))
+                global _re_value
+                custom = custom.replace(_re, _re_value)
+        return custom
+
     def variables(self):
         pass
 

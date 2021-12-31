@@ -105,7 +105,6 @@ class Version(_Entity):
     def full_code(self):
         """
         get full path code
-
         rtype: str
         """
         return ""
@@ -113,7 +112,6 @@ class Version(_Entity):
     def full_name(self):
         """
         get full path name
-
         rtype: str
         """
         return u"{}".format(self._data["Name"])
@@ -121,18 +119,16 @@ class Version(_Entity):
     def full_name_code(self):
         """
         get full path name and code
-
         rtype: str
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
     def file_code(self):
         """ get file name
-
         :rtype: str
         """
-        _link_handle = zfused_api.objects.Objects(self._data["Object"], self._data["LinkId"])
-        return _link_handle.file_code()
+        # _link_handle = zfused_api.objects.Objects(self._data["Object"], self._data["LinkId"])
+        return self.project_entity().file_code()
 
     def index(self):
         return self._data["Index"]

@@ -14,7 +14,7 @@ import datetime
 import shutil
 
 from qtpy import QtWidgets,QtCore,QtGui
-
+global font_scale
 
 class Hud_Frame(QtWidgets.QFrame):
     def __init__(self, parent = None):
@@ -42,11 +42,11 @@ class Hud_Frame(QtWidgets.QFrame):
 
         _font = QtGui.QFont(self._config.get("font-family"))
         _font.setBold(self._config.get("bold"))
-        _font.setPixelSize(self._config.get("font-size"))
+        _font.setPixelSize(self._config.get("font-size")*font_scale)
         painter.setFont(_font)
         
         _margin = self._config.get("margin")
-        _text_height = self._config.get("text-height")
+        _text_height = self._config.get("text-height")*font_scale
         for _hud in self._config.get("hud"):
             _horizontally, _vertically, _level = _hud.get("text-align")
             if _vertically == -1:
@@ -237,6 +237,9 @@ class PlayblastWidget(QtWidgets.QFrame):
             else:
                 new_size.setWidth(width_ratio*new_size.height()/height_ratio)
             self.resize(new_size.width(), new_size.height() + self.operation_widget.height())
+            global font_scale
+            font_scale = float(new_size.width())/float(width_ratio)*1.5 if float(new_size.width())/float(width_ratio)*1.5<1 else 1
+
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
