@@ -31,7 +31,13 @@
 	            "title"   :"拍屏\nflipbook",
 	            "cmd"     :"from zfused_maya.tool.technology.playblast import playblast_maya;reload(playblast_maya);ui = playblast_maya.Playblast();ui.show()",
 	            "color"   :"#7FFF00",
-	            "category":"拍屏"}
+	            "category":"拍屏"},
+            {   "name"    :"动画相机",
+                "code"    :"supercam",
+                "title"   :"动画相机\nsupercam",
+                "cmd"     :"from zfused_maya.tool.technology.playblast import playblast_maya;reload(playblast_maya);ui = playblast_maya.Playblast();ui.show()",
+                "color"   :"#7FFF00",
+                "category":"相机"}
                 ],
     "modeling":
         [
