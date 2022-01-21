@@ -43,7 +43,7 @@ class Conn(_Entity):
 class Input(_Entity):
 
     @classmethod
-    def new(cls, name, code, project_step_id, script, format, suffix):
+    def new(cls, name, code, project_step_id, script, format, suffix, rely = "self"):
         _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         _created_by = zfused_api.zFused.USER_ID
         _input_attribute, _status = zfused_api.zFused.post( key = "attr_input", data = { "Name": name,
@@ -52,6 +52,7 @@ class Input(_Entity):
                                                                                          "Script": script,
                                                                                          "Format": format,
                                                                                          "Suffix": suffix,
+                                                                                         "Rely": rely,
                                                                                          "CreatedBy":_created_by,
                                                                                          "CreatedTime":_created_time } )
         if _status:
@@ -96,11 +97,14 @@ class Input(_Entity):
     def extended_version(self):
         return self._data.get("ExtendedVersion")
 
+    def rely(self):
+        return self._data.get("Rely")
+
 
 class Output(_Entity):
 
     @classmethod
-    def new(cls, name, code, project_step_id, script, format, suffix):
+    def new(cls, name, code, project_step_id, script, format, suffix, rely = "self"):
         _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         _created_by = zfused_api.zFused.USER_ID
         _output_attribute, _status = zfused_api.zFused.post( key = "attr_output", data = { "Name": name,
@@ -109,6 +113,7 @@ class Output(_Entity):
                                                                                            "Script": script,
                                                                                            "Format": format,
                                                                                            "Suffix": suffix,
+                                                                                           "Rely": rely,
                                                                                            "CreatedBy":_created_by,
                                                                                            "CreatedTime":_created_time } )
         if _status:
@@ -150,7 +155,9 @@ class Output(_Entity):
     def script(self):
         return self._data.get("Script")
 
-
+    def rely(self):
+        return self._data.get("Rely")
+        
 
 # class TaskAttr():
 #     def __init__(self, task_id, attr_id = 0, mode = "in"):

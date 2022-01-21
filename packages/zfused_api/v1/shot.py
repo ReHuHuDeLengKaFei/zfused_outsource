@@ -383,35 +383,6 @@ class Shot(_Entity):
                 return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
         return None
 
-        # if self._data.get("Thumbnail"):
-        #     _thumbnail = self._data["Thumbnail"]
-        #     _full_code = self.full_code()
-        #     _production_path = zfused_api.project.Project(self._data["ProjectId"]).config["Root"]
-        #     _production_file = "{0}/shot/{1}/{2}".format(_production_path, _full_code, _thumbnail)
-        #     _local_path = zfused_api.project.Project(self._data["ProjectId"]).config["LocalRoot"]
-        #     _local_file = "{0}/shot/{1}/{2}".format(_local_path, _full_code, _thumbnail)
-            
-        #     #return _production_file
-        #     # 是否需要宝贝到本机
-        #     if os.path.exists(_production_file):
-        #         if not os.path.isfile(_local_file):
-        #             _path = os.path.dirname(_local_file)
-        #             if not os.path.isdir(_path):
-        #                 os.makedirs(_path)
-        #             shutil.copy(_production_file, _local_file)
-        #         return _local_file
-        #     else:
-        #         return None
-        # else:
-        #     if is_version:
-        #         _versions = self.get("version", filter = {"LinkId":self._id,"Object":"shot"})
-        #         if _versions:
-        #             _ver = _versions[-1]
-        #             import version
-        #             _ver_handle = version.Version(_ver["Id"], _ver)
-        #             return _ver_handle.GetThumbnail()
-        # return None
-
     def notes(self):
         """ get tasks notes
                 history
@@ -674,12 +645,10 @@ class Shot(_Entity):
 
         """
         _project_step_id = project_step_id
-        # project id
-        _project_id = self._data["ProjectId"]
-        # get default status id
+        _project_id = self.project_id()
         _waiting_ids = zfused_api.status.waiting_status_ids()
         if not _waiting_ids:
-            return
+            return False, "has not set waiting status"
         _status_id = _waiting_ids[0]
         # get project step id
         _project_step_handle = zfused_api.step.ProjectStep(_project_step_id)
@@ -688,19 +657,19 @@ class Shot(_Entity):
         # fix file code 
         _task_name = "{}_{}".format(self.file_code(), _project_step_handle.code()).replace("/", "_") 
         
-        _create_id = zfused_api.zFused.USER_ID
         _assigned_id = 0
-        _object = "shot"
-        _link_id = self._id
+        _object = self.object()
+        _project_entity_id = self.id()
         _software_id = _project_step_handle.data()["SoftwareId"]
+        _create_id = zfused_api.zFused.USER_ID
         _current_time = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
                                             "StepId":_step_id,
-                                            "Object":_object,
-                                            "LinkId":_link_id,
+                                            "ProjectEntityType":_object,
+                                            "ProjectEntityId":_project_entity_id,
                                             "SoftwareId":_software_id})
         if _task:
             return False, "%s is exists"%_task_name
@@ -710,49 +679,36 @@ class Shot(_Entity):
                                                           "ProjectStepId": _project_step_id, 
                                                           "ProjectId": _project_id,
                                                           "ProjectEntityType": _object,
-                                                          "ProjectEntityId": _link_id,
+                                                          "ProjectEntityId": _project_entity_id,
                                                           "StepId": _step_id,
                                                           "StatusId": _status_id,
-                                                          # "CreateBy": _create_id,
                                                           "AssignedTo": _assigned_id,
                                                           "Object": _object,
-                                                          "LinkId": _link_id,
+                                                          "LinkId": _project_entity_id,
                                                           "SoftwareId": _software_id,
                                                           "Description": "",
                                                           "EstimatedTime": 0,
-                                                          # "CreateTime": _current_time,
                                                           "StartTime": None,
                                                           "DueTime": None,
                                                           "IsOutsource": 0,
                                                           "Active": "true",
                                                           "CreatedBy": _create_id,
                                                           "CreatedTime": _current_time })
-        # _task = self.get("task", filter = { "SelfObject":"task",
-        #                                    "Name": _task_name,
-        #                                    "ProjectStepId": _project_step_id, 
-        #                                    "ProjectId": _project_id,
-        #                                    "StepId": _step_id,
-        #                                    "StatusId": _status_id,
-        #                                    "CreateBy": _create_id,
-        #                                    "AssignedTo": _assigned_id,
-        #                                    "Object": _object,
-        #                                    "LinkId": _link_id,
-        #                                    "SoftwareId":_software_id,
-        #                                    "IsOutsource":0})
+                                                          
         if _status:
             self.global_tasks[self._id].append(_task)
 
             _task = zfused_api.task.Task(_task["Id"])
             zfused_api.im.submit_message( "user",
-                                        zfused_api.zFused.USER_ID,
-                                        self.user_ids(),
-                                        { "msgtype": "new", 
-                                        "new": {"object": "task", "object_id": _task.id()} }, 
-                                        "new",
-                                        self.object(),
-                                        self.id(),
-                                        self.object(),
-                                        self.id() )
+                                           zfused_api.zFused.USER_ID,
+                                           self.user_ids(),
+                                           { "msgtype": "new", 
+                                             "new": {"object": "task", "object_id": _task.id()} }, 
+                                           "new",
+                                           self.object(),
+                                           self.id(),
+                                           self.object(),
+                                           self.id() )
 
             return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name    

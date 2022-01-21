@@ -202,12 +202,16 @@ class zFused(object):
 
 
 class _Entity(zFused):
+    global_dict = {}
     def __init__(self, entity_type, entity_id, entity_data):
         self._type = entity_type
         self._id = entity_id
         self._data = entity_data
 
         self._extra_attrs = {}
+
+    def __eq__(self, other):
+        return self._id == other._id and self._type == other._type
 
     def id(self):
         return self._id
@@ -250,6 +254,25 @@ class _Entity(zFused):
         rtype: str
         """
         return u"{}({})".format(self.name(), self.code())
+
+    def sort(self):
+        if "Sort" in self._data:
+            return self._data.get("Sort")
+        else:
+            return 0
+
+    def update_sort(self, value):
+        if "Sort" not in self._data:
+            return
+        if self.global_dict[self._id]["Sort"] == value:
+            return True
+        self.global_dict[self._id]["Sort"] = value
+        self._data["Sort"] = value
+        v = self.put(self._type, self._id, self._data, "sort")
+        if v:
+            return True
+        else:
+            return False
 
     def created_by(self):
         return self._data["CreatedBy"]

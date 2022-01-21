@@ -115,15 +115,6 @@ class Software(_Entity):
                     return _path
         return None
 
-        # return self._data.get("ExecutablePythonPath")
-        # _paths = self._data.get("ExecutablePythonPath").split(";")
-        # if _paths:
-        #     for _path in _paths:
-        #         if os.path.isfile(_path):
-        #             return _path
-        # return None
-
-
 
 class ProjectSoftware(_Entity):
     global_dict = {}

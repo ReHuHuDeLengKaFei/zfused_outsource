@@ -240,39 +240,38 @@ class ProjectStep(_Entity):
     def is_new_attribute_solution(self):
         """新的属性输入输出解决方案
         """
-        _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
+        _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id})
         if not _attrs:
-            # _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
-            _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id})
+            _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
             if _attrs:
-                return True
-        return False
+                return False
+        return True
 
     def output_attrs(self):
         """获取输出属性
         :rtype: str
         """
-        _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
+        _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id}, sortby = ["Sort"], order = ["asc"])
         if not _attrs:
-            _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id})
+            _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []
 
     def key_output_attr(self):
-        """获取输出属性
+        """获取 主文件 输出属性 
         :rtype: str
         """
-        _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
+        _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"}, sortby = ["Sort"], order = ["asc"])
         if not _attrs:
-            _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
+            _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
         return _attrs[0] if _attrs else None
 
     def input_attrs(self):
         """获取输出属性
         :rtype: str
         """
-        _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})
+        _attrs = self.get("attr_input", filter = {"ProjectStepId":self._id}, sortby = ["Sort"], order = ["asc"])
         if not _attrs:
-            _attrs = self.get("attr_input", filter = {"ProjectStepId":self._id})
+            _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []
 
     def init_script(self):
@@ -281,6 +280,18 @@ class ProjectStep(_Entity):
     def update_init_script(self, script):
         self.global_dict[self._id]["InitScript"] = script
         self._data["InitScript"] = script
+        v = self.put("project_step", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
+    def combine_script(self):
+        return self._data.get("CombineScript")
+
+    def update_combine_script(self, script):
+        self.global_dict[self._id]["CombineScript"] = script
+        self._data["CombineScript"] = script
         v = self.put("project_step", self._data["Id"], self._data)
         if v:
             return True
@@ -317,6 +328,18 @@ class ProjectStep(_Entity):
     def update_property_script(self, script):
         self.global_dict[self._id]["PropertyScript"] = script
         self._data["PropertyScript"] = script
+        v = self.put("project_step", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
+    def refresh_relative(self):
+        return self._data.get("RefreshRelative")
+
+    def update_refresh_relative(self, is_refresh):
+        self.global_dict[self._id]["RefreshRelative"] = is_refresh
+        self._data["RefreshRelative"] = is_refresh
         v = self.put("project_step", self._data["Id"], self._data)
         if v:
             return True
@@ -389,6 +412,13 @@ class ProjectStep(_Entity):
         if not _attrs:
             return []
         return _attrs
+
+
+
+
+
+
+
 
 
 class Step(_Entity):

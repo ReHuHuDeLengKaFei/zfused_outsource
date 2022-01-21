@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 def create_relatives(src_obj, src_id, dst_obj, dst_id, relatioon_ship = "reference", name_space = "", active = 'true'):
     _current_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    #get name exists
+    
+    # get name exists
     # _relatives = zfused_api.zFused.get("relative", filter = { "SourceObject": src_obj, 
     #                                                           "SourceId": src_id, 
     #                                                           "TargetObject": dst_obj, 

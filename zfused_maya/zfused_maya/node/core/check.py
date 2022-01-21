@@ -56,12 +56,22 @@ def geometry_structure():
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity()
     _property = _project_entity.property("geometry")
+    info = ""
     if not _property:
         return True, None
+
+    # 检查preveiw模型有无记录md5值【临时添加】
+    if not _property[0].has_key("md5"):
+        info += u"【上游文件提示】：Preview预览模型需要重新上传，以此更新模型结构信息\n"
+
     # get current geometry
     _geometry = property.get_geometrys()
     if _geometry != _property:
-        return False, u"文件几何体结构与资产文件结构不统一,请修正统一\n"
+        info += u"【当前文件提示】：文件几何体结构与Preview资产文件结构不统一,请修正统一(文件层级或者拓扑不一致，请自行检查)\n"
+        for _prodic,_geodic in zip(_property,_geometry):
+            if _prodic != _geodic:
+                info += "{}\n".format(_geodic["transform"])
+        return False, info
     return True, None
 
 # 检查是否存在引擎材质颜色 
@@ -179,9 +189,9 @@ def material_assign_faces():
             if len(_sgs) == 1:
                 _faces = cmds.sets(_sgs[0], q = True)
                 _faces = [_face for _face in _faces if "{}.f[".format(_trans) in _face ]
-                print(_faces)
+                # print(_faces)
                 if len(_faces):
-                    print(_faces)
+                    # print(_faces)
                     _is_error = True
                     info += "{}\n".format(_polygon)
     if _is_error:
@@ -263,6 +273,20 @@ def rendering_group():
                 rendering.append(dag)
     if not rendering:
         info = u"文件组织结构错误,请用分组工具分组整合文件\n"
+        return False, info
+    return True, None
+
+def scene_rendering_group():
+    rendering = []
+    allDags = cmds.ls(dag = True)
+    for dag in allDags:
+        if cmds.objExists("%s.rendering"%dag):
+            value = cmds.getAttr("%s.rendering"%dag)
+            if value:
+                rendering.append(dag)
+    if rendering:
+        info = u"场景存在rendering属性，请删除或者勾去选项\n"
+        info += "\n".join(rendering)
         return False, info
     return True, None
 
@@ -692,3 +716,53 @@ def scene_path():
         info = "场景路径有中文\n"
         return False,info
     return True,None
+
+def node_name():
+    """ 检查模型不规范命名
+    """
+    _task_id = record.current_task_id()
+    _task_entity = zfused_api.task.Task(_task_id)
+    _asset_name =_task_entity.project_entity().code()
+
+    _node_list = cmds.ls( dag=True, transforms = True)
+    _wrongnode =[]
+    info = u"场景存在不规范的命名\n"
+    
+    _defult_cam = ['persp','top','front','side']
+    for cam in _defult_cam:
+        _node_list.remove(cam)    
+    for i in _node_list:
+        if 'pasted' in str(i) or 'polySurface' in str(i) or _asset_name not in str(i):
+            _wrongnode.append(i)           
+    if _wrongnode!= []:
+        for _node in _wrongnode:
+            _node_name = str(_node)
+            info += u"{}\n".format(_node)
+        return False,info
+    return True,None
+
+
+
+def material_name():
+    """ 检查材质不规范命名
+    """
+    _task_id = record.current_task_id()
+    _task_entity = zfused_api.task.Task(_task_id)
+    _asset_name =_task_entity.project_entity().code()
+
+    _node_list = cmds.ls( mat=True)
+    _wrongnode =[]
+    info = u"场景存在不规范的材质命名\n" 
+    
+    _defult_shader = ['standardSurface1','particleCloud1','lambert1']
+    for _shader in _defult_shader:
+        _node_list.remove(_shader)  
+    for i in _node_list:
+        if 'pasted' in str(i) or 'polySurface' in str(i) or 'aiStandard' in str(i) or 'lambert' in str(i) or _asset_name not in str(i):
+            _wrongnode.append(i)           
+    if _wrongnode != []:
+        for _node in _wrongnode:
+            _node_name = str(_node)
+            info += u"{}\n".format(_node_name)
+        return False,info
+    return True,None   

@@ -628,58 +628,56 @@ class Asset(_Entity):
         """ create default task
         """
         _project_step_id = project_step_id
-        # project id
-        _project_id = self._data["ProjectId"]
-        # get default status id
+        _project_id = self.project_id()
         _waiting_ids = zfused_api.status.waiting_status_ids()
         if not _waiting_ids:
-            return
+            return False, "has not set waiting status"
         _status_id = _waiting_ids[0]
         # get project step id
-        _project_step_handle = zfused_api.step.ProjectStep(_project_step_id)
-        _step_id = _project_step_handle.data()["StepId"]
+        _project_step = zfused_api.step.ProjectStep(_project_step_id)
+        _step_id = _project_step.data()["StepId"]
 
         # fix file code
-        _task_name = "{}_{}".format(self.file_code(), _project_step_handle.code()).replace("/", "_") 
+        _task_name = "{}_{}".format(self.file_code(), _project_step.code()).replace("/", "_") 
         
-        _create_id = zfused_api.zFused.USER_ID
         _assigned_id = 0
-        _object = "asset"
-        _link_id = self._id
-        _software_id = _project_step_handle.data()["SoftwareId"]
+        _object = self.object()
+        _project_entity_id = self.id()
+        _software_id = _project_step.data()["SoftwareId"]
+        _create_id = zfused_api.zFused.USER_ID
         _current_time = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
                                             "StepId":_step_id,
-                                            "Object":_object,
-                                            "LinkId":_link_id,
+                                            # "Object":_object,
+                                            # "LinkId":_project_entity_id,
+                                            "ProjectEntityType": _object,
+                                            "ProjectEntityId": _project_entity_id,
                                             "SoftwareId":_software_id})
         if _task:
             return False, "%s is exists"%_task_name
 
         _task, _status = self.post(key = "task", data = { "SelfObject": "task", 
-                                                           "Name": _task_name,
-                                                           "ProjectStepId": _project_step_id, 
-                                                           "ProjectId": _project_id,
-                                                           "ProjectEntityType": _object,
-                                                           "ProjectEntityId": _link_id,
-                                                           "StepId": _step_id,
-                                                           "StatusId": _status_id,
-                                                           # "CreateBy": _create_id,
-                                                           "AssignedTo": _assigned_id,
-                                                           "Object": _object,
-                                                           "LinkId": _link_id,
-                                                           "SoftwareId": _software_id,
-                                                           "Description": "",
-                                                           "EstimatedTime": 0,
-                                                           # "CreateTime": _current_time,
-                                                           "StartTime": None,
-                                                           "DueTime": None,
-                                                           "IsOutsource": 0,
-                                                           "Active": "true",
-                                                           "CreatedBy": _create_id,
-                                                           "CreatedTime": _current_time })
+                                                          "Name": _task_name,
+                                                          "ProjectStepId": _project_step_id, 
+                                                          "ProjectId": _project_id,
+                                                          "ProjectEntityType": _object,
+                                                          "ProjectEntityId": _project_entity_id,
+                                                          "StepId": _step_id,
+                                                          "StatusId": _status_id,
+                                                          "AssignedTo": _assigned_id,
+                                                          "Object": _object,
+                                                          "LinkId": _project_entity_id,
+                                                          "SoftwareId": _software_id,
+                                                          "Description": "",
+                                                          "EstimatedTime": 0,
+                                                          "StartTime": None,
+                                                          "DueTime": None,
+                                                          "IsOutsource": 0,
+                                                          "Active": "true",
+                                                          "CreatedBy": _create_id,
+                                                          "CreatedTime": _current_time })
         if _status:
             if not self.global_tasks[self._id]:
                 self.global_tasks[self._id] = []
@@ -687,15 +685,15 @@ class Asset(_Entity):
 
             _task = zfused_api.task.Task(_task["Id"])
             zfused_api.im.submit_message( "user",
-                                        zfused_api.zFused.USER_ID,
-                                        self.user_ids(),
-                                        { "msgtype": "new", 
-                                        "new": {"object": "task", "object_id": _task.id()} }, 
-                                        "new",
-                                        self.object(),
-                                        self.id(),
-                                        self.object(),
-                                        self.id() )
+                                           zfused_api.zFused.USER_ID,
+                                           self.user_ids(),
+                                           { "msgtype": "new", 
+                                           "new": {"object": "task", "object_id": _task.id()} }, 
+                                           "new",
+                                           self.object(),
+                                           self.id(),
+                                           self.object(),
+                                           self.id() )
 
             return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name

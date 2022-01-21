@@ -1,7 +1,9 @@
 # coding:utf-8
 # --author-- lanhua.zhou
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
+import ast
+import json
 import logging
 import datetime
 
@@ -390,9 +392,10 @@ class Project(_Entity):
         _property = self.config.get("Variables")
         if not _property:
             return {}
+        _property = eval(_property)
         if key:
-            return eval(_property).get(key)
-        return eval(_property)
+            return _property.get(key)
+        return _property
 
     def update_variables(self, key, value):
         _property = self.variables()

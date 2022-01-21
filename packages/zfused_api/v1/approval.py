@@ -46,7 +46,7 @@ class Approval(_Entity):
 
     def submit(self, _s, _des = None):
         currentTime = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        #self._data["DueTime"] = due_time
+
         self.global_dict[self._id]["ApprovalId"] = self.USER_ID
         self.global_dict[self._id]["ApprovalTime"] = currentTime
         self.global_dict[self._id]["Status"] = _s

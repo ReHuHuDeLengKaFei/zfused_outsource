@@ -342,35 +342,6 @@ class Sequence(_Entity):
                 return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
         return None
 
-        # if self._data.get("Thumbnail"):
-        #     _thumbnail = self._data["Thumbnail"]
-        #     _full_code = self.full_code()
-        #     _production_path = zfused_api.project.Project(self._data["ProjectId"]).config["Root"]
-        #     _production_file = "{0}/sequence/{1}/{2}".format(_production_path, _full_code, _thumbnail)
-        #     _local_path = zfused_api.project.Project(self._data["ProjectId"]).config["LocalRoot"]
-        #     _local_file = "{0}/sequence/{1}/{2}".format(_local_path, _full_code, _thumbnail)
-            
-        #     #return _production_file
-        #     # 是否需要宝贝到本机
-        #     if os.path.exists(_production_file):
-        #         if not os.path.isfile(_local_file):
-        #             _path = os.path.dirname(_local_file)
-        #             if not os.path.isdir(_path):
-        #                 os.makedirs(_path)
-        #             shutil.copy(_production_file, _local_file)
-        #         return _local_file
-        #     else:
-        #         return None
-        # else:
-        #     if is_version:
-        #         _versions = self.get("version", filter = {"LinkId":self._id,"Object":"sequence"})
-        #         if _versions:
-        #             _ver = _versions[-1]
-        #             import version
-        #             _ver_handle = version.Version(_ver["Id"], _ver)
-        #             return _ver_handle.GetThumbnail()
-        # return None
-
     def notes(self):
         """ get tasks notes
                 history
