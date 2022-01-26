@@ -31,15 +31,12 @@ def new_project_status(project_id, entity_type, status_id, active = "true"):
                                                        "CreatedTime": _current_time }  )
     if _status:
         return _value["Id"], True
-    
     return "project status id create error", False
-
 
 
 def active_status():
     """
     获取激活可制作的任务
-
     """
     _active_status = zfused_api.zFused.get("status", filter = {"IsActive":1}, sortby = ["Sort"], order = ["asc"])
     if _active_status:
@@ -49,7 +46,6 @@ def active_status():
 def active_status_ids():
     """
     获取激活可制作的任务
-
     """
     _active_status = zfused_api.zFused.get("status", filter = {"IsActive":1}, sortby = ["Sort"], order = ["asc"])
     if _active_status:
@@ -59,7 +55,6 @@ def active_status_ids():
 def working_status():
     """
     获取制作中的状态标签
-
     """
     _working_status = zfused_api.zFused.get("status", filter = {"IsWorking":1}, sortby = ["Sort"], order = ["asc"])
     if _working_status:
@@ -77,7 +72,6 @@ def working_status_ids():
 
 def waiting_status():
     """ 获取等待任务
-
     """
     _waiting_status = zfused_api.zFused.get("status", filter = {"IsWaiting":1}, sortby = ["Sort"], order = ["asc"])
     if _waiting_status:
@@ -86,7 +80,6 @@ def waiting_status():
 
 def waiting_status_ids():
     """ 获取等待任务id
-
     """
     _waiting_status = zfused_api.zFused.get("status", filter = {"IsWaiting":1}, sortby = ["Sort"], order = ["asc"])
     if _waiting_status:

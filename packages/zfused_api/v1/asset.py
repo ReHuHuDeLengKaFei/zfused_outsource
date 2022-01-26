@@ -101,13 +101,13 @@ def cache(project_id_list = [], extract_freeze = True):
         # _assets = zfused_api.zFused.get("asset", sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"StatusId__in": _status_ids})
         # _asset_historys = zfused_api.zFused.get("asset_history")
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join(map(str,project_id_list))
         # _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids}, sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
         # _asset_historys = zfused_api.zFused.get("asset_history", filter = {"ProjectId__in": _project_ids})
-        _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
         list(map(lambda _asset: clear(Asset.global_tasks[_asset["Id"]]) if Asset.global_tasks[_asset["Id"]] else False, _assets))
@@ -115,7 +115,7 @@ def cache(project_id_list = [], extract_freeze = True):
     #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
-        list(map(lambda _task: Asset.global_tasks[_task["LinkId"]].append(_task), _asset_tasks))
+        list(map(lambda _task: Asset.global_tasks[_task["ProjectEntityId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
     # cache tags
     _str_asset_ids = [str(_asset_id) for _asset_id in Asset.global_dict]
@@ -138,7 +138,7 @@ def cache_from_ids(ids, extract_freeze = False):
 
     ids = "|".join(map(str, ids))
     _assets = zfused_api.zFused.get("asset", filter = {"Id__in": ids, "StatusId__in": _status_ids})
-    _asset_tasks = zfused_api.zFused.get("task", filter = {"Object": "asset", "LinkId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+    _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "ProjectEntityId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
 
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
@@ -147,7 +147,7 @@ def cache_from_ids(ids, extract_freeze = False):
     #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
-        list(map(lambda _task: Asset.global_tasks[_task["LinkId"]].append(_task), _asset_tasks))
+        list(map(lambda _task: Asset.global_tasks[_task["ProjectEntityId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
 
     return _assets
@@ -419,7 +419,7 @@ class Asset(_Entity):
                     _data = _history
 
         # get asset task
-        _tasks = self.get("task", filter = {"Object": "asset", "LinkId": self._id})
+        _tasks = self.get("task", filter = {"ProjectEntityType": "asset", "ProjectEntityId": self._id})
         if _tasks:
             for _task in _tasks:
                 _note = {"user_id": _task["CreatedBy"],
@@ -449,7 +449,7 @@ class Asset(_Entity):
         
         :rtype: list
         """
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "asset"},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "asset"},
                                         sortby = ["Index"], order = ["asc"])
         return _versions if _versions else []
 
@@ -457,11 +457,11 @@ class Asset(_Entity):
         """
         """
         # get task
-        _tasks = zfused_api.zFused.get("task", filter = {"LinkId": self._id, "Object": "asset", "ProjectStepId": project_step_id})
+        _tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityId": self._id, "ProjectEntityType": "asset", "ProjectStepId": project_step_id})
         if not _tasks:
             return []
         _task = _tasks[0]
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "asset", "TaskId": _task["Id"], "IsApproval": 1},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "asset", "TaskId": _task["Id"], "IsApproval": 1},
                                         sortby = ["Index"], order = ["asc"])
         if not _versions:
             return []
@@ -485,7 +485,7 @@ class Asset(_Entity):
 
     def tasks(self, project_step_id_list = []):
         if self._id not in self.global_tasks or zfused_api.zFused.RESET:
-            _tasks = self.get("task", filter = {"Object": "asset", "LinkId": self._id})
+            _tasks = self.get("task", filter = {"ProjectEntityType": "asset", "ProjectEntityId": self._id})
             self.global_tasks[self._id] = _tasks
         _tasks = self.global_tasks[self._id]
         if not _tasks:
@@ -543,8 +543,8 @@ class Asset(_Entity):
             _key = "{}_{}".format(self._id, _ids)
             _tasks = self.task_dict[_key]
         else:
-            _tasks = self.get("task", filter = { "LinkId": self._id, 
-                                                 "Object": "asset"} )
+            _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                 "ProjectEntityType": "asset"} )
         if not _tasks:
             return []
         return _tasks
@@ -650,8 +650,6 @@ class Asset(_Entity):
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
                                             "StepId":_step_id,
-                                            # "Object":_object,
-                                            # "LinkId":_project_entity_id,
                                             "ProjectEntityType": _object,
                                             "ProjectEntityId": _project_entity_id,
                                             "SoftwareId":_software_id})
@@ -667,8 +665,6 @@ class Asset(_Entity):
                                                           "StepId": _step_id,
                                                           "StatusId": _status_id,
                                                           "AssignedTo": _assigned_id,
-                                                          "Object": _object,
-                                                          "LinkId": _project_entity_id,
                                                           "SoftwareId": _software_id,
                                                           "Description": "",
                                                           "EstimatedTime": 0,

@@ -100,6 +100,9 @@ class Input(_Entity):
     def rely(self):
         return self._data.get("Rely")
 
+    def rule(self):
+        return self._data.get("Rule")
+
 
 class Output(_Entity):
 
@@ -158,6 +161,8 @@ class Output(_Entity):
     def rely(self):
         return self._data.get("Rely")
         
+    def rule(self):
+        return self._data.get("Rule")
 
 # class TaskAttr():
 #     def __init__(self, task_id, attr_id = 0, mode = "in"):

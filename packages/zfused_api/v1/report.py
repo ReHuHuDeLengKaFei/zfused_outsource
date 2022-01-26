@@ -124,13 +124,13 @@ class Report(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
-    def file_code(self):
-        """ get file name
+    # def file_code(self):
+    #     """ get file name
 
-        :rtype: str
-        """
-        _link_handle = zfused_api.objects.Objects(self._data["Object"], self._data["LinkId"])
-        return _link_handle.file_code()
+    #     :rtype: str
+    #     """
+    #     _link_handle = zfused_api.objects.Objects(self._data["Object"], self._data["LinkId"])
+    #     return _link_handle.file_code()
 
     def index(self):
         return self._data["Index"]

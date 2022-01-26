@@ -66,10 +66,10 @@ class Version(_Entity):
         return self._data["Description"]
 
     def link_object(self):
-        return self._data["Object"]
+        return self._data["ProjectEntityType"]
 
     def link_id(self):
-        return self._data["LinkId"]
+        return self._data["ProjectEntityId"]
 
     def user_id(self):
         return self._data["UserId"]
@@ -127,7 +127,6 @@ class Version(_Entity):
         """ get file name
         :rtype: str
         """
-        # _link_handle = zfused_api.objects.Objects(self._data["Object"], self._data["LinkId"])
         return self.project_entity().file_code()
 
     def index(self):
@@ -160,13 +159,13 @@ class Version(_Entity):
         step_name = self.Get("type", filter = {"Id":self._data["TypeId"]})[0]["Code"]
         project_name = self.Get("project_config", filter = {"Id":self._data["ProjectId"]})[0]["Publish"]
 
-        linkHandle = self.Get(self._data["Object"], filter = {"Id":self._data["LinkId"]})
-        if self._data["Object"] == "asset":
-            linkHandle = asset.Asset(self._data["LinkId"])
-        elif self._data["Object"] == "shot":
-            linkHandle = shot.Shot(self._data["LinkId"]) 
-        elif self._data["Object"] == "sequence":
-            linkHandle = sequence.Sequence(self._data["LinkId"]) 
+        linkHandle = self.Get(self._data["ProjectEntityType"], filter = {"Id":self._data["ProjectEntityId"]})
+        if self._data["ProjectEntityType"] == "asset":
+            linkHandle = asset.Asset(self._data["ProjectEntityId"])
+        elif self._data["ProjectEntityType"] == "shot":
+            linkHandle = shot.Shot(self._data["ProjectEntityId"]) 
+        elif self._data["ProjectEntityType"] == "sequence":
+            linkHandle = sequence.Sequence(self._data["ProjectEntityId"]) 
         path = linkHandle.GetPath()
         taskHandle.GetPath()
 
@@ -182,10 +181,10 @@ class Version(_Entity):
         return _task_backup_path
 
     def link_entity(self):
-        return(self.global_dict[self._id]["Object"], self.global_dict[self._id]["LinkId"])
+        return(self.global_dict[self._id]["ProjectEntityType"], self.global_dict[self._id]["ProjectEntityId"])
 
     def entity(self):
-        return(self.global_dict[self._id]["Object"], self.global_dict[self._id]["LinkId"])
+        return(self.global_dict[self._id]["ProjectEntityType"], self.global_dict[self._id]["ProjectEntityId"])
     
     def thumbnail(self):
         """ get thumbnail

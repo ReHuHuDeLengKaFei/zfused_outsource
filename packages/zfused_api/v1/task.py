@@ -116,7 +116,7 @@ def new_production_file(files, task_id, attr_output_id, index = 0, relative_enti
 
 def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, start_time, due_time, description = None, outsource = None, estimated_time = 0):
 
-    _task = zfused_api.zFused.get("task", filter = {"ProjectStepId": project_step_id, "Object":link_obj, "LinkId":link_id})
+    _task = zfused_api.zFused.get("task", filter = {"ProjectStepId": project_step_id, "ProjectEntityType":link_obj, "ProjectEntityId":link_id})
     if _task:
         return False, "%s is exists"%name
     _project_step_handle = zfused_api.step.ProjectStep(project_step_id)
@@ -134,14 +134,10 @@ def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, s
                                                                      "ProjectEntityId": link_id,
                                                                      "StepId":step_id,
                                                                      "StatusId":status_id,
-                                                                     # "CreateBy":create_id,
                                                                      "AssignedTo":assigned_id,
-                                                                     "Object":link_obj,
-                                                                     "LinkId":link_id,
                                                                      "SoftwareId":software_id,
                                                                      "Description":description,
                                                                      "EstimatedTime":estimated_time,
-                                                                     # "CreateTime":currentTime,
                                                                      "StartTime":start_time,
                                                                      "DueTime":due_time, 
                                                                      "IsOutsource":outsource, 
@@ -149,10 +145,7 @@ def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, s
                                                                      "CreatedBy": create_id,
                                                                      "CreatedTime": currentTime })
 
-    # _task = zfused_api.zFused.get("task", filter = {"SelfObject":"task","Name": name,"ProjectStepId": project_step_id,"ProjectId":project_id,"StepId":step_id,"StatusId":status_id,"CreateBy":create_id,"AssignedTo":assigned_id,"Object":link_obj,"LinkId":link_id,"SoftwareId":software_id,"Description":description, "IsOutsource":outsource})
-
     if _status:
-
         _task = Task(_task["Id"])
         _project_entity = _task.project_entity()
         zfused_api.im.submit_message( "user",
@@ -552,7 +545,7 @@ class Task(_Entity):
         return _path
 
     def link_entity(self):
-        return(self.global_dict[self._id]["Object"], self.global_dict[self._id]["LinkId"])
+        return(self.global_dict[self._id]["ProjectEntityType"], self.global_dict[self._id]["ProjectEntityId"])
 
     def versions(self, refresh = False):
         """ get all task publish veriosns
@@ -707,8 +700,6 @@ class Task(_Entity):
                                                                          "ProjectStepId": _project_step_id,
                                                                          "ProjectEntityType": _project_entity_type,
                                                                          "ProjectEntityId": _project_entity_id,
-                                                                         "Object":_project_entity_type,
-                                                                         "LinkId":_project_entity_id,
                                                                          "TaskId":_task_id,
                                                                          "Index":_index,
                                                                          "Thumbnail":"",
@@ -850,8 +841,6 @@ class Task(_Entity):
                                                                          "ProjectStepId": _project_step_id,
                                                                          "ProjectEntityType": _object,
                                                                          "ProjectEntityId": _link_id,
-                                                                         "Object":_object,
-                                                                         "LinkId":_link_id,
                                                                          "TaskId":_task_id,
                                                                          "Index":_index,
                                                                          "Thumbnail":thumbnail,
@@ -1024,7 +1013,8 @@ class Task(_Entity):
                 _layer_index = len(_layers) + 1
             else:
                 _layer_index = 1
-
+        
+        _report_id = 0
         if _index:
             if _layer_index:
                 _layer_handle = zfused_api.step.ProjectStepLayer(_layer_id)
@@ -1051,8 +1041,10 @@ class Task(_Entity):
                                                               })
             if not _status:
                 return False, "{} submit error".format(name)
-            # _last_report = _text[]
-        _report_id = _text["Id"]
+            _report_id = _text.get("Id")
+
+        if not _report_id:
+            return False, "{} review create error".format(name)
 
         # 提交最后版本id
         self.update_last_report_id(_report_id)
@@ -1062,7 +1054,6 @@ class Task(_Entity):
         # 提交project_entity缩略图
         try:
             self.project_entity().update_thumbnail_path(thumbnail_path)
-            # zfused_api.objects.Objects(_object, _link_id).update_thumbnail_path(thumbnail_path)
         except:
             pass
 
@@ -1079,21 +1070,27 @@ class Task(_Entity):
                                                            "Introduction": introduction,
                                                            "CreatedBy": _user_id,
                                                            "CreatedTime":_create_time } )
-        # _review_data = self.get("review", filter = { "EntityType": "report", 
-        #                                              "EntityId": _report_id, 
-        #                                              "ReviewerId": _reviewer_id,
-        #                                              "Status":"0",
-        #                                              "SubmitterId":_user_id})
         if not _status:
+            # remove report id
+            self.delete("report", _report_id)
             return False,"%s review create error"%name
-        _review_id = _text["Id"]
+        _review_id = _text.get("Id")
+        if not _review_id:
+            # remove report id
+            self.delete("report", _report_id)
+            return False, "{} review create error".format(name)
 
         # 提交审核记录
-        self.post(key = "review_record", data = { "ReviewId": _review_id,
-                                                  "ReviewProcessId": review_process_id,
-                                                  "CreatedBy": _user_id,
-                                                  "CreatedTime":_create_time } )
-
+        _,_status = self.post(key = "review_record", data = { "ReviewId": _review_id,
+                                                              "ReviewProcessId": review_process_id,
+                                                              "CreatedBy": _user_id,
+                                                              "CreatedTime":_create_time } )
+        if not _status:
+            # remove report id
+            self.delete("report", _report_id)
+            # remove review id
+            self.delete("review", _review_id)
+            return False, "{} review create error".format(name)
         # # 抄送人员
         # if ccer_ids:
         #     for _ccer_id in ccer_ids:
@@ -1196,7 +1193,7 @@ class Task(_Entity):
         """ get input tasks
         :rtype: dict
         """
-        tasks = defaultdict(list)
+        tasks = defaultdict(list)        
         _project_step = self.project_step()
         _input_attrs = _project_step.input_attrs()
         _is_new_attribute_solution = _project_step.is_new_attribute_solution()
@@ -1206,11 +1203,13 @@ class Task(_Entity):
             return tasks
         if _is_new_attribute_solution:
             for _input_attr in _input_attrs:
-                _rule = "single"
+                # _rule = "single"
+                _rule = _input_attr.get("Rule")
                 _rely = _input_attr.get("Rely")
                 _attr_conns = self.get("attr_conn", filter = {"AttrInputId": _input_attr.get("Id")})
                 if not _attr_conns:
                     continue
+
                 if _rely == "self":
                     for _attr_conn in _attr_conns:
                         # 自身关联任务链接
@@ -1223,14 +1222,17 @@ class Task(_Entity):
                         if _tasks:
                             tasks[_attr_conn["Id"]] += _tasks
                         
-                        if _rule == "signle":
-                            break
+                            if _rule == "single":
+                                break
 
                 elif _rely == "asset" or _rely == "assembly":
+                    _asset_task = {}
                     for _attr_conn in _attr_conns:
                         _attr_output_id = _attr_conn.get("AttrOutputId")
                         _attr_output = zfused_api.attr.Output(_attr_output_id)
                         _attr_output_project_step = _attr_output.project_step()
+                        _attr_output_rule = _attr_output.rule()
+                        _attr_output_rely = _attr_output.rely()
                         # get relative object
                         _relatives = self.get("relative", filter = { "SourceObject": _rely,
                                                                      "TargetObject": self.project_entity_type(), 
@@ -1238,25 +1240,26 @@ class Task(_Entity):
                         if not _relatives:
                             continue
                         for _relative in _relatives:
-                            _output_rely = _attr_output.rely()
-                            if _output_rely == "self":
-                                _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
-                                                                   "ProjectEntityType": _relative.get("SourceObject"),
-                                                                   "ProjectEntityId": _relative.get("SourceId") })
-                                if _tasks:
-                                    _task = _tasks[0]
-                                    _task["NameSpace"] = _relative.get("NameSpace")
-                                    tasks[_attr_conn["Id"]].append(_task)
-                            else:
+                            _task = {}
+                            if _attr_output_rely == _rely:
                                 _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
                                                                      "ProjectEntityType": self.project_entity_type(), 
                                                                      "ProjectEntityId": self.project_entity_id() })
                                 if _tasks:
                                     _task = _tasks[0]
                                     _task["NameSpace"] = _relative.get("NameSpace")
-                                    tasks[_attr_conn["Id"]].append(_task)
+                                    # tasks[_attr_conn["Id"]].append(_task)
+                            else:
+                                _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                     "ProjectEntityType": _relative.get("SourceObject"),
+                                                                     "ProjectEntityId": _relative.get("SourceId") })
+                                if _tasks:
+                                    _task = _tasks[0]
+                                    _task["NameSpace"] = _relative.get("NameSpace")
+                            if _task:
+                                tasks[_attr_conn["Id"]].append(_task)
                                     
-                        if _rule == "signle":
+                        if _rule == "single":
                             break
 
                 # # 获取属性关联
@@ -1284,7 +1287,7 @@ class Task(_Entity):
                     if not _attr:
                         continue
                     _attr_project_step_id = _attr[0]["ProjectStepId"]
-                    task = self.get("task",filter = {"ProjectStepId":_attr_project_step_id,"LinkId":self._data["ProjectEntityId"]})
+                    task = self.get("task",filter = {"ProjectStepId":_attr_project_step_id, "ProjectEntityId":self._data["ProjectEntityId"]})
                     # 任务状态机制?
                     _is_next = False
                     if task:
@@ -1304,7 +1307,7 @@ class Task(_Entity):
                         _step_attr = self.get("step_attr_input",filter = {"ProjectStepId":_attr_project_step_id,"Mode":"direct"})
                         if _step_attr:
                             _project_step_id = self.get("step_attr_output", filter = {"Id":_step_attr[0]["StepAttrId"]})[0]["ProjectStepId"]
-                            _task = self.get("task", filter = {"LinkId":self._data["ProjectEntityId"],"ProjectStepId":_project_step_id})
+                            _task = self.get("task", filter = {"ProjectEntityId":self._data["ProjectEntityId"],"ProjectStepId":_project_step_id})
                             if _task:
                                 # tasks[_step_attr[0]["Id"]] = _task
                                 tasks[_input_attr["Id"]] = _task
@@ -1313,7 +1316,7 @@ class Task(_Entity):
                     if not _attr:
                         continue
                     _attr_project_step_id = _attr[0]["ProjectStepId"]
-                    task = self.get("task",filter = {"ProjectStepId":_attr_project_step_id,"LinkId":self._data["ProjectEntityId"]})
+                    task = self.get("task", filter = {"ProjectStepId":_attr_project_step_id, "ProjectEntityId":self._data["ProjectEntityId"]})
                     # 任务状态机制?
                     if task:
                         tasks[_input_attr["Id"]] += task
@@ -1327,7 +1330,7 @@ class Task(_Entity):
                     
                     if _root_entity_type == "sequence":
                         _sequence_id = self.entity().data().get("SequenceId")
-                        task = self.get("task",filter = { "ProjectStepId":_attr_project_step_id, "LinkId":_sequence_id })
+                        task = self.get("task",filter = { "ProjectStepId":_attr_project_step_id, "ProjectEntityId":_sequence_id })
                     # 任务状态机制?
                     if task:
                         tasks[_input_attr["Id"]] += task
@@ -1345,7 +1348,7 @@ class Task(_Entity):
                                                                 "TargetId": self._data["ProjectEntityId"]})
                     if relatives:
                         for i in relatives:
-                            task = self.get("task", filter = {"ProjectStepId":_attr_project_step_id,"LinkId":i["SourceId"]})
+                            task = self.get("task", filter = {"ProjectStepId":_attr_project_step_id, "ProjectEntityId":i["SourceId"]})
                             if task:
                                 tasks[_input_attr["Id"]].append(task[0])
                             else:
@@ -1358,7 +1361,7 @@ class Task(_Entity):
                                 #     tasks[_step_attr[0]["Id"]] = []
                                 if _step_attr:
                                     _project_step_id = self.get("step_attr_output", filter = {"Id":_step_attr[0]["StepAttrId"]})[0]["ProjectStepId"]
-                                    _task = self.get("task", filter = {"LinkId":i["SourceId"],"ProjectStepId":_project_step_id})
+                                    _task = self.get("task", filter = {"ProjectEntityId":i["SourceId"],"ProjectStepId":_project_step_id})
                                     if _task:
                                         tasks[_input_attr["Id"]] += _task
         return tasks

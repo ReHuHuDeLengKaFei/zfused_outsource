@@ -61,17 +61,17 @@ def cache(project_id = [], extract_freeze = True):
 
     if not project_id:
         _episodes = zfused_api.zFused.get("episode", sortby = ["Code"], order = ["asc"])
-        _episode_tasks = zfused_api.zFused.get("task", filter = {"Object": "episode", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _episode_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "episode", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join([str(_project_id) for _project_id in project_id])
         _episodes = zfused_api.zFused.get("episode", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["Code"], order = ["asc"])
-        _episode_tasks = zfused_api.zFused.get("task", filter = {"Object": "episode", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _episode_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "episode", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _episodes:
         list(map(lambda _episode: Episode.global_dict.setdefault(_episode["Id"], _episode), _episodes))
         list(map(lambda _episode: clear(Episode.global_tasks[_episode["Id"]]), _episodes))
     if _episode_tasks:
         from . import task
-        list(map(lambda _task: Episode.global_tasks[_task["LinkId"]].append(_task), _episode_tasks))
+        list(map(lambda _task: Episode.global_tasks[_task["ProjectEntityId"]].append(_task), _episode_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _episode_tasks))
 
     # cache tags
@@ -95,14 +95,14 @@ def cache_from_ids(ids, extract_freeze = True):
 
     ids = "|".join(map(str, ids))
     _episodes = zfused_api.zFused.get("episode", filter = {"Id__in": ids, "StatusId__in": _status_ids}, sortby = ["Code"], order = ["asc"])
-    _episode_tasks = zfused_api.zFused.get("task", filter = {"Object": "episode", "LinkId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+    _episode_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "episode", "ProjectEntityId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
 
     if _episodes:
         list(map(lambda _episode: Episode.global_dict.setdefault(_episode["Id"],_episode), _episodes))
         list(map(lambda _episode: clear(Episode.global_tasks[_episode["Id"]]) if Episode.global_tasks[_episode["Id"]] else False, _episodes))
     if _episode_tasks:
         from . import task
-        list(map(lambda _task: Episode.global_tasks[_task["LinkId"]].append(_task), _episode_tasks))
+        list(map(lambda _task: Episode.global_tasks[_task["ProjectEntityId"]].append(_task), _episode_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _episode_tasks))
     return _episodes
 
@@ -145,39 +145,6 @@ class Episode(_Entity):
                 self.global_dict[self._id] = self._data
             else:
                 self._data = self.global_dict[self._id]
-
-    # def object(self):
-    #     return "episode"
-
-    # def id(self):
-    #     return self._id
-
-    # def data(self):
-    #     return self._data
-
-    # def code(self):
-    #     """
-    #     get code
-
-    #     rtype: str
-    #     """
-    #     return u"{}".format(self._data["Code"])   
-
-    # def name(self):
-    #     """
-    #     get name
-
-    #     rtype: str
-    #     """
-    #     return u"{}".format(self._data["Name"])
-
-    # def name_code(self):
-    #     """
-    #     get name code
-
-    #     rtype: str
-    #     """
-    #     return u"{}({})".format(self.name(), self.code())
 
     def description(self):
         return self._data["Description"]
@@ -370,35 +337,6 @@ class Episode(_Entity):
                 return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
         return None
 
-        # if self._data.get("Thumbnail"):
-        #     _thumbnail = self._data["Thumbnail"]
-        #     _full_code = self.full_code()
-        #     _production_path = zfused_api.project.Project(self._data["ProjectId"]).config["Root"]
-        #     _production_file = "{0}/episode/{1}/{2}".format(_production_path, _full_code, _thumbnail)
-        #     _local_path = zfused_api.project.Project(self._data["ProjectId"]).config["LocalRoot"]
-        #     _local_file = "{0}/episode/{1}/{2}".format(_local_path, _full_code, _thumbnail)
-            
-        #     #return _production_file
-        #     # 是否需要宝贝到本机 ???
-        #     if os.path.exists(_production_file):
-        #         if not os.path.isfile(_local_file):
-        #             _path = os.path.dirname(_local_file)
-        #             if not os.path.isdir(_path):
-        #                 os.makedirs(_path)
-        #             shutil.copy(_production_file, _local_file)
-        #         return _local_file
-        #     else:
-        #         return None
-        # else:
-        #     if is_version:
-        #         _versions = self.get("version", filter = {"LinkId":self._id,"Object":"episode"})
-        #         if _versions:
-        #             _ver = _versions[-1]
-        #             import version
-        #             _ver_handle = version.Version(_ver["Id"], _ver)
-        #             return _ver_handle.GetThumbnail()
-        # return None
-
     def notes(self):
         """ get tasks notes
                 history
@@ -434,7 +372,7 @@ class Episode(_Entity):
                     _data = _history
 
         # get asset task
-        _tasks = self.get("task", filter = {"Object": "episode", "LinkId": self._id})
+        _tasks = self.get("task", filter = {"ProjectEntityType": "episode", "ProjectEntityId": self._id})
         if _tasks:
             for _task in _tasks:
                 _note = {"user_id": _task["CreatedBy"],
@@ -466,8 +404,9 @@ class Episode(_Entity):
         
         :rtype: list
         """
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "episode"},
-                                        sortby = ["Index"], order = ["asc"])
+        _versions = self.get( "version", filter = { "ProjectEntityId": self._id, 
+                                                    "ProjectEntityType": "episode" },
+                                         sortby = ["Index"], order = ["asc"] )
         if not _versions:
             return []
         return _versions
@@ -485,7 +424,7 @@ class Episode(_Entity):
 
     def tasks(self, project_step_id_list = []):
         if self._id not in self.global_tasks or zfused_api.zFused.RESET:
-            _tasks = self.get("task", filter = {"Object": "episode", "LinkId": self._id})
+            _tasks = self.get("task", filter = {"ProjectEntityType": "episode", "ProjectEntityId": self._id})
             self.global_tasks[self._id] = _tasks
         _tasks = self.global_tasks[self._id]
         if not _tasks:
@@ -544,13 +483,13 @@ class Episode(_Entity):
             if _key in self.task_dict:
                 _tasks = self.task_dict[_key]
             else:
-                _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "episode", 
-                                                "ProjectStepId__in": _ids})
+                _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                     "ProjectEntityType": "episode", 
+                                                     "ProjectStepId__in": _ids})
                 self.task_dict[_key] = _tasks
         else:
-            _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "episode"})
+            _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                 "ProjectEntityType": "episode" })
         if not _tasks:
             return []
         return _tasks
@@ -634,8 +573,8 @@ class Episode(_Entity):
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
                                             "StepId":_step_id,
-                                            "Object":_object,
-                                            "LinkId":_link_id,
+                                            "ProjectEntityType":_object,
+                                            "ProjectEntityId":_link_id,
                                             "SoftwareId":_software_id})
         if _task:
             return False, "%s is exists"%_task_name
@@ -648,35 +587,17 @@ class Episode(_Entity):
                                                          "ProjectEntityId": _link_id,
                                                          "StepId": _step_id,
                                                          "StatusId": _status_id,
-                                                         # "CreateBy": _create_id,
                                                          "AssignedTo": _assigned_id,
-                                                         "Object": _object,
-                                                         "LinkId": _link_id,
                                                          "SoftwareId": _software_id,
                                                          "Description": "",
                                                          "EstimatedTime": 0,
-                                                         # "CreateTime": _current_time,
                                                          "StartTime": None,
                                                          "DueTime": None,
                                                          "IsOutsource": 0,
                                                          "Active": "true", 
                                                          "CreatedBy": _create_id,
                                                          "CreatedTime":_current_time })
-
-        # _task = self.get("task", filter = { "SelfObject":"task",
-        #                                    "Name": _task_name,
-        #                                    "ProjectStepId": _project_step_id, 
-        #                                    "ProjectId": _project_id,
-        #                                    "StepId": _step_id,
-        #                                    "StatusId": _status_id,
-        #                                    "CreateBy": _create_id,
-        #                                    "AssignedTo": _assigned_id,
-        #                                    "Object": _object,
-        #                                    "LinkId": _link_id,
-        #                                    "SoftwareId":_software_id,
-        #                                    "IsOutsource":0})
         if _status:
-
             _task = zfused_api.task.Task(_task["Id"])
             zfused_api.im.submit_message( "user",
                                         zfused_api.zFused.USER_ID,

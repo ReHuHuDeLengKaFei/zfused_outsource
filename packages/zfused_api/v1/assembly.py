@@ -96,17 +96,17 @@ def cache(project_id_list = [], extract_freeze = True):
 
     if not project_id_list:
         _assemblys = zfused_api.zFused.get("assembly", filter = {"StatusId__in": _status_ids})
-        _assembly_tasks = zfused_api.zFused.get("task", filter = {"Object": "assembly", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _assembly_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "assembly", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join(map(str,project_id_list))
         _assemblys = zfused_api.zFused.get("assembly", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
-        _assembly_tasks = zfused_api.zFused.get("task", filter = {"Object": "assembly", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _assembly_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "assembly", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _assemblys:
         list(map(lambda _assembly: Assembly.global_dict.setdefault(_assembly["Id"],_assembly), _assemblys))
         list(map(lambda _assembly: clear(Assembly.global_tasks[_assembly["Id"]]) if Assembly.global_tasks[_assembly["Id"]] else False, _assemblys))
     if _assembly_tasks:
         from . import task
-        list(map(lambda _task: Assembly.global_tasks[_task["LinkId"]].append(_task), _assembly_tasks))
+        list(map(lambda _task: Assembly.global_tasks[_task["ProjectEntityId"]].append(_task), _assembly_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _assembly_tasks))
     # cache tags
     _str_assembly_ids = [str(_assembly_id) for _assembly_id in Assembly.global_dict]
@@ -129,14 +129,14 @@ def cache_from_ids(ids, extract_freeze = False):
 
     ids = "|".join(map(str, ids))
     _assemblys = zfused_api.zFused.get("assembly", filter = {"Id__in": ids, "StatusId__in": _status_ids})
-    _assembly_tasks = zfused_api.zFused.get("task", filter = {"Object": "assembly", "LinkId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+    _assembly_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "assembly", "ProjectEntityId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
 
     if _assemblys:
         list(map(lambda _assembly: Assembly.global_dict.setdefault(_assembly["Id"],_assembly), _assemblys))
         list(map(lambda _assembly: clear(Assembly.global_tasks[_assembly["Id"]]) if Assembly.global_tasks[_assembly["Id"]] else False, _assemblys))
     if _assembly_tasks:
         from . import task
-        list(map(lambda _task: Assembly.global_tasks[_task["LinkId"]].append(_task), _assembly_tasks))
+        list(map(lambda _task: Assembly.global_tasks[_task["ProjectEntityId"]].append(_task), _assembly_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _assembly_tasks))
     return _assemblys
 
@@ -405,7 +405,7 @@ class Assembly(_Entity):
                     _data = _history
 
         # get assembly task
-        _tasks = self.get("task", filter = {"Object": "assembly", "LinkId": self._id})
+        _tasks = self.get("task", filter = {"ProjectEntityType": "assembly", "ProjectEntityId": self._id})
         if _tasks:
             for _task in _tasks:
                 _note = {"user_id": _task["CreatedBy"],
@@ -435,7 +435,7 @@ class Assembly(_Entity):
         
         :rtype: list
         """
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "assembly"},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "assembly"},
                                         sortby = ["Index"], order = ["asc"])
         return _versions if _versions else []
 
@@ -443,11 +443,11 @@ class Assembly(_Entity):
         """
         """
         # get task
-        _tasks = zfused_api.zFused.get("task", filter = {"LinkId": self._id, "Object": "assembly", "ProjectStepId": project_step_id})
+        _tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityId": self._id, "ProjectEntityType": "assembly", "ProjectStepId": project_step_id})
         if not _tasks:
             return []
         _task = _tasks[0]
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "assembly", "TaskId": _task["Id"], "IsApproval": 1},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "assembly", "TaskId": _task["Id"], "IsApproval": 1},
                                         sortby = ["Index"], order = ["asc"])
         if not _versions:
             return []
@@ -471,7 +471,7 @@ class Assembly(_Entity):
 
     def tasks(self, project_step_id_list = []):
         if self._id not in self.global_tasks or zfused_api.zFused.RESET:
-            _tasks = self.get("task", filter = {"Object": "assembly", "LinkId": self._id})
+            _tasks = self.get("task", filter = {"ProjectEntityType": "assembly", "ProjectEntityId": self._id})
             self.global_tasks[self._id] = _tasks
         _tasks = self.global_tasks[self._id]
         if not _tasks:
@@ -529,8 +529,8 @@ class Assembly(_Entity):
             _key = "{}_{}".format(self._id, _ids)
             _tasks = self.task_dict[_key]
         else:
-            _tasks = self.get("task", filter = { "LinkId": self._id, 
-                                                 "Object": "assembly"} )
+            _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                 "ProjectEntityType": "assembly"} )
         if not _tasks:
             return []
         return _tasks
@@ -639,11 +639,11 @@ class Assembly(_Entity):
 
 
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
-                                            "ProjectId":_project_id,
-                                            "StepId":_step_id,
-                                            "Object":_object,
-                                            "LinkId":_link_id,
-                                            "SoftwareId":_software_id})
+                                            "ProjectId": _project_id,
+                                            "StepId": _step_id,
+                                            "ProjectEntityType": _object,
+                                            "ProjectEntityId": _link_id,
+                                            "SoftwareId": _software_id})
         if _task:
             return False, "%s is exists"%_task_name
 
@@ -655,14 +655,10 @@ class Assembly(_Entity):
                                                            "ProjectEntityId": _link_id,
                                                            "StepId": _step_id,
                                                            "StatusId": _status_id,
-                                                           # "CreateBy": _create_id,
                                                            "AssignedTo": _assigned_id,
-                                                           "Object": _object,
-                                                           "LinkId": _link_id,
                                                            "SoftwareId": _software_id,
                                                            "Description": "",
                                                            "EstimatedTime": 0,
-                                                           # "CreateTime": _current_time,
                                                            "StartTime": None,
                                                            "DueTime": None,
                                                            "IsOutsource": 0,

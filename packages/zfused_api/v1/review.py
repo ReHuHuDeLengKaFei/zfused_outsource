@@ -135,8 +135,8 @@ class Review(_Entity):
         _project_id = self._data["ProjectId"]
         _project_step_id = self._data["ProjectStepId"]
         _step_id = self._data["StepId"]
-        _object = self._data["Object"]
-        _link_id = self._data["LinkId"]
+        _object = self._data["ProjectEntityType"]
+        _link_id = self._data["ProjectEntityId"]
         _task_id = self._data["Id"]
         _user_id = zfused_api.zFused.USER_ID
         

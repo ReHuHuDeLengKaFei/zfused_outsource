@@ -68,17 +68,17 @@ def cache(project_id = [], extract_freeze = True):
 
     if not project_id:
         _sequences = zfused_api.zFused.get("sequence", sortby = ["Code"], order = ["asc"])
-        _sequence_tasks = zfused_api.zFused.get("task", filter = {"Object": "sequence", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _sequence_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "sequence", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join([str(_project_id) for _project_id in project_id])
         _sequences = zfused_api.zFused.get("sequence", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["Code"], order = ["asc"])
-        _sequence_tasks = zfused_api.zFused.get("task", filter = {"Object": "sequence", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _sequence_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "sequence", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _sequences:
         list(map(lambda _sequence: Sequence.global_dict.setdefault(_sequence["Id"], _sequence), _sequences))
         list(map(lambda _sequence: clear(Sequence.global_tasks[_sequence["Id"]]) if Sequence.global_tasks[_sequence["Id"]] else False, _sequences))
     if _sequence_tasks:
         from . import task
-        list(map(lambda _task: Sequence.global_tasks[_task["LinkId"]].append(_task), _sequence_tasks))
+        list(map(lambda _task: Sequence.global_tasks[_task["ProjectEntityId"]].append(_task), _sequence_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _sequence_tasks))
 
     # cache tags
@@ -101,14 +101,14 @@ def cache_from_ids(ids, extract_freeze = True):
 
     ids = "|".join(map(str, ids))
     _sequences = zfused_api.zFused.get("sequence", filter = {"Id__in": ids}, sortby = ["Code"], order = ["asc"])
-    _sequence_tasks = zfused_api.zFused.get("task", filter = {"Object": "sequence", "LinkId__in": ids}, sortby = ["ProjectStepId"], order = ["asc"])
+    _sequence_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "sequence", "ProjectEntityId__in": ids}, sortby = ["ProjectStepId"], order = ["asc"])
 
     if _sequences:
         list(map(lambda _sequence: Sequence.global_dict.setdefault(_sequence["Id"],_sequence), _sequences))
         list(map(lambda _sequence: clear(Sequence.global_tasks[_sequence["Id"]]) if Sequence.global_tasks[_sequence["Id"]] else False, _sequences))
     if _sequence_tasks:
         from . import task
-        list(map(lambda _task: Sequence.global_tasks[_task["LinkId"]].append(_task), _sequence_tasks))
+        list(map(lambda _task: Sequence.global_tasks[_task["ProjectEntityId"]].append(_task), _sequence_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _sequence_tasks))
     return _sequences
 
@@ -377,7 +377,7 @@ class Sequence(_Entity):
                     _data = _history
 
         # get sequence task
-        _tasks = self.get("task", filter = {"Object": "sequence", "LinkId": self._id})
+        _tasks = self.get("task", filter = {"ProjectEntityType": "sequence", "ProjectEntityId": self._id})
         if _tasks:
             for _task in _tasks:
                 _note = {"user_id": _task["CreatedBy"],
@@ -396,7 +396,6 @@ class Sequence(_Entity):
         """ get asset link tag ids
         """
         if self._id not in self.global_tags.keys() or self.RESET:
-            # _historys = self.get("tag_link", filter = {"TaskId":self._id}, sortby = ["ChangeTime"], order = ["asc"])
             _tag_links = self.get("tag_link", filter = {"LinkObject": "asset", "LinkId": self._id})
             if _tag_links:
                 self.global_tags[self._id] = [_tag_link["TagId"] for _tag_link in _tag_links]
@@ -407,7 +406,7 @@ class Sequence(_Entity):
         
         :rtype: list
         """
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "sequence"},
+        _versions = self.get("version", filter={ "ProjectEntityId": self._id, "ProjectEntityType": "sequence" },
                                         sortby = ["Index"], order = ["asc"])
         return _versions if versions else []
 
@@ -421,7 +420,7 @@ class Sequence(_Entity):
 
     def tasks(self, project_step_id_list = []):
         if self._id not in self.global_tasks.keys() or zfused_api.zFused.RESET:
-            _tasks = self.get("task", filter = {"Object": "sequence", "LinkId": self._id})
+            _tasks = self.get("task", filter = {"ProjectEntityType": "sequence", "ProjectEntityId": self._id})
             self.global_tasks[self._id] = _tasks
         _tasks = self.global_tasks[self._id]
         if not _tasks:
@@ -480,13 +479,13 @@ class Sequence(_Entity):
             if _key in self.task_dict.keys():
                 _tasks = self.task_dict[_key]
             else:
-                _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "sequence", 
-                                                "ProjectStepId__in": _ids})
+                _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                     "ProjectEntityType": "sequence", 
+                                                     "ProjectStepId__in": _ids})
                 self.task_dict[_key] = _tasks
         else:
-            _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "sequence"})
+            _tasks = self.get("task", filter = {"ProjectEntityId": self._id, 
+                                                "ProjectEntityType": "sequence"})
         if not _tasks:
             return []
         return _tasks
@@ -579,8 +578,8 @@ class Sequence(_Entity):
         _task = self.get("task", filter = { "ProjectStepId": _project_step_id,
                                             "ProjectId":_project_id,
                                             "StepId":_step_id,
-                                            "Object":_object,
-                                            "LinkId":_link_id,
+                                            "ProjectEntityType":_object,
+                                            "ProjectEntityId":_link_id,
                                             "SoftwareId":_software_id})
         if _task:
             return False, "%s is exists"%_task_name
@@ -593,14 +592,10 @@ class Sequence(_Entity):
                                                           "ProjectEntityId": _link_id,
                                                           "StepId": _step_id,
                                                           "StatusId": _status_id,
-                                                          # "CreateBy": _create_id,
                                                           "AssignedTo": _assigned_id,
-                                                          "Object": _object,
-                                                          "LinkId": _link_id,
                                                           "SoftwareId": _software_id,
                                                           "Description": "",
                                                           "EstimatedTime": 0,
-                                                          # "CreateTime": _current_time,
                                                           "StartTime": None,
                                                           "DueTime": None,
                                                           "IsOutsource": 0,

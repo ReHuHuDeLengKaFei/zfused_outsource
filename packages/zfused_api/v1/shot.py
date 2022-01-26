@@ -71,12 +71,12 @@ def cache(project_id = [], extract_freeze = True):
     if not project_id:
         _shots = zfused_api.zFused.get("shot", sortby = ["Code"], order = ["asc"])
         # _shot_historys = zfused_api.zFused.get("shot_history")
-        _shot_tasks = zfused_api.zFused.get("task", filter = {"Object": "shot", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _shot_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "shot", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join([str(_project_id) for _project_id in project_id])
         _shots = zfused_api.zFused.get("shot", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["Code"], order = ["asc"])
         # _shot_historys = zfused_api.zFused.get("shot_history", filter = {"ProjectId__in": _project_ids})
-        _shot_tasks = zfused_api.zFused.get("task", filter = {"Object": "shot", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+        _shot_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "shot", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _shots:
         list(map(lambda _shot: Shot.global_dict.setdefault(_shot["Id"],_shot), _shots))
         list(map(lambda _shot: clear(Shot.global_tasks[_shot["Id"]]) if Shot.global_tasks[_shot["Id"]] else False, _shots))
@@ -84,7 +84,7 @@ def cache(project_id = [], extract_freeze = True):
     #     list(map(lambda _shot: Shot.global_historys[_shot["ShotId"]].append(_shot), _shot_historys))
     if _shot_tasks:
         from . import task
-        list(map(lambda _task: Shot.global_tasks[_task["LinkId"]].append(_task), _shot_tasks))
+        list(map(lambda _task: Shot.global_tasks[_task["ProjectEntityId"]].append(_task), _shot_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _shot_tasks))
         
     # cache tags
@@ -107,13 +107,13 @@ def cache_from_ids(ids, extract_freeze = True):
 
     ids = "|".join(map(str, ids))
     _shots = zfused_api.zFused.get("shot", filter = {"Id__in": ids, "StatusId__in": _status_ids})
-    _shot_tasks = zfused_api.zFused.get("task", filter = {"Object": "shot", "LinkId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
+    _shot_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "shot", "ProjectEntityId__in": ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _shots:
         list(map(lambda _shot: Shot.global_dict.setdefault(_shot["Id"],_shot), _shots))
         list(map(lambda _shot: clear(Shot.global_tasks[_shot["Id"]]) if Shot.global_tasks[_shot["Id"]] else False, _shots))
     if _shot_tasks:
         from . import task
-        list(map(lambda _task: Shot.global_tasks[_task["LinkId"]].append(_task), _shot_tasks))
+        list(map(lambda _task: Shot.global_tasks[_task["ProjectEntityId"]].append(_task), _shot_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _shot_tasks))
     return _shots
 
@@ -418,7 +418,7 @@ class Shot(_Entity):
                     _data = _history
 
         # get shot task
-        _tasks = self.get("task", filter = {"Object": "shot", "LinkId": self._id})
+        _tasks = self.get("task", filter = {"ProjectEntityType": "shot", "ProjectEntityId": self._id})
         if _tasks:
             for _task in _tasks:
                 _note = {"user_id": _task["CreatedBy"],
@@ -449,7 +449,7 @@ class Shot(_Entity):
         
         :rtype: list
         """
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "shot"},
+        _versions = self.get("version", filter={ "ProjectEntityId": self._id, "ProjectEntityType": "shot" },
                                         sortby = ["Index"], order = ["asc"])
         if not _versions:
             return []
@@ -459,11 +459,11 @@ class Shot(_Entity):
         """
         """
         # get task
-        _tasks = zfused_api.zFused.get("task", filter = {"LinkId": self._id, "Object": "shot", "ProjectStepId": project_step_id})
+        _tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityId": self._id, "ProjectEntityType": "shot", "ProjectStepId": project_step_id})
         if not _tasks:
             return []
         _task = _tasks[0]
-        _versions = self.get("version", filter={"LinkId": self._id, "Object": "shot", "TaskId": _task["Id"], "IsApproval": 1},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "shot", "TaskId": _task["Id"], "IsApproval": 1},
                                         sortby = ["Index"], order = ["asc"])
         if not _versions:
             return []
@@ -482,7 +482,7 @@ class Shot(_Entity):
 
     def tasks(self, project_step_id_list = []):
         if self._id not in self.global_tasks.keys() or zfused_api.zFused.RESET:
-            _tasks = self.get("task", filter = {"Object": "shot", "LinkId": self._id})
+            _tasks = self.get("task", filter = {"ProjectEntityType": "shot", "ProjectEntityId": self._id})
             self.global_tasks[self._id] = _tasks
         _tasks = self.global_tasks[self._id]
         if not _tasks:
@@ -541,13 +541,13 @@ class Shot(_Entity):
             if _key in self.task_dict.keys():
                 _tasks = self.task_dict[_key]
             else:
-                _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "shot", 
-                                                "ProjectStepId__in": _ids})
+                _tasks = self.get("task", filter = { "ProjectEntityId": self._id, 
+                                                     "ProjectEntityType": "shot", 
+                                                     "ProjectStepId__in": _ids})
                 self.task_dict[_key] = _tasks
         else:
-            _tasks = self.get("task", filter = {"LinkId": self._id, 
-                                                "Object": "shot"})
+            _tasks = self.get("task", filter = {"ProjectEntityId": self._id, 
+                                                "ProjectEntityType": "shot"})
         if not _tasks:
             return []
         return _tasks
@@ -683,8 +683,6 @@ class Shot(_Entity):
                                                           "StepId": _step_id,
                                                           "StatusId": _status_id,
                                                           "AssignedTo": _assigned_id,
-                                                          "Object": _object,
-                                                          "LinkId": _project_entity_id,
                                                           "SoftwareId": _software_id,
                                                           "Description": "",
                                                           "EstimatedTime": 0,
