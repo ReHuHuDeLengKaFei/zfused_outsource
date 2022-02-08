@@ -295,7 +295,7 @@ def camera_name():
     if not _task_id:
         return False, u"没有任务ID"
     _task = zfused_api.task.Task(_task_id)
-    _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["Object"], _task.data()["LinkId"])
+    _project_entity = _task.project_entity()
     _name = _project_entity.file_code()
     info = u"当前摄像机名称与任务名{}不匹配\n".format(_name)
     if not cmds.ls("*%s*"%_name, type = "camera"):
@@ -308,7 +308,7 @@ def file_name():
     if not _task_id:
         return False, _info
     _task = zfused_api.task.Task(_task_id)
-    _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["Object"], _task.data()["LinkId"])
+    _project_entity = _task.project_entity() 
     _name = _project_entity.file_code()
     _file_name = cmds.file(q = True, sn = True)
     if _name not in os.path.basename(_file_name):

@@ -102,6 +102,12 @@ class Version(_Entity):
     def task_id(self):
         return self._data.get("TaskId")
 
+    def project_entity_type(self):
+        return self._data.get("ProjectEntityType")
+
+    def project_entity_id(self):
+        return self._data.get("ProjectEntityId")
+
     def full_code(self):
         """
         get full path code

@@ -44,9 +44,7 @@ class CurrentTaskWidget(QtWidgets.QFrame):
         _task_id = record.current_task_id()
         if _task_id:
             _task_handle = zfused_api.task.Task(_task_id)
-            _entity_type = _task_handle.data()["Object"]
-            _entity_id = _task_handle.data()["LinkId"]
-            _entity_handle = zfused_api.objects.Objects(_entity_type, _entity_id)
+            _entity_handle = _task_handle.project_entity()
             self.link_button.setText(_entity_handle.name_code())
             self.task_button.setText(_task_handle.name())
         else:

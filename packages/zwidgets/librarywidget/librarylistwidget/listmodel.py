@@ -29,7 +29,7 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
         if not self._search_text:
             return True
         _in_name = self._search_text.lower() in data.full_name_code().lower()
-        _link_handle = zfused_api.objects.Objects(data.data()["Object"], data.data()["LinkId"])
+        _link_handle = zfused_api.objects.Objects(data.data()["ProjectEntityType"], data.data()["ProjectEntityId"])
         _in_link_name = self._search_text.lower() in _link_handle.full_name_code().lower()
         if _in_name or _in_link_name:
             return True

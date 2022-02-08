@@ -99,8 +99,8 @@ def publish_file(task_id, infomation={}, is_auto=False):
     if _output_scripts:
         for _output_script in _output_scripts:
             publish_result = False
-            _output_entity_type = _task.data()["Object"]
-            _output_entity_id = _task.data()["LinkId"]
+            _output_entity_type = _task.data()["ProjectEntiyType"]
+            _output_entity_id = _task.data()["ProjectEntiyId"]
             _output_attr_id = _output_script["Id"]
             # 为了兼容新旧attribute 需要设定 _is_new_attribute_solution
             kwargs = {"is_new_attribute_solution": _is_new_attribute_solution}

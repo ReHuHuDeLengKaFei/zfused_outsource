@@ -392,7 +392,7 @@ class Episode(_Entity):
         """
         if self._id not in self.global_tags or self.RESET:
             # _historys = self.get("tag_link", filter = {"TaskId":self._id}, sortby = ["ChangeTime"], order = ["asc"])
-            _tag_links = self.get("tag_link", filter = {"LinkObject": "asset", "LinkId": self._id})
+            _tag_links = self.get("tag_link", filter = {"LinkObject": "episode", "LinkId": self._id})
             if _tag_links:
                 self.global_tags[self._id] = [_tag_link["TagId"] for _tag_link in _tag_links]
             else:

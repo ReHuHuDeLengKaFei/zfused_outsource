@@ -124,7 +124,7 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
 
 
         # 绘制link
-        _link_handle = zfused_api.objects.Objects(_task_handle.data()["Object"], _task_handle.data()["LinkId"])
+        _link_handle = _task_handle.project_entity()
         if _task_handle.data()["Object"] == "asset":
             _link_full_name = _link_handle.full_name()
         else:

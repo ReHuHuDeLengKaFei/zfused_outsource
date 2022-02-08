@@ -136,8 +136,8 @@ def replace_by_step(element, project_step_id):
     _link_id = element["link_id"]
     _reference_node = element["reference_node"]
 
-    _replace_tasks = zfused_api.zFused.get("task", filter = { "Object": _link_object,
-                                                              "LinkId": _link_id,
+    _replace_tasks = zfused_api.zFused.get("task", filter = { "ProjectEntityType": _link_object,
+                                                              "ProjectEntityId": _link_id,
                                                               "ProjectStepId": project_step_id})
     if not _replace_tasks:
         return

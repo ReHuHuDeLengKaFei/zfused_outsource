@@ -396,7 +396,7 @@ class Sequence(_Entity):
         """ get asset link tag ids
         """
         if self._id not in self.global_tags.keys() or self.RESET:
-            _tag_links = self.get("tag_link", filter = {"LinkObject": "asset", "LinkId": self._id})
+            _tag_links = self.get("tag_link", filter = {"LinkObject": "sequence", "LinkId": self._id})
             if _tag_links:
                 self.global_tags[self._id] = [_tag_link["TagId"] for _tag_link in _tag_links]
         return self.global_tags[self._id]

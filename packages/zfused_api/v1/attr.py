@@ -107,7 +107,7 @@ class Input(_Entity):
 class Output(_Entity):
 
     @classmethod
-    def new(cls, name, code, project_step_id, script, format, suffix, rely = "self"):
+    def new(cls, name, code, project_step_id, script, format, suffix, rely = "self", rule = "single"):
         _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         _created_by = zfused_api.zFused.USER_ID
         _output_attribute, _status = zfused_api.zFused.post( key = "attr_output", data = { "Name": name,
@@ -117,6 +117,7 @@ class Output(_Entity):
                                                                                            "Format": format,
                                                                                            "Suffix": suffix,
                                                                                            "Rely": rely,
+                                                                                           "Rule": rule,
                                                                                            "CreatedBy":_created_by,
                                                                                            "CreatedTime":_created_time } )
         if _status:

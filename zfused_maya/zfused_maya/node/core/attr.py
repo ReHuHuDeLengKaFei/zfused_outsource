@@ -50,10 +50,10 @@ def set_node_attr(node, output_attr_id, version_id, is_local = "false"):
                  str(_version_handle.data()["ProjectId"]), 
                  type="string")
     cmds.setAttr("{}.link_object".format(node), 
-                 str(_version_handle.data()["Object"]), 
+                 str(_version_handle.project_entity_type()), 
                  type="string")
     cmds.setAttr("{}.link_id".format(node), 
-                 str(_version_handle.data()["LinkId"]), 
+                 str(_version_handle.project_entity_id()), 
                  type="string")
     cmds.setAttr("{}.project_step_id".format(node), 
                  str(_task_handle.data()["ProjectStepId"]), 

@@ -27,8 +27,8 @@ def create_relatives(scene_elements, task_id, version_id):
     _task_handle = zfused_api.task.Task(task_id)
     _project_step_id = _task_handle.data()["ProjectStepId"]
     _mode_dict = defaultdict(list)
-    _entity_type = _task_handle.data()["Object"]
-    _entity_id = _task_handle.data()["LinkId"]
+    _entity_type = _task_handle.project_entity_type()
+    _entity_id = _task_handle.project_entity_id()
     for _element in scene_elements:
         if _element["link_object"] != _entity_type and _element["link_id"] != _entity_id:
             _mode_dict["relative"].append(_element)
@@ -77,8 +77,8 @@ def create_relatives_(task_id = 0):
         if not _task_id:
             return 
     _task_handle = zfused_api.task.Task(_task_id)
-    _link_object = _task_handle.data()["Object"]
-    _link_id = _task_handle.data()["LinkId"]
+    _link_object = _task_handle.project_entity_type()
+    _link_id = _task_handle.project_entity_id()
 
     # # get elements 
     # _element_list = element.scene_elements()
@@ -158,8 +158,7 @@ def create_relatives_(task_id = 0):
            
         # create object relatives
         _handle = zfused_api.task.Task(_id)
-        #print(_handle.data()["Object"], _handle.data()["LinkId"], _link_object, _link_id)
-        zfused_api.relative.create_relatives(_handle.data()["Object"], _handle.data()["LinkId"], _link_object, _link_id)
+        zfused_api.relative.create_relatives(_handle.data()["ProjectEntityType"], _handle.data()["ProjectEntityId"], _link_object, _link_id)
 
     for _element in _element_list:
         # create version relatives
