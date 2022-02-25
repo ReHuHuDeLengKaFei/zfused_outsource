@@ -38,14 +38,17 @@ def get_file_info(src_file, dst_file):
     _file_information = {}
 
     _file_information["path"] = dst_file
-    _name = os.path.basename(src_file)
-    _file_information["name"] = _name
+    _file_information["name"] = os.path.basename(dst_file)
+
     _size = os.path.getsize(src_file)
     _file_information["size"] = _size
+
     _md5 = md5_for_file(src_file)
     _file_information["md5"] = _md5
+    
     _format = src_file.split(".")[-1]
     _file_information["format"] = _format
+    
     _suffix = os.path.splitext(src_file)[-1]
     _file_information["suffix"] = _suffix
 

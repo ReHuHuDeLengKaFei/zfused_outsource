@@ -77,6 +77,28 @@ class ProjectStepCheck(_Entity):
 
 
 class ProjectStep(_Entity):
+
+    @classmethod
+    def new(cls, name, code, project_id, project_entity_type, software_id, color):
+        _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+        _project_step, _status = zfused_api.zFused.post( key = "project_step", data = { "Name": name,
+                                                                                           "Code": code,
+                                                                                           "ProjectId": project_id,
+                                                                                           "Object": project_entity_type,
+                                                                                           "SoftwareId": software_id,
+                                                                                           "Color": color,
+                                                                                           "InitScript": "print('init script')",
+                                                                                           "CombineScript": "print('combine script')",
+                                                                                           "PropertyScript": "print('property script')",
+                                                                                           "ComputeScript": "print('compute script')",
+                                                                                           "Active": "true",
+                                                                                           "CreatedBy":_created_by,
+                                                                                           "CreatedTime":_created_time } )
+        if _status:
+            return _project_step["Id"], True
+        return "{} create error".format(name), False
+
     global_dict = {}
     def __init__(self, entity_id, entity_data = None):
         super(ProjectStep, self).__init__("project_step", entity_id, entity_data)
@@ -243,6 +265,9 @@ class ProjectStep(_Entity):
         _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id})
         if not _attrs:
             _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
+            if _attrs:
+                return False
+            _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})
             if _attrs:
                 return False
         return True

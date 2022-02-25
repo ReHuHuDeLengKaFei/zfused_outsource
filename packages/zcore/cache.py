@@ -1,6 +1,7 @@
 # coding:utf-8
 # --author-- lanhua.zhou
 from __future__ import print_function
+from collections import defaultdict
 
 import time
 import threading
@@ -18,6 +19,8 @@ class ThumbnailPixmapThread(QtCore.QObject):
         super(ThumbnailPixmapThread, self).__init__()
         self._count = 0
         
+        self._sleep_time = 0
+
         self._handle_pool = []
 
         self._cmd_pool = []
@@ -29,23 +32,25 @@ class ThumbnailPixmapThread(QtCore.QObject):
     def analyze(self):
         self._count += 1
         while True:
-            # print(self._handle_pool)
             if self._handle_pool:
                 for _index, _handle in enumerate(self._handle_pool):
                     _object = _handle.object()
                     _id = _handle.id()
                     _object_id = "{}:{}".format(_object, _id)
                     _thumbnail = _handle.get_thumbnail()
-                    if _thumbnail:
-                        if _thumbnail.startswith("http:"):
-                            req = httpsession.get(_thumbnail)
-                            _pixmap = QtGui.QPixmap()
-                            _pixmap.loadFromData(req.content)
+                    try:
+                        if _thumbnail:
+                            if _thumbnail.startswith("http:"):
+                                req = httpsession.get(_thumbnail)
+                                _pixmap = QtGui.QPixmap()
+                                _pixmap.loadFromData(req.content)
+                            else:
+                                _pixmap = QtGui.QPixmap(_thumbnail)
                         else:
-                            _pixmap = QtGui.QPixmap(_thumbnail)
-                    else:
+                            _pixmap = None
+                    except:
                         _pixmap = None
-                    _ThumbnailCache.PIXMAP_CACHE[_object_id] = _thumbnail
+                    _ThumbnailCache.THUMBNAIL_PATH_CACHE[_object_id] = _thumbnail
                     _ThumbnailCache.PIXMAP_CACHE[_object_id] = _pixmap
                     self.cached.emit(_object_id)
                     self._handle_pool.pop(_index)
@@ -55,15 +60,25 @@ class ThumbnailPixmapThread(QtCore.QObject):
                         except Exception as e:
                             print(e)
                     self._cmd_pool.pop(_index)
-            # return
+                self._sleep_time = 0
+            else:
+                self._sleep_time = 0.1
             self.stop_signal.emit()
-            time.sleep(0.1)
-            # self.stop_signal.emit()
+            time.sleep(self._sleep_time)
+
 
 class _ThumbnailCache(QtCore.QObject):
     cached = QtCore.Signal(str)
-    PIXMAP_CACHE = {}
-    THUMBNAIL_PATH_CACHE = {}
+    PIXMAP_CACHE = defaultdict(QtGui.QPixmap)
+    THUMBNAIL_PATH_CACHE = defaultdict(str)
+    # PIXMAP_CACHE = {}
+    # THUMBNAIL_PATH_CACHE = {}
+
+    @classmethod
+    def clear(cls):
+        _ThumbnailCache.PIXMAP_CACHE = defaultdict(QtGui.QPixmap)
+        _ThumbnailCache.THUMBNAIL_PATH_CACHE = defaultdict(str)
+
     def __init__(self):
         super(_ThumbnailCache, self).__init__()
         
@@ -94,6 +109,7 @@ class _ThumbnailCache(QtCore.QObject):
         _id = handle.id()
         _thumbnail = handle.get_thumbnail()
         _object_id = "{}:{}".format(_object, _id)
+        # if not self.PIXMAP_CACHE.get(_object_id) or self.THUMBNAIL_PATH_CACHE.get(_object_id) != _thumbnail:
         if _object_id not in self.PIXMAP_CACHE or self.THUMBNAIL_PATH_CACHE.get(_object_id) != _thumbnail:
             self.PIXMAP_CACHE[_object_id] = None
             self.THUMBNAIL_PATH_CACHE[_object_id] = _thumbnail
@@ -103,12 +119,15 @@ class _ThumbnailCache(QtCore.QObject):
                 self._thread_start = True
         return self.PIXMAP_CACHE[_object_id]
 
+
 class CloudImagePixmapThread(QtCore.QObject):
     cached = QtCore.Signal(str)
     stop_signal = QtCore.Signal()
     def __init__(self):
         super(CloudImagePixmapThread, self).__init__()
         self._count = 0
+
+        self._sleep_time = 0
 
         self._url_pool = []
 
@@ -124,14 +143,17 @@ class CloudImagePixmapThread(QtCore.QObject):
             if self._url_pool:
                 for _index, _url in enumerate(self._url_pool):
                     _thumbnail = _url
-                    if _thumbnail:
-                        if _thumbnail.startswith("http:"):
-                            req = httpsession.get(_thumbnail)
-                            _pixmap = QtGui.QPixmap()
-                            _pixmap.loadFromData(req.content)
+                    try:
+                        if _thumbnail:
+                            if _thumbnail.startswith("http:"):
+                                req = httpsession.get(_thumbnail)
+                                _pixmap = QtGui.QPixmap()
+                                _pixmap.loadFromData(req.content)
+                            else:
+                                _pixmap = QtGui.QPixmap(_thumbnail)
                         else:
-                            _pixmap = QtGui.QPixmap(_thumbnail)
-                    else:
+                            _pixmap = None
+                    except:
                         _pixmap = None
                     _CloudImageCache.PIXMAP_CACHE[_url] = _pixmap
                     # self.cached.emit(_object_id)
@@ -142,15 +164,23 @@ class CloudImagePixmapThread(QtCore.QObject):
                         except Exception as e:
                             print(e)
                     self._cmd_pool.pop(_index)
+                self._sleep_time = 0
+            else:
+                self._sleep_time = 0.1
             # return
             self.stop_signal.emit()
-            time.sleep(0.1)
-            # self.stop_signal.emit()
+            time.sleep(self._sleep_time)
 
-# cloud thumbnail cache
+
 class _CloudImageCache(QtCore.QObject):
     cached = QtCore.Signal(str)
     PIXMAP_CACHE = {}
+
+    @classmethod
+    def clear(cls):
+        _CloudImageCache.PIXMAP_CACHE = defaultdict(QtGui.QPixmap)
+        # cls.THUMBNAIL_PATH_CACHE = defaultdict(str)
+
     def __init__(self):
         super(_CloudImageCache, self).__init__()
         
@@ -190,7 +220,6 @@ class _CloudImageCache(QtCore.QObject):
 ThumbnailCache = _ThumbnailCache()
 
 CloudImageCache = _CloudImageCache()
-
 
 # class _ThumbnailPixmapThread(threading.Thread):
 #     exec_ = False

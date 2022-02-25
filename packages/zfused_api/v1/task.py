@@ -66,6 +66,15 @@ def new_production_file(files, task_id, attr_output_id, index = 0, relative_enti
         _file_thumbnail_path = _file.get("thumbnail_path")
         _file_width = _file.get("width")
         _file_height = _file.get("height")
+
+        # relative
+        if _file.get("relative_entity_type"):
+            _relative_entity_type = _file.get("relative_entity_type")
+        if _file.get("relative_entity_id"):
+            _relative_entity_id = _file.get("relative_entity_id")
+        if _file.get("relative_name_space"):
+            _relative_name_space = _file.get("relative_name_space")
+
         zfused_api.zFused.post( key = "production_file",
                                 data = { "ProjectId": _project_id,
                                          "ProjectStepId": _project_step_id,
@@ -1226,7 +1235,151 @@ class Task(_Entity):
                                 break
 
                 elif _rely == "asset" or _rely == "assembly":
-                    _asset_task = {}
+                    _relative_tasks = defaultdict(list) 
+
+                    _relatives = self.get("relative", filter = { "SourceObject": _rely,
+                                                                    "TargetObject": self.project_entity_type(), 
+                                                                    "TargetId": self.project_entity_id() })
+                    if not _relatives:
+                        continue
+                    
+                    for _relative in _relatives:
+                        if _rule == "latest":
+                            # 获取最新的关联任务
+                            _latest_time = None
+                            _latest_conn_id = 0
+                            _latest_task = None
+                            for _attr_conn in _attr_conns:
+                                _attr_output_id = _attr_conn.get("AttrOutputId")
+                                _attr_output = zfused_api.attr.Output(_attr_output_id)
+                                _attr_output_project_step = _attr_output.project_step()
+                                _attr_output_rule = _attr_output.rule()
+                                _attr_output_rely = _attr_output.rely()
+
+                                _conn_id = _attr_conn["Id"]
+                                if _attr_output_rely == _rely:
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                         "ProjectEntityType": self.project_entity_type(), 
+                                                                         "ProjectEntityId": self.project_entity_id() })
+                                    if _tasks:
+                                        _task = _tasks[0]
+                                        _task["NameSpace"] = _relative.get("NameSpace")
+                                        _files = zfused_api.zFused.get("production_file", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                                                     "ProjectStepAttrId": _attr_output_id,
+                                                                                                     "ProjectEntityType": self.project_entity_type(), 
+                                                                                                     "ProjectEntityId": self.project_entity_id(),
+                                                                                                     "TaskId": _task.get("Id"),
+                                                                                                     "RelativeEntityType": _relative.get("SourceObject"),
+                                                                                                     "RelativeEntityId": _relative.get("SourceId"),
+                                                                                                     "RelativeNameSpace": _relative.get("NameSpace") })
+                                        if _files:
+                                            _file_time = _files[-1].get("CreatedTime")
+                                            if not _latest_time or _latest_time < _file_time:
+                                                _latest_time = _file_time
+                                                _latest_conn_id = _conn_id
+                                                _latest_task = _task
+                                else:
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                         "ProjectEntityType": _relative.get("SourceObject"),
+                                                                         "ProjectEntityId": _relative.get("SourceId") })
+                                    if _tasks:
+                                        _task = _tasks[0]
+                                        _task["NameSpace"] = _relative.get("NameSpace")
+                                        _files = zfused_api.zFused.get("production_file", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                                                     "ProjectStepAttrId": _attr_output_id,
+                                                                                                     "ProjectEntityType": self.project_entity_type(), 
+                                                                                                     "ProjectEntityId": self.project_entity_id(),
+                                                                                                     "TaskId": _task.get("Id")
+                                                                                                     })
+                                        if _files:
+                                            _file_time = _files[-1].get("CreatedTime")
+                                            if not _latest_time or _latest_time < _file_time:
+                                                _latest_time = _file_time
+                                                _latest_conn_id = _conn_id
+                                                _latest_task = _task
+
+                            if _latest_task:
+                                _relative_tasks[_latest_conn_id].append(_latest_task)                                
+                        else:
+                            for _attr_conn in _attr_conns:
+                                _attr_output_id = _attr_conn.get("AttrOutputId")
+                                _attr_output = zfused_api.attr.Output(_attr_output_id)
+                                _attr_output_project_step = _attr_output.project_step()
+                                _attr_output_rule = _attr_output.rule()
+                                _attr_output_rely = _attr_output.rely()
+
+                                _task = {}
+                                if _attr_output_rely == _rely:
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                         "ProjectEntityType": self.project_entity_type(), 
+                                                                         "ProjectEntityId": self.project_entity_id() })
+                                    if _tasks:
+                                        _task = _tasks[0]
+                                        _task["NameSpace"] = _relative.get("NameSpace")
+                                else:
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                         "ProjectEntityType": _relative.get("SourceObject"),
+                                                                         "ProjectEntityId": _relative.get("SourceId") })
+                                    if _tasks:
+                                        _task = _tasks[0]
+                                        _task["NameSpace"] = _relative.get("NameSpace")
+                                if _task:
+                                    _relative_tasks[_attr_conn["Id"]].append(_task)
+
+                    if not _relative_tasks:
+                        continue
+                    
+                    for _k, _v in _relative_tasks.items():
+                        tasks[_k] += _v
+
+                    """
+
+                    for _attr_conn in _attr_conns:
+                        _attr_output_id = _attr_conn.get("AttrOutputId")
+                        _attr_output = zfused_api.attr.Output(_attr_output_id)
+                        _attr_output_project_step = _attr_output.project_step()
+                        _attr_output_rule = _attr_output.rule()
+                        _attr_output_rely = _attr_output.rely()
+                        # get relative object
+                        _relatives = self.get("relative", filter = { "SourceObject": _rely,
+                                                                     "TargetObject": self.project_entity_type(), 
+                                                                     "TargetId": self.project_entity_id() })
+                        if not _relatives:
+                            continue
+                        for _relative in _relatives:
+                            _task = {}
+                            if _attr_output_rely == _rely:
+                                _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                     "ProjectEntityType": self.project_entity_type(), 
+                                                                     "ProjectEntityId": self.project_entity_id() })
+                                if _tasks:
+                                    _task = _tasks[0]
+                                    _task["NameSpace"] = _relative.get("NameSpace")
+                            else:
+                                _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(), 
+                                                                     "ProjectEntityType": _relative.get("SourceObject"),
+                                                                     "ProjectEntityId": _relative.get("SourceId") })
+                                if _tasks:
+                                    _task = _tasks[0]
+                                    _task["NameSpace"] = _relative.get("NameSpace")
+                            if _task:
+
+                                _relative_tasks[_attr_conn["Id"]].append(_task)
+                        
+                        if _rule == "single":
+                            continue
+
+                    if not _relative_tasks:
+                        continue
+                    
+                    if _rule == "latest":
+                        # 获取最新的文件
+                        for _k, _v in _relative_tasks.items():
+                            tasks[_k] += _v
+
+
+                    
+                    #
                     for _attr_conn in _attr_conns:
                         _attr_output_id = _attr_conn.get("AttrOutputId")
                         _attr_output = zfused_api.attr.Output(_attr_output_id)
@@ -1261,6 +1414,7 @@ class Task(_Entity):
                                     
                         if _rule == "single":
                             break
+                    """
 
                 # # 获取属性关联
                 # _attr_conns = self.get("attr_conn", filter = {"AttrInputId": _input_attr.get("Id")})

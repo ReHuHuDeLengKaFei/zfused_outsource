@@ -7,8 +7,11 @@ from __future__ import print_function
 
 import os
 import glob
-import locale
 import subprocess
+import shutil
+import tempfile
+import hashlib
+import locale
 
 PATH = os.path.abspath("./plugins")
 if not os.path.isdir(PATH):
@@ -38,7 +41,6 @@ def cut_image(video, image):
 
 def convert_video(inVideo, outVideo):
     """ convet video 
-
     :rtype: bool
     """
     _ffmpeg_exe = os.path.join(PLUGIN_DIRNAME,"ffmpeg/ffmpeg.exe")
@@ -57,9 +59,9 @@ def convert_video(inVideo, outVideo):
 def mergeVideo(filename, fps, size, images, audio = None, offset = None, time = None):
     _ffmpeg_exe = os.path.join(PLUGIN_DIRNAME,"ffmpeg/ffmpeg.exe")
     if audio:
-        cmd = '%s -y -r %s -f image2 -s %s -i %s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p -t %s %s'%(_ffmpeg_exe, fps, size, images, offset, audio, time, filename)
+        cmd = '%s -y -framerate %s -f image2 -s %s -i %s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p -t %s %s'%(_ffmpeg_exe, fps, size, images, offset, audio, time, filename)
     else:
-        cmd = '%s -y -r %s -f image2 -s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p %s'%(_ffmpeg_exe, fps, size,images, filename)
+        cmd = '%s -y -framerate %s -f image2 -s %s -i %s -vcodec libx264 -crf 25 -pix_fmt yuv420p %s'%(_ffmpeg_exe, fps, size,images, filename)
 
     _process = subprocess.Popen(cmd, shell = True)
     _process.communicate()

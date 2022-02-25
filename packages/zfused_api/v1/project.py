@@ -133,19 +133,22 @@ class Project(_Entity):
             if not _profile:
                 logger.error("project id {0} is not exists".format(self._id))
                 return
-            self.profile = _profile[0]
+            self._profile = _profile[0]
             _config = self.get( "project_config", filter = { "ProjectId": self._id} )
             if not _config:
                 logger.error("project id {0} is not exists".format(self._id))
                 return
-            self.config = _config[0]
+            self._config = _config[0]
             self.global_dict[self._id] = self._data
-            self.profile_dict[self._id] = self.profile
-            self.config_dict[self._id] = self.config
+            self.profile_dict[self._id] = self._profile
+            self.config_dict[self._id] = self._config
         else:
             self._data = self.global_dict[self._id]
-            self.profile = self.profile_dict[self._id]
-            self.config = self.config_dict[self._id]
+            self._profile = self.profile_dict[self._id]
+            self._config = self.config_dict[self._id]
+
+            self.config = self._config
+            self.profile = self._profile
 
     def full_code(self):
         """get full path code
@@ -172,10 +175,10 @@ class Project(_Entity):
         """ return project color
 
         """
-        _color = self.profile["Color"]
+        _color = self._profile["Color"]
         if not _color:
             return "#FFFFFF"
-        return self.profile["Color"]
+        return self._profile["Color"]
 
     def status(self):
         return zfused_api.status.Status(self._data.get("StatusId"))
@@ -192,7 +195,7 @@ class Project(_Entity):
 
         rtype: datetime.datetime
         """
-        _time_text = self.profile["StartTime"]
+        _time_text = self._profile["StartTime"]
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
@@ -203,54 +206,54 @@ class Project(_Entity):
 
         rtype: datetime.datetime
         """
-        _time_text = self.profile["EndTime"]
+        _time_text = self._profile["EndTime"]
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
     def production_path(self):
-        _production_path = self.config.get("ProductionPath")
+        _production_path = self._config.get("ProductionPath")
         if not _production_path:
-            _production_path = self.config.get("Root")
+            _production_path = self._config.get("Root")
         return _production_path
 
     def transfer_path(self):
-        _transfer_path = self.config.get("TransferPath")
+        _transfer_path = self._config.get("TransferPath")
         return _transfer_path
 
     def backup_path(self):
-        _backup_path = self.config.get("BackupPath")
+        _backup_path = self._config.get("BackupPath")
         if not _backup_path:
-            _backup_path = self.config.get("Publish")
+            _backup_path = self._config.get("Publish")
         return _backup_path
 
     def work_path(self):
         """ get project work path
         rtype: str
         """
-        _work_path = self.config.get("WorkPath")
+        _work_path = self._config.get("WorkPath")
         if not _work_path:
-            _work_path = self.config.get("LocalRoot")
+            _work_path = self._config.get("LocalRoot")
         return _work_path
 
     def temp_path(self):
         """ get project publish path
         rtype: str
         """
-        _temp_path = self.config.get("TempPath")
+        _temp_path = self._config.get("TempPath")
         if not _temp_path:
-            _temp_path = self.config.get("LocalPublish")
+            _temp_path = self._config.get("LocalPublish")
         return _temp_path
 
     def image_path(self):
-        return self.config.get("ImagePath")
+        return self._config.get("ImagePath")
 
     def cache_path(self):
-        return self.config.get("CachePath")
+        return self._config.get("CachePath")
 
     def farm_path(self):
-        return self.config.get("FarmPath")
+        return self._config.get("FarmPath")
 
     def project_step_ids(self):
         """ get asset task step id
@@ -326,10 +329,21 @@ class Project(_Entity):
         return [_attr["Id"] for _attr in _attrs]
 
     def get_thumbnail(self):
-        _thumbnail = self.profile["ThumbnailPath"]
+        _thumbnail = self._profile["ThumbnailPath"]
         if _thumbnail.startswith("storage"):
             return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail.split("storage/")[-1])
         return None
+
+    def update_thumbnail_path(self, thumbnail_path):
+        if self.profile_dict[self._id]["ThumbnailPath"] == thumbnail_path:
+            return True
+        self.profile_dict[self._id]["ThumbnailPath"] = thumbnail_path
+        self._profile["ThumbnailPath"] = thumbnail_path
+        v = self.put("project_profile", self._profile["Id"], self._profile, "thumbnail_path", False)
+        if v:
+            return True
+        else:
+            return False
 
     def update_priority(self, priority_index):
         """
@@ -382,14 +396,14 @@ class Project(_Entity):
         return "add software {} error".format(software_id), False
 
     def fps(self):
-        return self.config.get("Fps")
+        return self._config.get("Fps")
 
     def resolution(self):
-        return [self.config.get("ImageWidth"), self.config.get("ImageHeight")]
+        return [self._config.get("ImageWidth"), self._config.get("ImageHeight")]
 
     def variables(self, key = ""):
-        self.config = self.get_one( "project_config", self.config.get("Id") )
-        _property = self.config.get("Variables")
+        self._config = self.get_one( "project_config", self._config.get("Id") )
+        _property = self._config.get("Variables")
         if not _property:
             return {}
         _property = eval(_property)
@@ -400,8 +414,8 @@ class Project(_Entity):
     def update_variables(self, key, value):
         _property = self.variables()
         _property[key] = value
-        self.config["Variables"] = str(_property)
-        v = self.put("project_config", self.config["Id"], self.config, "Variables")
+        self._config["Variables"] = str(_property)
+        v = self.put("project_config", self._config["Id"], self._config, "Variables")
         if v:
             return True
         else:

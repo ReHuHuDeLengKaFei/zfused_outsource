@@ -602,18 +602,7 @@ class Sequence(_Entity):
                                                           "Active": "true",
                                                           "CreatedBy": _create_id,
                                                           "CreatedTime": _current_time })
-        # _task = self.get("task", filter = { "SelfObject":"task",
-        #                                    "Name": _task_name,
-        #                                    "ProjectStepId": _project_step_id, 
-        #                                    "ProjectId": _project_id,
-        #                                    "StepId": _step_id,
-        #                                    "StatusId": _status_id,
-        #                                    "CreateBy": _create_id,
-        #                                    "AssignedTo": _assigned_id,
-        #                                    "Object": _object,
-        #                                    "LinkId": _link_id,
-        #                                    "SoftwareId":_software_id,
-        #                                    "IsOutsource":0})
+
         if _status:
             self.global_tasks[self._id].append(_task)
 

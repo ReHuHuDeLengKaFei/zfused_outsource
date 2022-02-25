@@ -5,9 +5,13 @@ import os
 import time
 import sys
 import socket
+import tempfile
+import hashlib
 import logging
 
 from Qt import QtCore
+
+logger = logging.getLogger(__file__)
 
 BUFFER_SIZE = 1024*1024
 
@@ -16,7 +20,26 @@ def get_internal_trans_server_addr():
     _ip, _port = zfused_api.zFused.CLOUD_TRANS_SERVER_ADDR.split(":")
     return (_ip, int(_port))
 
-logger = logging.getLogger(__file__)
+def md5_for_file(f, block_size=2**20):
+    with open(f) as fHandle:
+        md5 = hashlib.md5()
+        while True:
+            data = fHandle.read(block_size)
+            if not data:
+                break
+            md5.update(data)
+        return md5.hexdigest()
+    return md5.hexdigest()
+
+def is_hash_equal(f1, f2):
+    if f1 == f2:
+        return True
+    if os.path.isfile(f1) and os.path.isfile(f2):
+        str1 = md5_for_file(f1)  
+        str2 = md5_for_file(f2)  
+        return str1 == str2 
+    return False
+
 
 # 添加回调进度百分比
 # 类似指针
@@ -29,6 +52,8 @@ def trans( func ):
         global _socket
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.connect(get_internal_trans_server_addr())
+        # Turn $gMainPane Off:
+        # mel.eval("paneLayout -e -manage false $gMainPane")
         try:
             return func( *args, **kwargs )
         except Exception as e:
@@ -41,6 +66,9 @@ def trans( func ):
 
 # @trans
 def send_file_to_server(src_file, dst_file, progress = [0]):
+    if is_hash_equal(src_file, dst_file):
+        return True
+
     _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _socket.connect(get_internal_trans_server_addr())
     try:
@@ -50,7 +78,7 @@ def send_file_to_server(src_file, dst_file, progress = [0]):
         _send_commond = "send {} {}".format(_dst_file, _file_size)
         _socket.send( _send_commond.encode() )
         data = _socket.recv(BUFFER_SIZE)
-        if data.decode() == "start":
+        if data.decode().startswith("start"):
             print("start send file")
             # send_file_to_server(_src_file, _socket)
             with open(src_file, "rb") as f:
@@ -86,6 +114,9 @@ def send_file_to_server(src_file, dst_file, progress = [0]):
         _socket.close()
 
 def get_file_from_server(src_file, dst_file, progress = [0]):
+    if is_hash_equal(src_file, dst_file):
+        return True
+
     _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _socket.connect(get_internal_trans_server_addr())
     try:
@@ -179,18 +210,19 @@ class FileTransfer(QtCore.QObject):
         self._dst_file = dst_file
 
     def upload(self):
+        if is_hash_equal(src_file, dst_file):
+            return True
+
         self.progress_started.emit()
         print("start ...")
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.connect(get_internal_trans_server_addr())
         try:
-            # _src_file = self._src_file
-            # _dst_file = self._dst_file
             _file_size = os.path.getsize(self._src_file)
             _send_commond = "send {} {}".format(self._dst_file, _file_size)
             _socket.send( _send_commond.encode() )
             data = _socket.recv(BUFFER_SIZE)
-            if data.decode() == "start":
+            if data.decode().startswith("start"):
                 print("start send file")
                 _progress_value = 0
                 with open(self._src_file, "rb") as f:
@@ -229,8 +261,10 @@ class FileTransfer(QtCore.QObject):
             _socket.close()         
 
     def download(self):
-        self.progress_started.emit()
+        if is_hash_equal(src_file, dst_file):
+            return True
 
+        self.progress_started.emit()
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.connect(get_internal_trans_server_addr())
         try:
@@ -238,7 +272,6 @@ class FileTransfer(QtCore.QObject):
             _socket.send( _send_commond.encode() )
             data = _socket.recv(BUFFER_SIZE)
             arrayOfCommands = data.decode().split(" ")
-            # print(arrayOfCommands)
             if arrayOfCommands[0] == "send":
                 # 判定文件是否存在
                 _file_name = arrayOfCommands[1]

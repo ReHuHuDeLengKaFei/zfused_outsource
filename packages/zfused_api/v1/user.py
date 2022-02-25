@@ -336,9 +336,9 @@ class User(_Entity):
         if self._id not in self.global_post:
             _post_users = self.get("post_user", filter = {"UserId":self._id})
             if not _post_users:
-                self.global_post[self._id] = []
+                self.global_post[self._id] = set([])
             else:
-                self.global_post[self._id] = [_post_user["PostId"] for _post_user in _post_users]
+                self.global_post[self._id] = set([_post_user["PostId"] for _post_user in _post_users])
         return self.global_post[self._id]
 
     def department_ids(self):
@@ -348,9 +348,9 @@ class User(_Entity):
         if self._id not in self.global_department:
             _department_users = self.get("department_user", filter = {"UserId": self._id})
             if not _department_users:
-                self.global_department[self._id] = []
+                self.global_department[self._id] = set([])
             else:
-                self.global_department[self._id] = [_department_user["DepartmentId"] for _department_user in _department_users]
+                self.global_department[self._id] = set([_department_user["DepartmentId"] for _department_user in _department_users])
         return self.global_department[self._id]
 
     def clear_unread_messags(self):
