@@ -48,7 +48,6 @@ class _position_repair_ui(QtWidgets.QWidget):
         self.file_path = os.path.dirname(__file__)
         self.json_box = QtWidgets.QComboBox()
         self.json_box.setFixedHeight(30)
-
         self.rfn_tree.setStyleSheet("QTreeWidget::item{font-size: 12px;color: #FFFFFF;}")
 
     def build(self):
@@ -68,7 +67,7 @@ class _position_repair_ui(QtWidgets.QWidget):
         self.rfn_tree.setHeaderLabels(["namespace","file_path","matrix"])
         self.rfn_tree.setColumnCount(3)
         self.rfn_tree.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.singl_repair_btn.clicked.connect(self.singal_repair_func)
+        #self.singl_repair_btn.clicked.connect(self.singal_repair_func)
         self.global_repair.clicked.connect(self.global_repair_func)
         scene_json =self.get_all_json()
         self.json_box.addItems(scene_json)
@@ -102,7 +101,6 @@ class _position_repair_ui(QtWidgets.QWidget):
         layout.addWidget(self.global_repair)
 
     def add_tree_item(self,json_path):
-
         try:
             with open(json_path,"r") as f:
                 _date =json.load(f)
@@ -172,7 +170,6 @@ class _position_repair_ui(QtWidgets.QWidget):
     def comebox_change_func(self):
         self.rfn_tree.clear()
         current_json_name = self.json_box.currentText()
-        print(current_json_name)
         json_path = os.path.join(self.file_path, current_json_name)
         self.add_tree_item(json_path)
 
