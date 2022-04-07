@@ -250,6 +250,13 @@ class Version(_Entity):
         _task_handle = zfused_api.task.Task(self._data["TaskId"])
         _path = _task_handle.production_path()
         _file_name = self._data["FilePath"]
+
+        _work_with_no_version = self.project().variables("work_with_no_version", 0)
+        if _work_with_no_version:
+            _file_name = _file_name.split(".")
+            _file_name.pop(-2)
+            _file_name = ".".join(_file_name)
+
         _file = "{}/{}/{}".format(_path, attr_code, _file_name)
         return _file
 

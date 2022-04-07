@@ -2,6 +2,8 @@
 # --author-- lanhua.zhou
 from __future__ import print_function
 
+import os
+
 from Qt import QtWidgets, QtGui, QtCore
 
 
@@ -71,6 +73,12 @@ class ShowPanelWidget(QtWidgets.QWidget):
         
         self.panel_splitter.setStretchFactor(0, 6)
         self.panel_splitter.setStretchFactor(1, 4)
+
+        #_qss = resource.get("qss", "./window.qss")
+        _qss = "{}/window.qss".format(os.path.dirname(__file__))
+        with open(_qss) as f:
+            qss = f.read()
+            self.setStyleSheet(qss)
 
 
 def progress_decorator(func):

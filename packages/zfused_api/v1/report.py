@@ -283,3 +283,118 @@ class Report(_Entity):
 
     def layer_id(self):
         return self._data.get("LayerId")
+
+    def set_pass(self):
+
+        _review = zfused_api.zFused.get("review", filter = {"EntityType":"report", "EntityId": self._id})
+        if not _review:
+            self.update_approval(-1)
+            self.task().update_review_status("-1")
+            return
+
+        _review_id = _review[0].get("Id")
+        _review_handle = zfused_api.review.Review(_review_id)
+        _task_handle = zfused_api.task.Task(self._data.get("TaskId"))
+        
+        # if _review_handle.data()["Status"] == "1":
+        #     return
+
+        _review_process_name = ""
+        _review_process_id = _review_handle.data().get("ReviewProcessId")
+        if _review_process_id:
+            _review_process_handle = zfused_api.review.ReviewProcess(_review_process_id)
+            _review_process_name = _review_process_handle.name()
+        _review_handle.submit("1")
+        _next_review_process_id = _review_handle.data().get("ReviewProcessId")
+        if _next_review_process_id == _review_process_id:
+            self.update_approval(1)
+            
+        currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._reply(self, _review_id, {}, {"name":_review_process_name,"value":1,"submitter_id":zfused_api.zFused.USER_ID,"submit_time":currentTime})
+
+        _task_handle.update_review_process(_next_review_process_id)
+        if _next_review_process_id == _review_process_id:
+            _task_handle.update_review_status("1")
+
+    
+    def set_no_pass(self):
+        _review = zfused_api.zFused.get("review", filter = {"EntityType":"report", "EntityId":self._id})
+        if not _review:
+            self.update_approval(-1)
+            self.task().update_review_status("-1")
+            return
+
+        _review_id = _review[0]["Id"]
+        _review_handle = zfused_api.review.Review(_review_id)
+
+        # if _review_handle.data()["Status"] == "-1":
+        #     return
+
+        _review_process_name = ""
+        _review_process_id = _review_handle.data().get("ReviewProcessId")
+        if _review_process_id:
+            _review_process_handle = zfused_api.review.ReviewProcess(_review_process_id)
+            _review_process_name = _review_process_handle.name()
+        _review_handle.submit("-1")
+        self.update_approval(-1)
+
+        currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._reply(self, _review_id, {}, {"name":_review_process_name,"value":-1,"submitter_id":zfused_api.zFused.USER_ID,"submit_time":currentTime})
+    
+        _task_handle = zfused_api.task.Task(self._data.get("TaskId"))
+        _task_handle.update_review_process(_review_process_id)
+        _task_handle.update_review_status("-1")
+
+    def _reply(self, report_handle, review_id, message, respond = None, clear = True):
+        """ 
+        """
+        _reply_text = message
+
+        _task_id = report_handle.data()["TaskId"]
+        _task_handle = zfused_api.task.Task(_task_id)
+        _project_step_handle = zfused_api.step.ProjectStep(_task_handle.data()["ProjectStepId"])
+        _submit_user_id = [report_handle.data()["CreatedBy"]]
+        
+        _review_process = _project_step_handle.review_process()
+        if _review_process:
+            _review_user_ids = _project_step_handle.review_user_ids()
+        else:
+            _review_process_id = 0
+            _review_user_ids = _project_step_handle.approvalto_user_ids()
+
+        _ccer_ids = _project_step_handle.cc_user_ids()
+        _receiver_ids = list(set(_review_user_ids + _ccer_ids + _submit_user_id))
+        _user_ids = list(set(_receiver_ids))
+        _group_users = zfused_api.zFused.get("group_user", filter = {"EntityType":"task", "EntityId": _task_id})
+        if _group_users:
+            for _group_user in _group_users:
+                _user_id = int(_group_user["UserId"])
+                if _user_id in _user_ids:
+                    _user_ids.remove(_user_id)
+        if _user_ids:
+            for _user_id in _user_ids:
+                zfused_api.zFused.post("group_user", {"EntityType":"task", "EntityId":_task_id, "UserId": _user_id})
+
+        _user_id = zfused_api.zFused.USER_ID
+        if respond:
+            _message_id = zfused_api.im.submit_message( "user",
+                                                        _user_id,
+                                                        _receiver_ids,
+                                                        { "msgtype": "respond",
+                                                          "respond": respond },
+                                                        "respond", 
+                                                        "review",
+                                                        review_id,
+                                                        "task",
+                                                        report_handle.data()["TaskId"] )
+        if message:
+            _message_id = zfused_api.im.submit_message( "user",
+                                                        _user_id,
+                                                        _receiver_ids,
+                                                        { "msgtype": "rich-text",
+                                                        "rich-text": _reply_text },
+                                                        "reply", 
+                                                        "review",
+                                                        review_id,
+                                                        "task",
+                                                        report_handle.data()["TaskId"] )

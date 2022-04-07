@@ -554,17 +554,6 @@ class Assembly(_Entity):
     #     _key = "{}_{}".format(assembly_id, project_step_id)    
     #     cls.task_dict[_key].append(task)
 
-    def update_name(self, name):
-        """
-        """
-        self.global_dict[self._id]["Name"] = name
-        self._data["Name"] = name
-        v = self.put("assembly", self._data["Id"], self._data, "name")
-        if v:
-            return True
-        else:
-            return False
-
     def update_status(self, status_id):
         """ update project step check script
         

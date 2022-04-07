@@ -239,7 +239,6 @@ def _delete_multishape():
         if _getshape:
             if len(_getshape)>1:
                 cmds.delete(_getshape[1:])
-                #print ((_aname+u" 多余型节点已经被删除"))
 
 
 def normal_lock():
@@ -250,3 +249,19 @@ def normal_lock():
     if meshs:
         for _mesh in meshs:
             cmds.polyNormalPerVertex(_mesh,ufn = 1)
+
+def null_refernece():
+    """
+    清理 未参考reference
+    """
+    _references = cmds.ls(rf=True)
+    _null_reference = []
+    for _reference in _references:
+        try:
+            cmds.referenceQuery(_reference, f=1)
+        except:
+            _null_reference.append(_reference)
+    if len(_null_reference) !=0:
+        for _ref in _null_reference:
+            cmds.lockNode(_ref,lock =False)
+            cmds.delete(_ref)

@@ -78,7 +78,6 @@ class Window(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event):
         """ resize event
-
         """
         self.__edge_place()
 

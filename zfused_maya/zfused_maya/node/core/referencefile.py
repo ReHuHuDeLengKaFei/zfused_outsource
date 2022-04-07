@@ -13,6 +13,7 @@ import pymel.core as pm
 
 from zcore import filefunc
 
+
 logger = logging.getLogger(__name__)
 
 def publish_file(files, src, dst):

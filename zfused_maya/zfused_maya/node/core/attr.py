@@ -43,38 +43,35 @@ def set_node_attr(node, output_attr_id, version_id, is_local = "false"):
     if _is_lock:
         cmds.lockNode(node, l=True)
 
-    _version_handle = zfused_api.version.Version(version_id)
-    _task_handle = zfused_api.task.Task(_version_handle.data()["TaskId"])
+    _version = zfused_api.version.Version(version_id)
+    _task = _version.task()
 
     cmds.setAttr("{}.project_id".format(node), 
-                 str(_version_handle.data()["ProjectId"]), 
+                 str(_task.project_id()), 
                  type="string")
     cmds.setAttr("{}.link_object".format(node), 
-                 str(_version_handle.project_entity_type()), 
+                 str(_task.project_entity_type()), 
                  type="string")
     cmds.setAttr("{}.link_id".format(node), 
-                 str(_version_handle.project_entity_id()), 
+                 str(_task.project_entity_id()), 
                  type="string")
     cmds.setAttr("{}.project_step_id".format(node), 
-                 str(_task_handle.data()["ProjectStepId"]), 
+                 str(_task.project_step_id()), 
                  type="string")
     
-    _project_step = _task_handle.project_step()
-    # print(_project_step.is_new_attribute_solution())
-    # print(output_attr_id)
+    _project_step = _task.project_step()
     if _project_step.is_new_attribute_solution():
         _output_attr_handle = zfused_api.attr.Output(output_attr_id)
-        # print(_output_attr_handle.data())
     else:
         _output_attr_handle = zfused_api.outputattr.OutputAttr(output_attr_id)
     cmds.setAttr("{}.output_attr".format(node), str(_output_attr_handle.code()), type = "string")
     cmds.setAttr("{}.output_attr_id".format(node), str(output_attr_id), type = "string")
     cmds.setAttr("{}.task_id".format(node), 
-                 str(_version_handle.data()["TaskId"]), 
+                 str(_version.data()["TaskId"]), 
                  type="string")
-    cmds.setAttr("{}.version".format(node), str(_version_handle.index()), type = "string")
+    cmds.setAttr("{}.version".format(node), str(_version.index()), type = "string")
     cmds.setAttr("{}.version_id".format(node), 
-                 str(_version_handle.data()["Id"]), 
+                 str(_version.data()["Id"]), 
                  type="string")
     #is_local = "false"
     cmds.setAttr("{}.is_local".format(node), 
@@ -121,8 +118,8 @@ def get_node_attr(node):
     if cmds.objExists("{}.version".format(node)):
         _attr_data["version"] = int(cmds.getAttr("%s.version" % node))
     else:
-        _version_handle = zfused_api.version.Version(_attr_data["version_id"])
-        _attr_data["version"] = _version_handle.index()
+        _version = zfused_api.version.Version(_attr_data["version_id"])
+        _attr_data["version"] = _version.index()
 
     return _attr_data
 

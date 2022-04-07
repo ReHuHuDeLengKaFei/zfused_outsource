@@ -201,6 +201,7 @@ class zFused(object):
             return False
 
 
+
 class _Entity(zFused):
     global_dict = {}
     def __init__(self, entity_type, entity_id, entity_data):
@@ -254,6 +255,9 @@ class _Entity(zFused):
         rtype: str
         """
         return u"{}({})".format(self.name(), self.code())
+
+    def match(self, text):
+        pass
 
     def sort(self):
         if "Sort" in self._data:
@@ -345,6 +349,28 @@ class _Entity(zFused):
         _property[key] = value
         self._data["Property"] = str(_property)
         v = self.put(self._type, self._id, self._data, "property")
+        if v:
+            return True
+        else:
+            return False
+
+    def update_name(self, name):
+        """
+        """
+        self.global_dict[self._id]["Name"] = name
+        self._data["Name"] = name
+        v = self.put(self._type, self._data["Id"], self._data, "name")
+        if v:
+            return True
+        else:
+            return False
+
+    def update_code(self, code):
+        """
+        """
+        self.global_dict[self._id]["Code"] = code
+        self._data["Code"] = code
+        v = self.put(self._type, self._data["Id"], self._data, "code")
         if v:
             return True
         else:

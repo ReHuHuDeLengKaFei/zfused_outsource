@@ -236,7 +236,7 @@ class ThumbnailButton(QtWidgets.QPushButton):
         path = QtGui.QPainterPath()
         painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 0), 1))
         path.addRect(_rect.x(),_rect.y(),_rect.width(),_rect.height())
-        path.addRoundedRect(_rect.x(),_rect.y(),_rect.width(),_rect.height(), 4, 4)
+        path.addRoundedRect(_rect.x(),_rect.y(),_rect.width(),_rect.height(), 0, 0)
         self._background_color = self.parent().palette().color(self.parent().backgroundRole())
         painter.setBrush(QtGui.QBrush(QtGui.QColor(self._background_color)))
         path.setFillRule(QtCore.Qt.OddEvenFill)

@@ -7,13 +7,13 @@ import os
 import shutil
 
 import maya.cmds as cmds
-
+import  maya.mel as mel
 from zcore import filefunc
+import xgenm as xg
 
 
 def publish_file(files, src, dst):
     """ upload files 
-
     """
     _files = files
     for _file in _files:
@@ -27,7 +27,6 @@ def publish_file(files, src, dst):
 
 def local_file(files, src, dst):
     """ local download files 
-
     """
     _files = files
     for _file in _files:
@@ -45,7 +44,6 @@ def local_file(files, src, dst):
 
 def change_node_path(nodes, src, dst):
     """ change file nodes path
-
     """
     _file_nodes = nodes
     for _file_node in _file_nodes:
@@ -62,7 +60,6 @@ def change_node_path(nodes, src, dst):
 
 def nodes():
     """ 获取alembic cache节点
-
     :rtype: list
     """
     _file_nodes = cmds.ls(type = "AlembicNode")
@@ -150,12 +147,13 @@ def paths(alembic_files):
 
     return _value
 
-def create_frame_cache(_path,startTime,endTime,grpname,*args):
+def create_frame_cache(_path,startTime,endTime,grpname,*args,**kwargs):
     '''生成创建缓存命令
     '''
     _dir = os.path.dirname(_path)
     if not os.path.isdir(_dir):
         os.makedirs(_dir)
+
     if isinstance(grpname,list):
         roots = ''.join(["-root %s "%i for i in grpname])
     else:
@@ -165,7 +163,14 @@ def create_frame_cache(_path,startTime,endTime,grpname,*args):
         exOptions = ''.join([" -%s"%j for j in args])
     else:
         exOptions = ''
-    joborder = "-frameRange %s %s %s -dataFormat hdf %s -file %s"%(startTime,endTime,exOptions,roots,_path)
+    if kwargs:
+        other_attr = ''
+        for key,value in kwargs.items():
+            other_attr = other_attr + ' -{} {}'.format(key,value)
+    else:
+        other_attr = ''
+
+    joborder = "-frameRange %s %s %s %s -dataFormat hdf %s -file %s"%(startTime,endTime,other_attr,exOptions,roots,_path)
     return joborder
 
 def import_cache(asset,namespace,node,path,texfile = None):
@@ -187,7 +192,6 @@ def import_cache(asset,namespace,node,path,texfile = None):
                 for _i in _usedattr[0::2]:
                     _attrname = _i.split(_s)[-1]
                     cmds.connectAttr(_i,"{}{}".format(_d,_attrname))
-                    #print ("connect attr:{} to {}".format(_i,"{}{}".format(_d,_attrname)))
 
     def blend_shape(src, dst):
         _src_nums = len(cmds.listRelatives(src, c = True, type = "mesh", ad = True)) 
@@ -433,7 +437,6 @@ class AlembicCache(object):
                 for _i in _usedattr[0::2]:
                     _attrname = _i.split(_s)[-1]
                     cmds.connectAttr(_i,"{}{}".format(_d,_attrname))
-                    #print ("connect attr:{} to {}".format(_i,"{}{}".format(_d,_attrname)))
 
     @classmethod
     def set_namespace(cls,nameSpace):
@@ -489,3 +492,64 @@ class AlembicCache(object):
         if _dis_connect:
             for k,v in _dis_connect.items():
                 cmds.disconnectAttr(k,v)
+
+
+def create_xgen_frame_cache(_path,startTime,endTime,grpname,*args):
+    '''生成创建缓存命令
+    '''
+    # _dir = os.path.dirname(_path)
+    # if not os.path.isdir(_dir):
+    #     os.makedirs(_dir)
+    # if isinstance(grpname,list):
+    #     roots = ''.join(["-root %s "%i for i in grpname])
+    # else:
+    #     roots = "-root %s "%grpname
+    # # # 导出附加参数
+    # # if args:
+    # #     exOptions = ''.join([" -%s"%j for j in args])
+    # # else:
+    # #     exOptions = ''
+    # # if kwargs:
+    # #     other_attr = ''
+    # #     for key,value in kwargs.items():
+    # #         other_attr = other_attr + ' -{} {}'.format(key,value)
+    # # else:
+    # #     other_attr = ''
+    # #
+    # # joborder = "-frameRange %s %s %s %s -dataFormat hdf %s -file %s"%(startTime,endTime,other_attr,exOptions,roots,_path)
+
+
+    _dir = os.path.dirname(_path)
+    if not os.path.isdir(_dir):
+        os.makedirs(_dir)
+
+    cmdAlembicBase = ''
+    cmdAlembicBase = cmdAlembicBase + '-frameRange ' + str(startTime) + ' ' + str(endTime)
+    cmdAlembicBase = cmdAlembicBase + ' -uvWrite -attrPrefix xgen -worldSpace'
+    palette = cmds.ls(exactType="xgmPalette")
+    for p in range(len(palette)):
+        descShapes = cmds.listRelatives(palette[p], type="xgmDescription", ad=True)
+        cmdAlembic = cmdAlembicBase
+        for d in range(len(descShapes)):
+            descriptions = cmds.listRelatives(descShapes[d], parent=True)
+            if len(descriptions):
+                patches = xg.descriptionPatches(descriptions[0])
+                for patch in patches:
+                    cmd = 'xgmPatchInfo -p "' + patch + '" -g'
+                    geom = mel.eval(cmd)
+                    geomFullName = cmds.ls(geom, l=True)
+                    cmdAlembic += " -root " + geomFullName[0]
+        cmdAlembic = cmdAlembic + ' -stripNamespaces -file \'' + _path + '\'";'
+    joborder = cmdAlembic
+    return joborder
+
+
+
+
+if __name__ == '__main__':
+    asset = "backkomuni"
+    namespace = "backkom"
+    node = "c_backkomuni_geometry_GRP"
+    path = "X:/BKM2/shot/seq006/shot001/animation/maya2017/cache/alembiccache/0005/backkom.abc"
+    bsnode = "blendshape1"
+    AlembicCache.switch(bsnode,asset,namespace,node,path)

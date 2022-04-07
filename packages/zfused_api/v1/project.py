@@ -117,9 +117,65 @@ def cache(project_id_list = []):
 
 
 class Project(_Entity):
+
     global_dict = {}
     config_dict = {}
     profile_dict = {}
+
+
+    @classmethod
+    def new(cls, name, code, status_id, color, description = ""):
+        _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+
+        _projects = zfused_api.zFused.get( "project", filter = {"Code": code})
+        if _projects:
+            return "{} is exists".format(name), False
+
+        _project, _status = zfused_api.zFused.post( key = "project", 
+                                                data = { "Name": name,
+                                                         "Code": code,
+                                                         "StatusId": status_id,
+                                                         "IsOutsource": 0,
+                                                         "Priority": 0,
+                                                         "CreatedBy": _created_by,
+                                                         "CreatedTime": _created_time } )
+        if not _status:
+            return "{} create error".format(name), False
+
+        _project_id = _project.get("Id")
+        
+        _project_profile, _status = zfused_api.zFused.post( key = "project_profile", 
+                                                    data = { "ProjectId": _project_id, 
+                                                            "Color": color,
+                                                            "Introduction": description,
+                                                            "CreatedBy": _created_by,
+                                                            "CreatedTime": _created_time  } )
+        if not _status:
+            zfused_api.zFused.delete( "project", _project_id )
+            return "{} create error".format(name), False
+
+        _project_profile_id = _project_profile.get("Id")
+
+        _project_config, _status = zfused_api.zFused.post( key = "project_config", 
+                                                    data = { "ProjectId": _project_id,
+                                                             "CreatedBy": _created_by,
+                                                             "CreatedTime": _created_time } )
+        if not _status:
+            zfused_api.zFused.delete( "project", _project_id )
+            zfused_api.zFused.delete( "project_profile", _project_profile_id )
+            return "{} create error".format(name), False
+        # group user
+        zfused_api.zFused.post( key = "group_user",
+                                data = { "EntityType": "project",
+                                         "EntityId": _project_id,
+                                         "UserId": _created_by,
+                                         "CreatedBy": _created_by,
+                                         "CreatedTime": _created_time } )
+        return _project_id, True
+        # return "{} create project error".format(name), False
+
+
     def __init__(self, entity_id, entity_data = None):
         super(Project, self).__init__("project", entity_id, entity_data)
 
@@ -401,14 +457,28 @@ class Project(_Entity):
     def resolution(self):
         return [self._config.get("ImageWidth"), self._config.get("ImageHeight")]
 
-    def variables(self, key = ""):
+    def variables(self, key = "", default = {}):
         self._config = self.get_one( "project_config", self._config.get("Id") )
         _property = self._config.get("Variables")
         if not _property:
-            return {}
+            return default
         _property = eval(_property)
+        print(_property)
         if key:
-            return _property.get(key)
+            if key not in _property:
+                if default:
+                    _value = default
+                else:
+                    _value = _property.get(key)
+            else:
+                _value = _property.get(key)
+
+            # _value = _property.get(key)
+            # if not _value:
+            #     if default:
+            #         _value = default
+            
+            return _value
         return _property
 
     def update_variables(self, key, value):

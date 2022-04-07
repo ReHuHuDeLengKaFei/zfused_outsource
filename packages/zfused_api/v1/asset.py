@@ -152,6 +152,7 @@ def cache_from_ids(ids, extract_freeze = False):
 
     return _assets
 
+
 class Asset(_Entity):
     global_dict = {}
     global_historys = defaultdict(list)
@@ -567,17 +568,6 @@ class Asset(_Entity):
     # def load_task(cls, asset_id, project_step_id, task):
     #     _key = "{}_{}".format(asset_id, project_step_id)    
     #     cls.task_dict[_key].append(task)
-
-    def update_name(self, name):
-        """
-        """
-        self.global_dict[self._id]["Name"] = name
-        self._data["Name"] = name
-        v = self.put("asset", self._data["Id"], self._data, "name")
-        if v:
-            return True
-        else:
-            return False
 
     def update_status(self, status_id):
         """ update project step check script

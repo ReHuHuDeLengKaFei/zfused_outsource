@@ -153,6 +153,15 @@ def cache_from_ids(user_ids = []):
 
 
 class User(_Entity):
+
+    @classmethod
+    def match(cls, text):
+        _matchs = zfused_api.zFused.get("user_profile", filter = {"NameCn__icontains": text, "Active":"true" }, fields = ["UserId"])
+        _matchs += zfused_api.zFused.get("user_profile", filter = {"NameEn__icontains": text, "Active":"true"}, fields = ["UserId"])
+        if _matchs:
+            return [_match.get("UserId") for _match in _matchs]
+        return []
+
     global_dict = {}
     global_profile = {}
     global_post = defaultdict(set)
@@ -233,14 +242,6 @@ class User(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
-    # def relation_users(self):
-    #     _group_user_list = self.Get("project_user_relation", filter={
-    #                                 "SuperiorId": self._id})
-    #     if not _group_user_list:
-    #         return []
-    #     else:
-    #         return self.Get("user", filter={"Id__in": "|".join(["{}".format(_user["UserId"]) for _user in _group_user_list])})
-
     def working_tasks(self):
         """
         获取制作中的任务
@@ -269,29 +270,6 @@ class User(_Entity):
             # zfused_api.objects.cache("task", _task_ids)
             return _tasks
         return []
-
-    '''
-    def UpdatePassword(self, password):
-        md = hashlib.md5()
-        md.update(password)
-        ps = md.hexdigest()
-        self._data["Password"] = ps
-        self.Put("user", self._data["Id"], self._data)
-    
-
-    def GetProfile(self):
-        return user_profile(self._id)
-
-    def GetTasks(self, filter = {}, fields = [], sortby = [], order = [], offset = None):
-        filter_data = filter
-        filter_data["AssignedTo"] = self._id
-        allTasks = self.Get("task", filter = filter_data, fields = fields, sortby = sortby, order = order, offset = offset)
-        return allTasks
-
-    def GetThumbnail(self):
-        _thumbnail = self.profile.get("Thumbnail")
-        return _thumbnail
-    '''
 
     def thumbnail(self):
         return None
@@ -352,6 +330,21 @@ class User(_Entity):
             else:
                 self.global_department[self._id] = set([_department_user["DepartmentId"] for _department_user in _department_users])
         return self.global_department[self._id]
+
+    def is_online(self):
+        return self._data.get("IsOnline")
+
+    def update_is_online(self, is_online):
+        if self.global_dict[self._id]["IsOnline"] == is_online:
+            return True
+        self.global_dict[self._id]["IsOnline"] = is_online
+        self._data["IsOnline"] = is_online
+        v = self.put("user", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
 
     def clear_unread_messags(self):
         pass

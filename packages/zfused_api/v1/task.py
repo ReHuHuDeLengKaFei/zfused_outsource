@@ -1,12 +1,14 @@
 # coding:utf-8
 # --author-- lanhua.zhou
 from collections import defaultdict
+from collections import OrderedDict
 
 import os
 import time
 import shutil
 import datetime
 import logging
+import copy
 
 from . import _Entity
 import zfused_api
@@ -240,6 +242,42 @@ def cache_from_ids(ids, extract_freeze = True):
 
 
 class Task(_Entity):
+
+
+    @classmethod
+    def new_sub_task(cls, task_id, name, code, description = ""):
+        if zfused_api.zFused.get("task", filter = {"SubTaskCode": code, "ParentTaskId": task_id}):
+            return "{} is exists, create error".format(name), False
+
+        _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+
+        _task = Task(task_id)
+        _data = _task.data()
+        
+        _task_data = copy.deepcopy(_data)
+
+        _task_data.pop("Id")
+        _task_data["CreatedBy"] = _created_by
+        _task_data["CreatedTime"] = _created_time
+        _task_data["ProductionTime"] = 0
+        _task_data["Name"] = "{}_{}".format(_task_data.get("Name"), code)
+        _task_data["HasSubTask"] = 0
+        _task_data["SubTaskName"] = name
+        _task_data["SubTaskCode"] = code
+        _task_data["ParentTaskId"] = task_id
+        _task_data["Description"] = description
+
+        _sub_task, _status = zfused_api.zFused.post( key = "task", data = _task_data )
+        if _status:
+            _task.set_has_sub_task(1) 
+
+            return _sub_task["Id"], True
+
+        return "{} create error".format(name), False
+
+
+
     global_dict = {}
     global_historys = defaultdict(list)
     global_versions = defaultdict(list)
@@ -271,6 +309,9 @@ class Task(_Entity):
         self._time_nodes_calculate = False
 
     def code(self):
+        return self.name()
+
+    def name_code(self):
         return self.name()
 
     # def data(self):
@@ -879,8 +920,9 @@ class Task(_Entity):
         # 提交project_entity缩略图
         try:
             _project_entity = self.project_entity()
-            if not _project_entity.data().get("ThumbnailPath"):
-                _project_entity.update_thumbnail_path(thumbnail_path)
+            _project_entity.update_thumbnail_path(thumbnail_path)
+            # if not _project_entity.data().get("ThumbnailPath"):
+            #     _project_entity.update_thumbnail_path(thumbnail_path)
             # if not zfused_api.objects.Objects(_object, _link_id).data().get("ThumbnailPath"):
             #     zfused_api.objects.Objects(_object, _link_id).update_thumbnail_path(thumbnail_path)
         except:
@@ -978,6 +1020,7 @@ class Task(_Entity):
 
         #发送系统通知
         return _version_id, "%s submit approval success"%name
+
 
     def submit_review(self, name,
                             # user_id,
@@ -1165,6 +1208,7 @@ class Task(_Entity):
 
         return _report_id, "%s submit review success"%name
 
+
     def is_production(self):
         if "IsProduction" not in self.global_dict[self._id]:
             return 0
@@ -1202,7 +1246,8 @@ class Task(_Entity):
         """ get input tasks
         :rtype: dict
         """
-        tasks = defaultdict(list)        
+        tasks = OrderedDict()
+
         _project_step = self.project_step()
         _input_attrs = _project_step.input_attrs()
         _is_new_attribute_solution = _project_step.is_new_attribute_solution()
@@ -1229,6 +1274,8 @@ class Task(_Entity):
                                                             "ProjectEntityType": self.project_entity_type(), 
                                                             "ProjectEntityId": self.project_entity_id() })
                         if _tasks:
+                            if _attr_conn["Id"] not in tasks:
+                                tasks[_attr_conn["Id"]] = []
                             tasks[_attr_conn["Id"]] += _tasks
                         
                             if _rule == "single":
@@ -1330,6 +1377,8 @@ class Task(_Entity):
                         continue
                     
                     for _k, _v in _relative_tasks.items():
+                        if _k not in tasks:
+                            tasks[_k] = []
                         tasks[_k] += _v
 
                     """
@@ -1435,7 +1484,8 @@ class Task(_Entity):
 
         else:
             for _input_attr in _input_attrs:
-                # tasks[_input_attr["Id"]] = []
+                if _input_attr["Id"] not in tasks:
+                    tasks[_input_attr["Id"]] = []
                 if _input_attr["Mode"] == "indirect":
                     _attr = self.get("step_attr_output", filter = {"Id":_input_attr["StepAttrId"]})
                     if not _attr:
@@ -2012,6 +2062,10 @@ class Task(_Entity):
                 _hours_all += _time.get("ProductionTime")
             self.update_production_time(_hours_all)
 
+        # if self.is_sub_task():
+        #     _parent_task = Task(self._data.get("ParentTaskId"))
+        #     _parent_task.submit_task_time(date, hours, description)
+
     def prophet(self, proposed_entity_type, proposed_entity_id, proposed_description):
         _value = self._data.get("ProphetValue")
         if _value == -1:
@@ -2131,3 +2185,33 @@ class Task(_Entity):
             return True
         else:
             return False
+
+
+
+    def is_sub_task(self):
+        return self._data.get("ParentTaskId")
+
+    def has_sub_task(self):
+        return self._data.get("HasSubTask")
+
+    def set_has_sub_task(self, has_sub_task):
+        if self._id not in self.global_dict:
+            self.global_dict[self._id] = self._data
+        if self.global_dict[self._id]["HasSubTask"] == has_sub_task:
+            return True
+        self.global_dict[self._id]["HasSubTask"] = has_sub_task
+        self._data["HasSubTask"] = has_sub_task
+        v = self.put("task", self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
+
+    def parent_task_id(self):
+        return self._data.get("ParentTaskId")
+
+    def sub_task_name(self):
+        return self._data.get("SubTaskName")
+
+    def sub_task_code(self):
+        return self._data.get("SubTaskCode")

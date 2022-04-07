@@ -12,9 +12,9 @@ from zcore import filefunc
 
 logger = logging.getLogger(__file__)
 
-
 def publish_file(files, src, dst):
     """ upload files 
+
     """
     src = src.replace("\\","/")
     dst = dst.replace("\\","/")
@@ -35,6 +35,7 @@ def publish_file(files, src, dst):
 
 def local_file(files, src, dst):
     """ local download files 
+
     """
     src = src.replace("\\","/")
     dst = dst.replace("\\","/")
@@ -57,6 +58,7 @@ def local_file(files, src, dst):
 
 def change_node_path(ori_dict, src, dst):
     """ change file nodes path
+
     """
     for _k,_v in ori_dict.items():
         _v = _v.replace("\\","/")

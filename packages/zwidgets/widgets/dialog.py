@@ -100,13 +100,16 @@ class Dialog(QtWidgets.QDialog):
 
     def set_title(self, text, icon = None):
         """ set dialog title
+
         """
         self.__title_button.setText(text)
+
         if icon:
             self.__title_button.setIcon(QtGui.QIcon(icon))
 
     def add_content_widget(self, widget):
         """ add content widget
+
         """
         self.__content_layout.addWidget(widget)
 

@@ -92,6 +92,7 @@ class ProjectStep(_Entity):
                                                                                            "CombineScript": "print('combine script')",
                                                                                            "PropertyScript": "print('property script')",
                                                                                            "ComputeScript": "print('compute script')",
+                                                                                           "RefreshRelative": 1,
                                                                                            "Active": "true",
                                                                                            "CreatedBy":_created_by,
                                                                                            "CreatedTime":_created_time } )
@@ -371,12 +372,6 @@ class ProjectStep(_Entity):
         else:
             return False
 
-    def check_script(self):
-        """get check script 
-        :rtype: str        
-        """
-        return self._data["CheckScript"]
-
     def add_check(self, check_id):
         _is_exists = zfused_api.zFused.get("project_step_check", filter = {"ProjectStepId":self._id, "CheckId": check_id})
         if not _is_exists:
@@ -403,6 +398,12 @@ class ProjectStep(_Entity):
         if _nodes:
             return [ProjectStepCheck(_node.get("Id")) for _node in _nodes]
         return []
+
+    def check_script(self):
+        """get check script 
+        :rtype: str        
+        """
+        return self._data["CheckScript"]
 
     def update_check_script(self, script):
         """ update project step check script

@@ -22,15 +22,24 @@ from . import element
 
 
 def create_relatives(scene_elements, task_id, version_id):
+    """
+    创建项目实体关联
+    """
+    
+    # 这边清除当前任务关联和版本关联合理
     zfused_api.relative.clear_relatives("task", task_id)
     zfused_api.relative.clear_relatives("version", version_id)
-    _task_handle = zfused_api.task.Task(task_id)
-    _project_step_id = _task_handle.data()["ProjectStepId"]
+
+    _task = zfused_api.task.Task(task_id)
+    # _project_step_id = _task.data()["ProjectStepId"]
+    _project_step = _task.project_step()
     _mode_dict = defaultdict(list)
-    _entity_type = _task_handle.project_entity_type()
-    _entity_id = _task_handle.project_entity_id()
+
+    _project_entity_type = _task.project_entity_type()
+    _project_entity_id = _task.project_entity_id()
+
     for _element in scene_elements:
-        if _element["link_object"] != _entity_type and _element["link_id"] != _entity_id:
+        if _element["link_object"] != _project_entity_type and _element["link_id"] != _project_entity_id:
             _mode_dict["relative"].append(_element)
         _relationship = _element["relation_ship"]
         _name_space = _element["namespace"]
@@ -44,14 +53,21 @@ def create_relatives(scene_elements, task_id, version_id):
 
     if _mode_dict["relative"]:
         # create entity entity relatives 
-        zfused_api.relative.clear_relatives(_entity_type, _entity_id)
+        # 清除项目实体之间的关联
+        
+        if not _project_step.refresh_relative():
+            return
+
+        zfused_api.relative.clear_relatives(_project_entity_type, _project_entity_id)
+        
         for _element in _mode_dict["relative"]:
             _relationship = _element["relation_ship"]
             _name_space = _element["namespace"]
-            zfused_api.relative.create_relatives(_element["link_object"], _element["link_id"], _entity_type, _entity_id, _relationship, _name_space)
-        if _entity_type == "shot":
+            zfused_api.relative.create_relatives(_element["link_object"], _element["link_id"], _project_entity_type, _project_entity_id, _relationship, _name_space)
+        
+        if _project_entity_type == "shot":
             # get sequence
-            _shot_handle = zfused_api.shot.Shot(_entity_id)
+            _shot_handle = zfused_api.shot.Shot(_project_entity_id)
             _sequence_id = _shot_handle.data()["SequenceId"]
             if _sequence_id:
                 for _element in _mode_dict["relative"]:
@@ -76,9 +92,9 @@ def create_relatives_(task_id = 0):
         _task_id = record.current_task_id()
         if not _task_id:
             return 
-    _task_handle = zfused_api.task.Task(_task_id)
-    _link_object = _task_handle.project_entity_type()
-    _link_id = _task_handle.project_entity_id()
+    _task = zfused_api.task.Task(_task_id)
+    _link_object = _task.project_entity_type()
+    _link_id = _task.project_entity_id()
 
     # # get elements 
     # _element_list = element.scene_elements()
@@ -123,7 +139,7 @@ def create_relatives_(task_id = 0):
     # 测试 可能有问题
     if not _task_ids:
         zfused_api.relative.clear_relatives("task", _task_id)
-        _version_id = _task_handle.last_version_id()
+        _version_id = _task.last_version_id()
         _attrs = []
         _sets = cmds.ls(type = "objectSet")
         for _set in _sets:
@@ -136,7 +152,7 @@ def create_relatives_(task_id = 0):
     # _task_ids = list(set(_task_ids))
 
     # 上一级version版本
-    _version_id = _task_handle.last_version_id()
+    _version_id = _task.last_version_id()
     if _version_id:
         #print(_version_id)
         _version_relatives = zfused_api.zFused.get("relative", filter = {"TargetObject": "version", "TargetId": _version_id})
@@ -158,13 +174,13 @@ def create_relatives_(task_id = 0):
            
         # create object relatives
         _handle = zfused_api.task.Task(_id)
-        zfused_api.relative.create_relatives(_handle.data()["ProjectEntityType"], _handle.data()["ProjectEntityId"], _link_object, _link_id)
+        zfused_api.relative.create_relatives(_handle.project_entity_type(), _handle.project_entity_id(), _link_object, _link_id)
 
     for _element in _element_list:
         # create version relatives
         zfused_api.relative.create_relatives("version", _element["version_id"], "task", _task_id)
 
-    _version_id = _task_handle.last_version_id()
+    _version_id = _task.last_version_id()
     _attrs = []
     _sets = cmds.ls(type = "objectSet")
     for _set in _sets:

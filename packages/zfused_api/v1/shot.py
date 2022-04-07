@@ -37,7 +37,7 @@ def new_shot(project_id, name, code, status_id, episode_id = 0, sequence_id = 0,
     _value, _status = zfused_api.zFused.post(key = "shot", data = {  "Name": name,
                                                    "Code": code,
                                                    "ProjectId": project_id,
-                                                   "StatusId":status_id,
+                                                   "StatusId": status_id,
                                                    "EpisodeId": episode_id,
                                                    "SequenceId": sequence_id,
                                                    "TypeId": type_id,
@@ -119,6 +119,36 @@ def cache_from_ids(ids, extract_freeze = True):
 
 
 class Shot(_Entity):
+
+
+    @classmethod
+    def new(cls, name, code, status_id, project_id, episode_id = 0, sequence_id = 0, type_id = 0, description = None):
+
+        _shots = zfused_api.zFused.get( "shot", 
+                                        filter = {"ProjectId": project_id,"Code": code, "EpisodeId": episode_id, "SequenceId": sequence_id})
+        if _shots:
+            return "{} is exists".format(name), False
+
+        _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+        _shot, _status = zfused_api.zFused.post( key = "shot", data = { "Name": name,
+                                                                        "Code": code,
+                                                                        "ProjectId": project_id,
+                                                                        "StatusId": status_id,
+                                                                        "EpisodeId": episode_id,
+                                                                        "SequenceId": sequence_id,
+                                                                        "TypeId": type_id,
+                                                                        "Description": description,
+                                                                        "StartTime": None, 
+                                                                        "EndTime": None,
+                                                                        "Active": "true",
+                                                                        "CreatedBy":_created_by,
+                                                                        "CreatedTime":_created_time } )
+        if _status:
+            return _shot.get("Id"), True
+        return "{} create error".format(name), False
+
+
     global_dict = {}
     task_dict = {}
     global_tasks = defaultdict(list)
