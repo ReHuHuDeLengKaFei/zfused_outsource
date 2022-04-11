@@ -15,7 +15,7 @@ import zfused_maya.node.attribute.output.animation.publish_cam as cam
 reload(cam)
 
 
-class ExportCamera(window._Window):
+class ExportCamera(window.Window):
     def __init__(self, parent = None):
         super(ExportCamera, self).__init__(parent)
         self._build()

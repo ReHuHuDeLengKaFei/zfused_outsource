@@ -14,6 +14,9 @@ from zfused_maya.core import tomaya, record
 
 
 class _Window(window.Window):
+    """
+    
+    """
     def __init__(self, parent = None):
         super(_Window, self).__init__(parent = tomaya.GetMayaMainWindowPoint())
         self.name_button.setText("zFused for maya {}".format(zfused_maya.version()))
@@ -32,7 +35,13 @@ class _Window(window.Window):
         super(_Window, self).showEvent(event)
 
 
-class Window(QtWidgets.QMainWindow):
+class Window(window.Window):
+    def __init__(self, parent = None):
+        super(Window, self).__init__(parent = tomaya.GetMayaMainWindowPoint())
+        self.name_button.setText("zFused for maya {}".format(zfused_maya.version()))
+
+
+class Window_(QtWidgets.QMainWindow):
     def __init__(self, parent = None):
         super(Window, self).__init__(parent = tomaya.GetMayaMainWindowPoint())
 
