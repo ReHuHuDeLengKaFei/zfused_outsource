@@ -261,6 +261,7 @@ class Window(QtWidgets.QMainWindow):
         self.layout.addWidget(self.central_widget)
         self.layout.addWidget(self.tail_widget)
 
+
         #_qss = resource.get("qss", "./window.qss")
         _qss = "{}/window.qss".format(os.path.dirname(__file__))
         with open(_qss) as f:
