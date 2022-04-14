@@ -1,7 +1,7 @@
 
 .svn/entries
 .svn/format
-.database
+database/*.json
 *.svn-base
 *.db
 *.db-journal

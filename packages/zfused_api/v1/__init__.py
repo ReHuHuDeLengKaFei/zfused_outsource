@@ -4,6 +4,8 @@
 from __future__ import print_function
 from functools import wraps
 
+import os
+
 import sys
 import time
 import datetime
@@ -36,6 +38,9 @@ def reset( func ):
         finally:
             zFused.RESET = False
     return wrap
+
+LOCAL_DATABASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "database"))
+# print(LOCAL_DATABASE_PATH)
 
 
 class zFused(object):
@@ -94,6 +99,11 @@ class zFused(object):
         """get data
         rtype: list
         """
+
+        # local database
+        if os.path.isfile("{}/{}.json".format(LOCAL_DATABASE_PATH, key)):
+            pass
+
         server = "%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key)
         # cloud server
         _cloud_server = "%s/%s" % (zFused.CLOUD_SERVER_PATH, key)
