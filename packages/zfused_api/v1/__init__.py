@@ -101,8 +101,12 @@ class zFused(object):
         """
 
         # local database
-        if os.path.isfile("{}/{}.json".format(LOCAL_DATABASE_PATH, key)):
-            pass
+        _database_file = "{}/{}.json".format(LOCAL_DATABASE_PATH, key)
+        if os.path.isfile(_database_file):
+            with open(_database_file, "r") as handle:
+                data = handle.read()
+                jsdata = json.loads(data)
+                return jsdata
 
         server = "%s/%s" % (zFused.INTERNAL_API_SERVER_PATH, key)
         # cloud server
@@ -140,6 +144,16 @@ class zFused(object):
         """get data
         rtype: dict
         """
+        _database_file = "{}/{}.json".format(LOCAL_DATABASE_PATH, key)
+        if os.path.isfile(_database_file):
+            with open(_database_file, "r") as handle:
+                data = handle.read()
+                jsdata = json.loads(data)
+                for _data in jsdata:
+                    if id == _data.get("Id"):
+                        return _data
+                return {}
+
         server = "{}/{}/{}".format(zFused.INTERNAL_API_SERVER_PATH, key, id)
         headers = {'content-type': 'application/json'}
         try:

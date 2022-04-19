@@ -163,6 +163,82 @@ def fix_to_render():
             cmds.setAttr("{}.standin_draw_override".format(_ai_node), 3)
 
 
+
+
+def gpu_to_model(is_sel = True):
+
+    if is_sel:
+        _sels = cmds.ls(sl = True)
+    else:
+        _sels = cmds.ls(type = "gpuCache")
+
+    for _sel in _sels:
+        # print(_sel)
+        if not cmds.objExists("{}.cacheFileName".format(_sel)):
+            continue
+            
+        # get gpu file
+        _gpu_file = cmds.getAttr("{}.cacheFileName".format(_sel))
+        print(_gpu_file)
+        _maya_file = _gpu_file.replace("/gpu/", "/file/").replace(".abc", ".mb")
+        if not os.path.isfile(_maya_file):
+            _maya_file = _gpu_file.replace("/gpu/", "/file/").replace(".abc", ".ma")
+        if not os.path.isfile(_maya_file):
+            continue
+
+        print(_maya_file)
+        
+        _shot_scene_node = "shotscene_instance_grp"
+        if not cmds.objExists(_shot_scene_node):
+            cmds.createNode("transform", name = _shot_scene_node)
+        
+        _name = os.path.basename(_gpu_file).split(".")[0]
+        _parent_node = "{}_instance_grp".format(_name)
+        if not cmds.objExists(_parent_node):
+            cmds.createNode("transform", name = _parent_node)
+            cmds.parent(_parent_node, _shot_scene_node)
+            
+        _instance_node = "{}_instance_00".format(_name)
+        
+        #if not cmds.objExists(_instance_node):
+        #    cmds.createNode("transform", name = _instance_node)
+        #    cmds.parent(_instance_node, _parent_node)
+            
+        if not cmds.objExists(_instance_node):
+            cmds.createNode("transform", name = _instance_node)
+            cmds.parent(_instance_node, _parent_node)
+            # refernce file
+            _ori_assemblies = cmds.ls(assemblies=True)
+            rf = cmds.file(_maya_file, r = True, ns = "{}_instance".format(_name))
+            rfn = cmds.referenceQuery(rf, rfn = True)
+            #attr.set_node_attr(rfn, _key_output_attr["Id"], _version_handle.id(), "false")
+            _new_assemblies = cmds.ls(assemblies=True)
+            _asset_tops = list(set(_new_assemblies) - set(_ori_assemblies))
+            if _asset_tops:
+                for _asset_top in _asset_tops:
+                    try:
+                        cmds.parent(_asset_top, _instance_node)
+                    except:
+                        pass
+        print(_sel)
+        if cmds.nodeType(_sel) == "gpuCache":
+            _sel = cmds.listRelatives(_sel, p = True)[0]
+        _mt = cmds.xform(_sel, q = True, m = True, ws = True)
+        _instance = cmds.instance(_instance_node)[0]
+        cmds.xform(_instance, m = _mt, ws = True)
+        # cmds.parent(_instance, _parent_node)
+
+    _trans = cmds.ls(type = "transform")
+
+    for _tran in _trans:
+        if _tran.endswith("_instance_00"):
+            cmds.hide(_tran)
+
+
+
+
+
+
 def _test():
     import os
     import maya.api.OpenMaya as OpenMaya

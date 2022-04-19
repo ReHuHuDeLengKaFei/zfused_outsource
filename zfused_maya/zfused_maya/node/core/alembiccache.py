@@ -494,7 +494,7 @@ class AlembicCache(object):
                 cmds.disconnectAttr(k,v)
 
 
-def create_xgen_frame_cache(_path,startTime,endTime,grpname,*args):
+def create_xgen_frame_cache(_path,startTime,endTime,_pallette,*args):
     '''生成创建缓存命令
     '''
     # _dir = os.path.dirname(_path)
@@ -526,20 +526,20 @@ def create_xgen_frame_cache(_path,startTime,endTime,grpname,*args):
     cmdAlembicBase = ''
     cmdAlembicBase = cmdAlembicBase + '-frameRange ' + str(startTime) + ' ' + str(endTime)
     cmdAlembicBase = cmdAlembicBase + ' -uvWrite -attrPrefix xgen -worldSpace'
-    palette = cmds.ls(exactType="xgmPalette")
-    for p in range(len(palette)):
-        descShapes = cmds.listRelatives(palette[p], type="xgmDescription", ad=True)
-        cmdAlembic = cmdAlembicBase
-        for d in range(len(descShapes)):
-            descriptions = cmds.listRelatives(descShapes[d], parent=True)
-            if len(descriptions):
-                patches = xg.descriptionPatches(descriptions[0])
-                for patch in patches:
-                    cmd = 'xgmPatchInfo -p "' + patch + '" -g'
-                    geom = mel.eval(cmd)
-                    geomFullName = cmds.ls(geom, l=True)
-                    cmdAlembic += " -root " + geomFullName[0]
-        cmdAlembic = cmdAlembic + ' -stripNamespaces -file \'' + _path + '\'";'
+    palette = _pallette
+    #for p in range(len(palette)):
+    descShapes = cmds.listRelatives(palette, type="xgmDescription", ad=True)
+    cmdAlembic = cmdAlembicBase
+    for d in range(len(descShapes)):
+        descriptions = cmds.listRelatives(descShapes[d], parent=True)
+        if len(descriptions):
+            patches = xg.descriptionPatches(descriptions[0])
+            for patch in patches:
+                cmd = 'xgmPatchInfo -p "' + patch + '" -g'
+                geom = mel.eval(cmd)
+                geomFullName = cmds.ls(geom, l=True)
+                cmdAlembic += " -root " + geomFullName[0]
+    cmdAlembic = cmdAlembic + ' -stripNamespaces -file \'' + _path + '\'";'
     joborder = cmdAlembic
     return joborder
 

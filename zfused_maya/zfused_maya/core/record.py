@@ -67,6 +67,7 @@ class _Json(object):
     def __init__(self, file):
         self.file = file
         self._data = {}
+        
         '''
         if not os.path.isfile(self.file):
             with open(self.file, "w") as handle:
