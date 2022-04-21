@@ -200,7 +200,7 @@ def cache(project_ids = [], extract_freeze = True):
         _task_versions = zfused_api.zFused.get("version")
     else:
         _project_ids = "|".join([str(_project_id) for _project_id in project_ids])
-        _tasks = zfused_api.zFused.get("task", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["DueTime","CreateTime"], order = ["asc"])
+        _tasks = zfused_api.zFused.get("task", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
         _task_versions = zfused_api.zFused.get("version", filter = {"ProjectId__in": _project_ids})
     if _tasks:
         list(map(lambda _task: Task.global_dict.setdefault(_task["Id"],_task), _tasks))
@@ -430,6 +430,10 @@ class Task(_Entity):
         if _software_id:
             return zfused_api.software.Software(_software_id)
         return None
+
+    def software_id(self):
+        _software_id = self._data.get("SoftwareId")
+        return _software_id
 
     def assigned_to(self):
         """

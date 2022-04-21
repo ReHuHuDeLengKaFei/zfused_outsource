@@ -46,7 +46,8 @@ OBJECT = {
     "check": zfused_api.check.Check,
     "project_step_check": zfused_api.step.ProjectStepCheck,
     "software": zfused_api.software.Software,
-    "project_software": zfused_api.software.ProjectSoftware
+    "project_software": zfused_api.software.ProjectSoftware,
+    "question": zfused_api.question.Question
 }
 
 
@@ -86,7 +87,8 @@ ENTITY_MAP = {
     "assembly": zfused_api.assembly.Assembly,
     "fileprovide": zfused_api.fileprovide.FileProvide,
     "check": zfused_api.check.Check,
-    "project_step_check": zfused_api.step.ProjectStepCheck
+    "project_step_check": zfused_api.step.ProjectStepCheck,
+    "question": zfused_api.question.Question
 }
 
 logger = logging.getLogger(__file__) 

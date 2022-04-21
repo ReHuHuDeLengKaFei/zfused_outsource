@@ -185,6 +185,9 @@ class ProjectStep(_Entity):
             return []
         return _rp
 
+    def user_ids(self):
+        return list(set(self.review_user_ids() + self.approvalto_user_ids() + self.cc_user_ids()))
+
     def review_user_ids(self, review_process_id = None):
         if review_process_id:
             _rs = self.get("review_user", filter = {"EntityType":"project_step", "EntityId":self._id, "ReviewProcessId": review_process_id})

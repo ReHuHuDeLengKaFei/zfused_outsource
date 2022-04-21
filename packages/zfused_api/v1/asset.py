@@ -260,7 +260,6 @@ class Asset(_Entity):
 
     def level(self):
         """ get asset level
-
         """
         return self.global_dict[self._id]["Level"]
 
@@ -447,7 +446,6 @@ class Asset(_Entity):
 
     def versions(self):
         """ get task version
-        
         :rtype: list
         """
         _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "asset"},
@@ -455,14 +453,7 @@ class Asset(_Entity):
         return _versions if _versions else []
 
     def project_step_versions(self, project_step_id):
-        """
-        """
-        # get task
-        _tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityId": self._id, "ProjectEntityType": "asset", "ProjectStepId": project_step_id})
-        if not _tasks:
-            return []
-        _task = _tasks[0]
-        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "asset", "TaskId": _task["Id"], "IsApproval": 1},
+        _versions = self.get("version", filter={"ProjectEntityId": self._id, "ProjectEntityType": "asset", "ProjectStepId": project_step_id, "IsApproval": 1},
                                         sortby = ["Index"], order = ["asc"])
         if not _versions:
             return []

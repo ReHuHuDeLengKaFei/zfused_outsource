@@ -150,6 +150,13 @@ class Department(_Entity):
             return _users_id
         return []
 
+    def user_ids(self):
+        _users = self.get("department_user", filter={"DepartmentId": self._id})
+        if _users:
+            _users_id = [_user["UserId"] for _user in _users]
+            return _users_id
+        return []
+
     def add_user(self, user_id):
         """ add user to department
         """
