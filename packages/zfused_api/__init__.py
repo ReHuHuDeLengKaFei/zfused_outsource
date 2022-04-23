@@ -1,6 +1,9 @@
+# from packages.zfused_api.v1 import assembly
 from .v1 import zFused
 from .v1 import _Entity
 from .v1 import reset
+
+
 from .v1 import software
 from .v1 import project
 from .v1 import user
@@ -41,5 +44,21 @@ from .v1 import medialibrary
 from .v1 import assembly
 from .v1 import fileprovide
 from .v1 import check
+from .v1 import plugin
+
 from .v1 import attr
+
+from .v1 import question
+
+from . import im
+from . import util
 from .v1 import objects
+
+
+from .env import *
+
+
+# def reset():
+#     """ reset all api data
+#     """
+#     objects.reset()
