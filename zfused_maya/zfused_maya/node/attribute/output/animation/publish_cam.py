@@ -51,4 +51,4 @@ def export_cam_dir(seq_dir, export_dir):
         else:
             return 1
     else:
-        return 2
+        return 2    
