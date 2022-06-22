@@ -13,8 +13,9 @@ import locale
 import datetime
 import shutil
 
-from qtpy import QtWidgets,QtCore,QtGui
+from Qt import QtWidgets,QtCore,QtGui
 global font_scale
+
 
 class Hud_Frame(QtWidgets.QFrame):
     def __init__(self, parent = None):
@@ -35,6 +36,7 @@ class Hud_Frame(QtWidgets.QFrame):
         _rect = self.rect()
         painter = QtGui.QPainter()
         painter.begin(self)
+
         
         # image
         if self._image:
@@ -44,9 +46,10 @@ class Hud_Frame(QtWidgets.QFrame):
         _font.setBold(self._config.get("bold"))
         _font.setPixelSize(self._config.get("font-size")*font_scale)
         painter.setFont(_font)
+        _fm = QtGui.QFontMetrics(_font)
         
         _margin = self._config.get("margin")
-        _text_height = self._config.get("text-height")*font_scale
+        _text_height = self._config.get("text-height")*font_scale + 5
         for _hud in self._config.get("hud"):
             _horizontally, _vertically, _level = _hud.get("text-align")
             if _vertically == -1:
@@ -64,29 +67,66 @@ class Hud_Frame(QtWidgets.QFrame):
 
             painter.setPen(QtGui.QPen(QtGui.QColor(_hud.get("color"))))
             
+            # text = u"未设置"
+            # exec(_hud.get("cmd"))
+            # if _horizontally == -1:
+            #     painter.drawText( _hud_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, text )
+            # elif _horizontally == 0:
+            #     painter.drawText( _hud_rect, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter, text )
+            # else:
+            #     painter.drawText( _hud_rect, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter, text )
+
             text = u"未设置"
-            exec(_hud.get("cmd"))
-            
+            content_text = None
+            exec (_hud.get("cmd"))
             if _horizontally == -1:
-                painter.drawText( _hud_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, text )
+                if content_text:
+                    _fix_width = _fm.width(content_text) - _fm.width(text)
+                    _hud_rect.setX( _hud_rect.x() + _fix_width )
+                painter.drawText(_hud_rect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, text)
             elif _horizontally == 0:
-                painter.drawText( _hud_rect, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter, text )
+                painter.drawText(_hud_rect, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter, text)
             else:
-                painter.drawText( _hud_rect, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter, text )
-        # _width =_rect.width()
-        # _height =_rect.height()
-        # painter.drawRect(_width*0.05,_height*0.05,_width*0.9,_height*0.9)
-        #
+                if content_text:
+                    _fix_width = _fm.width(content_text) - _fm.width(text)
+                    _hud_rect.setWidth( _hud_rect.width() - _fix_width )
+                painter.drawText(_hud_rect, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter, text)
+
+
         painter.end()
 
     def resizeEvent(self,event):
         if self._config:
             width_ratio ,height_ratio = self._config.get("image_size")
             new_size = event.size()
-            if (new_size.height()<width_ratio*new_size.height()/height_ratio):
-                new_size.setHeight(height_ratio*new_size.width()/width_ratio)
+
+            _cofig_ratio = width_ratio/height_ratio
+            if _cofig_ratio > 1:
+                _width = self.width()
             else:
-                new_size.setWidth(width_ratio*new_size.height()/height_ratio)
+                _width = min(400, self.width())
+            
+            new_size.setWidth(_width)
+            new_size.setHeight(height_ratio * _width/width_ratio)
+
+            # _self_ratio = self.width()/self.height()
+
+            # _cofig_ratio = width_ratio/height_ratio
+            
+            # if _cofig_ratio > 1:
+            #     new_size.setWidth(self.width())
+            #     new_size.setHeight(height_ratio * self.width()/width_ratio)
+            # else:
+            #     _width = max( 300, width_ratio * self.height()/height_ratio )
+            #     # new_size.setWidth(width_ratio * self.height()/height_ratio)
+            #     new_size.setWidth(_width)
+            #     new_size.setHeight(self.height())
+
+            # if (new_size.height() < width_ratio * self.height()/height_ratio):
+            #     new_size.setHeight(height_ratio * self.width()/width_ratio)
+            # else:
+            #     new_size.setWidth(width_ratio * self.height()/height_ratio)
+
             self.resize(new_size)
 
 
@@ -94,6 +134,7 @@ class OperationWidget(QtWidgets.QFrame):
     playblast = QtCore.Signal(str)
     extra_path = QtCore.Signal(str)
     resolution_scale =QtCore.Signal(str)
+
     def __init__(self, parent = None):
         super(OperationWidget, self).__init__(parent)
         self._build()
@@ -132,12 +173,12 @@ class OperationWidget(QtWidgets.QFrame):
         return self.folder_checkbox.isChecked()
 
     def _build(self):
-        self.setFixedHeight(240)
+        self.setFixedHeight(200)
         _layout = QtWidgets.QVBoxLayout(self)
         _layout.setSpacing(2)
         _layout.setContentsMargins(2,2,2,2)
 
-        _layout.addStretch(True)
+        # _layout.addStretch(True)
 
         # path widget
         self.path_widget = QtWidgets.QFrame()
@@ -203,6 +244,7 @@ class PlayblastWidget(QtWidgets.QFrame):
     playblast = QtCore.Signal(str)
     extra_path = QtCore.Signal(str)
     resolution_scale =QtCore.Signal(str)
+    global font_scale
 
     def __init__(self, parent = None):
         super(PlayblastWidget, self).__init__(parent)
@@ -231,15 +273,17 @@ class PlayblastWidget(QtWidgets.QFrame):
     def resizeEvent(self,event):
         if self._config:
             width_ratio,height_ratio = self._config.get("image_size")
+            
             new_size = event.size()
-            if (new_size.height()<width_ratio*new_size.height()/height_ratio):
-                new_size.setHeight(height_ratio*new_size.width()/width_ratio)
+            if (new_size.height() < width_ratio * self.hud_widget.height()/height_ratio):
+                new_size.setHeight(height_ratio * self.hud_widget.width()/width_ratio)
             else:
-                new_size.setWidth(width_ratio*new_size.height()/height_ratio)
-            self.resize(new_size.width(), new_size.height() + self.operation_widget.height())
+                new_size.setWidth(width_ratio * self.hud_widget.height()/height_ratio)
+
+            self.resize(self.hud_widget.width(), self.hud_widget.height() + self.operation_widget.height())
+
             global font_scale
             font_scale = float(new_size.width())/float(width_ratio)*1.5 if float(new_size.width())/float(width_ratio)*1.5<1 else 1
-
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
