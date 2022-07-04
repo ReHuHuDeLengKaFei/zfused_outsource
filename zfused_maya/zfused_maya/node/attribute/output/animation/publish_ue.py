@@ -4,19 +4,36 @@ from __future__ import print_function
 
 import os
 import sys
+import shutil
 import logging
 import json
+import time
 
 import maya.cmds as cmds
 from pymel.core import *
 
 import zfused_api
+from zfused_maya.core import record
 
-CAM_KEYWORD_LIST = ['cam']
-ASSET_TYPE_LIST = ['char', 'prop']
+CAM_KEYWORD_LIST = ['cam', 'CAM', 'FKXR','EP']
+# ASSET_TYPE_LIST = ['Chars', 'Props']
+ASSET_TYPE_LIST = ['char', 'prop', 'env']
+# ASSET_TYPE_LIST = ['ch', 'env', 'pr', 'wolf']
 ATTR_LIST_TRANSFORM = ['tx','ty','tz','rx','ry','rz','sx','sy','sz']
 ATTR_LIST_CAM_SHAPE = ['focalLength']
-ROOT_NAME = 'Root_M'
+ROOT_JOINT_NAME = 'DeformationSystem'
+# ROOT_NAME = 'Root_M'
+ROOT_GEO_NAME = 'geometry_grp'
+
+logger = logging.getLogger(__name__)
+_is_load = cmds.pluginInfo("fbxmaya", query=True, loaded = True)
+if not _is_load:
+    try:
+        logger.info("try load fbx plugin")
+        cmds.loadPlugin("fbxmaya")
+    except Exception as e:
+        logger.error(e)
+        sys.exit()
 
 def read_json_file(file_path):
     with open(os.path.abspath(file_path), "r") as json_file:
@@ -37,6 +54,7 @@ def export_fbx(frame_start, frame_end, fbx_path):
     frame_end   = str(frame_end)
     mel.eval('FBXResetExport;')
     mel.eval('FBXExportFileVersion "FBX201800"')
+    mel.eval('FBXExportInputConnections -v false;')
     mel.eval('FBXExportBakeComplexAnimation -v true;')
     mel.eval("FBXExportSplitAnimationIntoTakes -clear;")
     mel.eval('FBXExportConvertUnitString "cm"')
@@ -52,13 +70,6 @@ def get_cam_list(*args):
 			if cam_keyword in str(cam):
 			    cam_list.append(listRelatives(cam, parent = True)[0])
 	return cam_list
-
-def get_current_frame_value_list(node, attr_list):
-    value_list = []
-    for attr in attr_list:
-        value = getAttr(node + '.' + attr)
-        value_list.append(value)
-    return value_list
 
 def get_cam_dict(frame_ext = 10):
     cam_old       = get_cam_list()[0]
@@ -89,101 +100,21 @@ def get_cam_dict(frame_ext = 10):
     frame_start, frame_end = get_playback_frames()
     frame_start_ext = frame_start - frame_ext
     frame_end_ext = frame_end + frame_ext
-
-    for frame in range(frame_start_ext, frame_end_ext + 1):
-        #print(frame)
-        currentTime(frame, edit = True)
-        t = cam_new.getTranslation('world')
-        s = cam_new.getScale()
-        
-        rotation = cam_new.getRotation()
-        rotation = datatypes.EulerRotation([rotation[0], rotation[1], rotation[2]]).asQuaternion()
-        rotself = datatypes.EulerRotation([-90.0, 0.0, 0.0]).asQuaternion()
-        rotself = rotation * rotself
-        rotroot = datatypes.EulerRotation([90.0, 0.0, 0.0]).asQuaternion()
-        rotroot = rotself * rotroot
-        rotation = rotroot.rotate
-        cam_export.setTranslation([t[0], t[2], t[1]])
-        cam_export.setRotation(rotroot, quaternion = True)
-        cam_export.setScale([s[0], s[2], s[1]])
-        setKeyframe(cam_export)
-    cam_export_rx = listConnections(cam_export + '.rx', destination = False, source = True)[0]
-    cam_export_ry = listConnections(cam_export + '.ry', destination = False, source = True)[0]
-    cam_export_rz = listConnections(cam_export + '.rz', destination = False, source = True)[0]
-    filterCurve(cam_export_rx, cam_export_ry, cam_export_rz)
     
     cam_value_dict = collections.OrderedDict()
     cam_value_dict['cam_name'] = cam_name
-    cam_value_dict['cam_transform_attr'] = ATTR_LIST_TRANSFORM
-    cam_value_dict['cam_shape_attr'] = ATTR_LIST_CAM_SHAPE
-    #cam_value_dict['frame_range'] = get_playback_frames()
     cam_value_dict['frame_start'] = frame_start_ext
     cam_value_dict['frame_end']   = frame_end_ext
+    cam_value_dict['focal_length'] = focal_length
+    cam_value_dict['focal_length_key_list'] = []
+
+    if keyframe(cam_shape_old, attribute = 'focalLength', query = True, keyframeCount = True) != 0:
+        attr_node = PyNode(cam_shape_old + '.focalLength')
+        for frame in range(frame_start_ext, frame_end_ext):
+            attr_value = attr_node.get(time = frame)
+            cam_value_dict['focal_length_key_list'].append(attr_value)
     
-    cam_value_list = []
-    for frame in range(frame_start_ext, frame_end_ext + 1):
-        #print(frame)
-        currentTime(frame, edit = True)
-        frame_cam_value_list = get_current_frame_value_list(cam_export, ATTR_LIST_TRANSFORM)
-        frame_cam_shape_value_list = get_current_frame_value_list(cam_shape_old, ATTR_LIST_CAM_SHAPE)
-        frame_value_list = frame_cam_value_list + frame_cam_shape_value_list
-        cam_value_list.append(frame_value_list)
-        #cam_value_list.append(frame)
-    #print(cam_value_list)
-    cam_value_dict['cam_value_list'] = cam_value_list
     return cam_value_dict
-
-def joint_children(joint_parent, joint_dict, depth):
-    # global joint_count
-    # joint_count += 1
-    # print('|'),
-    # print(' ' * depth * 2),
-    # print('|'),
-    # print(joint_parent)
-    export_joint_name = joint_parent.split(':')[-1]
-    export_joint_parent = createNode('joint', name = export_joint_name)
-    for attr in ATTR_LIST_TRANSFORM:
-        value = getAttr(joint_parent + '.' + attr)
-        #setAttr(export_joint_name + '.' + attr, value)
-    
-    child_node_list = listRelatives(joint_parent, type = 'joint')
-    child_list = []
-    for node in child_node_list:
-        child_list.append(str(node))
-    if child_list == []:
-        return 'end'
-    else:
-        depth += 1
-        #print(child_list)
-        joint_dict[str(joint_parent)] = (child_list, collections.OrderedDict())
-        for child in child_list:
-            #print(child)
-            joint_children(child, joint_dict[str(joint_parent)][1], depth)
-            export_joint_child_name = child.split(':')[-1]
-            parent(export_joint_child_name, export_joint_parent)
-
-def joint_children_set_attr(joint_parent):
-    joint_old = ls(joint_parent)[0]
-    joint_new = ls(joint_parent.split(':')[-1])[0]
-    #print(joint_new)
-    translation = joint_old.getTranslation('world')
-    joint_new.setTranslation(translation, 'world')
-    rotation = joint_old.getRotation('world')
-    joint_new.setRotation(rotation, 'world')
-    scale = joint_old.getScale()
-    joint_new.setScale(scale)
-    setKeyframe(joint_new) 
-    child_node_list = listRelatives(joint_parent, type = 'joint')
-    child_list = []
-    for node in child_node_list:
-        child_list.append(str(node))
-    if child_list == []:
-        return 'end'
-    else:
-        #print(child_list)
-        for child in child_list:
-            #print(child)
-            joint_children_set_attr(child)
 
 def check_root_joint():
     root_check_dict = collections.OrderedDict()
@@ -193,24 +124,31 @@ def check_root_joint():
         ref_list = ls(references = True)
         if ref_list != []:
             for ref in ref_list:
-                ref_path = referenceQuery(ref, filename = True)
-                asset_type_dir = '/' + asset_type + '/'
-                if asset_type_dir in ref_path:
-                    ref_namespace = referenceQuery(ref, namespace = True).split(':')[-1]
-                    root_exist = objExists(ref_namespace + ':' + ROOT_NAME)
-                    root_check_dict[ref_namespace] = root_exist
+                try:
+                    ref_path = referenceQuery(ref, filename = True)
+                    asset_type_dir = '/' + asset_type + '/'
+                    if asset_type_dir in ref_path:
+                        ref_namespace = referenceQuery(ref, namespace = True).split(':')[-1]
+                        root_exist = objExists(ref_namespace + ':' + ROOT_NAME)
+                        root_check_dict[ref_namespace] = root_exist
+                except:
+                    print(ref, '            bad bad')
     return(root_check_dict)
 
-def export_shot(shot_data_dir, frame_ext = 10):
+def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
+    #ogs(pause = True)
     ref_count = 0
     for asset_type in ASSET_TYPE_LIST:
         asset_type_dir = '/' + asset_type + '/'
         ref_list = ls(references = True)
         if ref_list != []:
             for ref in ref_list:
-                ref_path = referenceQuery(ref, filename = True)
-                if asset_type_dir in ref_path:
-                    ref_count += 1
+                try:
+                    ref_path = referenceQuery(ref, filename = True)
+                    if asset_type_dir in ref_path:
+                        ref_count += 1
+                except:
+                    print(ref, '            bad bad')
     #print(ref_count)
     progress_window = window(title = u'大家好我是进度条')
     columnLayout()
@@ -218,7 +156,11 @@ def export_shot(shot_data_dir, frame_ext = 10):
     showWindow(progress_window)
 
     file_name = os.path.splitext(os.path.split(sceneName())[1])[0].split('.')[0]
-    version   = os.path.splitext(os.path.split(sceneName())[1])[0].split('.')[1]
+    version   = 0
+    try:
+        version   = os.path.splitext(os.path.split(sceneName())[1])[0].split('.')[1]
+    except:
+        pass
     frame_start, frame_end = get_playback_frames()
     frame_start_ext = frame_start - frame_ext
     frame_end_ext = frame_end + frame_ext
@@ -236,18 +178,24 @@ def export_shot(shot_data_dir, frame_ext = 10):
     cam_dict  = collections.OrderedDict()
     char_dict = collections.OrderedDict()
     shot_dict['cam'] = cam_dict
+
+    fps = currentUnit(time = True, query = True)
+    shot_dict['fps'] = fps
+    _time = time.localtime(time.time())
+    time_formated = '{}.{}.{} {}:{}:{}'.format(_time.tm_year, _time.tm_mon, _time.tm_mday, _time.tm_hour, _time.tm_min, _time.tm_sec)
+    shot_dict['time'] = time_formated
+    shot_dict['zfused'] = zfused_dict
+
     
     if get_cam_list():
         cam_value_dict = get_cam_dict(frame_ext)
         cam_name = cam_value_dict['cam_name']
-        cam_json_file = shot_data_dir + cam_name + '.json'
         cam_fbx_file  = shot_data_dir + cam_name + '.fbx'
         cam_dict[cam_name] = collections.OrderedDict()
-        cam_dict[cam_name]['json'] = cam_json_file
         cam_dict[cam_name]['fbx']  = cam_fbx_file
+        cam_dict[cam_name]['focal_length']  = cam_value_dict['focal_length']
+        cam_dict[cam_name]['focal_length_key_list']  = cam_value_dict['focal_length_key_list']
         print(cam_value_dict)
-        write_json_file(cam_value_dict, cam_json_file)
-        file_export_list.append(cam_json_file)
 
         select(cam_name, replace = True)
         export_fbx(frame_start_ext, frame_end_ext, cam_fbx_file)
@@ -258,57 +206,90 @@ def export_shot(shot_data_dir, frame_ext = 10):
     for asset_type in ASSET_TYPE_LIST:
         asset_dict = collections.OrderedDict()
         shot_dict[asset_type] = asset_dict
-        ref_list = ls(references = True)
-        if ref_list != []:
-            for ref in ref_list:
-                ref_path = referenceQuery(ref, filename = True)
-                asset_type_dir = '/' + asset_type + '/'
-                if asset_type_dir in ref_path:
-                    #print(ref)
-                    #print(ref_path)
-                    ref_namespace = referenceQuery(ref, namespace = True).split(':')[-1]
-                    print(ref_namespace)
-                    asset_name = ref_path.split(asset_type_dir)[1].split('/')[0]
-                    ani_name = file_name + '_' + asset_name
-                    fbx_path = shot_data_dir + ani_name + '.fbx'
-                    asset_dict[ref_namespace] = collections.OrderedDict()
-                    asset_dict[ref_namespace]['maya_path']  = ref_path
-                    asset_dict[ref_namespace]['maya_node']  = str(ref)
-                    asset_dict[ref_namespace]['asset_name'] = asset_name
-                    asset_dict[ref_namespace]['ani_name']   = ani_name
-                    asset_dict[ref_namespace]['fbx_path']   = ''
-                    asset_dict[ref_namespace]['root_joint_available'] = True
-                    if objExists(ref_namespace + ':' + ROOT_NAME):
-                        joint_root = ls(ref_namespace + ':' + ROOT_NAME)[0]
-                        #print(joint_root)
-                        depth = 0
-                        joint_count = 0
-                        joint_dict = collections.OrderedDict()
-                        joint_children(joint_root, joint_dict, 0)
-                        
-                        for frame in range(frame_start_ext, frame_end_ext + 1):
-                            currentTime(frame, edit = True)
-                            joint_children_set_attr(joint_root)
-                        select(ROOT_NAME, replace = True)
-                        export_fbx(frame_start_ext, frame_end_ext, fbx_path)
-                        asset_dict[ref_namespace]['fbx_path'] = fbx_path
-                        file_export_list.append(fbx_path)
-                        delete(ROOT_NAME)
+        ref_node_list = ls(references = True)
+        if ref_node_list != []:
+            for ref_node in ref_node_list:
+                try:
+                    ref_path = referenceQuery(ref_node, filename = True)
+                    asset_type_dir = '/' + asset_type + '/'
+                    if asset_type_dir in ref_path:
+                        if referenceQuery(ref_node, isLoaded = True):
+                            print(ref_node)
+                            print(ref_path)
+                            ref_namespace = referenceQuery(ref_node, namespace = True).split(':', 1)[-1]
+                            print(ref_namespace)
+                            asset_name = ref_path.split(asset_type_dir)[1].split('/')[0]
+                            #ani_name = file_name + '_' + asset_name
+                            ani_name = file_name + '_' + ref_namespace.replace(':', '___')
+                            fbx_path = shot_data_dir + ani_name + '.fbx'
+                            asset_dict[ref_namespace] = collections.OrderedDict()
+                            asset_dict[ref_namespace]['maya_path']  = ref_path
+                            asset_dict[ref_namespace]['maya_node']  = str(ref_node)
+                            asset_dict[ref_namespace]['asset_name'] = asset_name
+                            asset_dict[ref_namespace]['ani_name']   = ani_name
+                            asset_dict[ref_namespace]['fbx_path']   = ''
+                            asset_dict[ref_namespace]['root_joint_available'] = False
+                            asset_dict[ref_namespace]['root_geo_available'] = False
+                            print(asset_dict)
+                            if objExists(ref_namespace + ':' + ROOT_JOINT_NAME):
+                                asset_dict[ref_namespace]['root_joint_available'] = True
+                                joint_root = ls(ref_namespace + ':' + ROOT_JOINT_NAME)
+                                print(joint_root)
+                                joint_parent = cmds.listRelatives(joint_root, parent = True)
+                                print(joint_parent)
 
-                        progressBar(progressControl, edit = True, step= 1)
-                    else:
-                        asset_dict[ref_namespace]['root_joint_available'] = False
+                                if objExists(ref_namespace + ':' + ROOT_GEO_NAME):
+                                    asset_dict[ref_namespace]['root_geo_available'] = True
+                                    geo_root = ls(ref_namespace + ':' + ROOT_GEO_NAME)
+                                    print(geo_root)
+                                    geo_parent = cmds.listRelatives(geo_root, parent = True)
+                                    print(geo_parent)
+                                
+                                    cmds.file(ref_path, importReference = True)
+                                    
+                                    parent(joint_root, world = True)
+                                    parent(geo_root, world = True)
+                                    parentConstraint(joint_parent, joint_root, maintainOffset = True, weight = 1)
+                                    
+                                    select(geo_root, joint_root, replace = True)
+                                    export_fbx(frame_start_ext, frame_end_ext, fbx_path)
+                                    asset_dict[ref_namespace]['fbx_path'] = fbx_path
+                                    file_export_list.append(fbx_path)
+                                else:
+                                    cmds.file(ref_path, importReference = True)
+                                    parent(joint_root, world = True)
+                                    parentConstraint(joint_parent, joint_root, maintainOffset = True, weight = 1)
+
+                                    select(joint_root, replace = True)
+                                    export_fbx(frame_start_ext, frame_end_ext, fbx_path)
+                                    asset_dict[ref_namespace]['fbx_path'] = fbx_path
+                                    file_export_list.append(fbx_path)
+                                
+                                control_main = ref_namespace + ':Main'
+                                if listAttr(control_main, string = 'vis'):
+                                    asset_dict[ref_namespace]['vis'] = []
+                                    if keyframe(control_main, attribute = 'vis', query = True, keyframeCount = True) != 0:
+                                        attr_node = PyNode(control_main + '.vis')
+                                        for frame in range(frame_start_ext, frame_end_ext):
+                                            attr_value = attr_node.get(time = frame)
+                                            asset_dict[ref_namespace]['vis'].append(attr_value)
+
+                            else:
+                                pass
+                except:
+                    print(ref, '            bad bad')
+            progressBar(progressControl, edit = True, step= 1)
     
     shot_json_file = shot_data_dir + file_name + '.json'
     write_json_file(shot_dict, shot_json_file)
     file_export_list.insert(0, shot_json_file)
     deleteUI(progress_window)
 
-    return file_export_list
+    return shot_json_file
 
 
 
-def publish(*args, **kwargs):
+def publish_ue(*args, **kwargs):
     _task_id, _output_attr_id = args
     print('publish ue')
 
@@ -322,10 +303,55 @@ def publish(*args, **kwargs):
     # print('_attr_code:                      ', _attr_code)
 
     _task = zfused_api.task.Task(_task_id)
-    # print('_task:                           ', _task)
+    _task_name = _task.code()
+    # print('_task_name:                           ', _task_name)
+    _shot_id = _task._data["ProjectEntityId"]
+    _shot = zfused_api.shot.Shot(_shot_id)
+    _shot_name = _shot.code()
+    # print('_shot_name:                           ', _shot_name)
+
+    _sequence_id = _shot._data["SequenceId"]
+    _sequence_name = zfused_api.sequence.Sequence(_sequence_id).code()
+    # print('_sequence_name:                       ', _sequence_name)
+
+    _episode_id = _shot._data["EpisodeId"]
+    _episode_name = zfused_api.episode.Episode(_episode_id).code()
+    # print('_episode_name:                       ', _episode_name)
+
+    _project_id = record.current_project_id()
+    _project = zfused_api.project.Project(_project_id)
+    _cache_path = _project.cache_path()
+    _ue_cache_root = "{}/{}".format(_cache_path, 'ue')
+    # print(_ue_cache_root)
+    _ue_json_fbx_dir = "{}/{}".format(_ue_cache_root, 'json/fbx')
+
+    _ue_shot_dir = "{}/{}/{}/{}".format(_ue_cache_root, _episode_name, _sequence_name, _shot_name)
+    _file_index = "{:0>4d}".format(_task.last_version_index( 0 ) + 1)
+    # print('_file_index 0: ', _file_index)
+    _ue_fbx_version_dir = "{}/{}/{}/".format(_ue_shot_dir, 'fbx', _file_index)
+    print(_ue_fbx_version_dir)
+    
+    
+
+    _user_id = zfused_api.zFused.USER_ID
+    _user_handle = zfused_api.user.User(_user_id)
+    _name_cn = _user_handle.name()
+    _name_en = _user_handle.code()
+    # print(_name_en, _name_cn)
+    
+    zfused_dict = collections.OrderedDict()
+    zfused_dict['episode_name'] = _episode_name
+    zfused_dict['sequence_name'] = _sequence_name
+    zfused_dict['shot_name'] = _shot_name
+    zfused_dict['task_name'] = _task_name
+    zfused_dict['file_index'] = _file_index
+    zfused_dict['user_name'] = _name_en
+    # print(zfused_dict)
+
+
     # _path = _task.path()
     # print('_path:                           ', _path)
-    _production_path = _task.production_path()
+    # _production_path = _task.production_path()
     # print('_production_path:                ', _production_path)
     # _transfer_path = _task.transfer_path()
     # print('_transfer_path:                  ', _transfer_path)
@@ -333,26 +359,23 @@ def publish(*args, **kwargs):
     # print('_backup_path:                    ', _backup_path)
     # _work_path = _task.work_path()
     # print('_work_path:                      ', _work_path)
-    _project_entity_production_path = _task.project_entity().production_path()
+    # _project_entity_production_path = _task.project_entity().production_path()
     # print('_project_entity_production_path: ', _project_entity_production_path)
     # _temp_path = _task.temp_path()
     # print('_temp_path:                      ', _temp_path)
     # _file_code = _task.file_code()
     # print('_file_code:                      ', _file_code)
     
-    _file_index = "{:0>4d}".format(_task.last_version_index( 0 ))
-    # print('_file_index 0: ', _file_index)
-
-    _path = 'layout/toue'
-    _production_path = '{}/{}'.format(_project_entity_production_path, _path)
-    # _production_path = 'E:/project/bkm3a/toue/publish'
-    # print('_production_path:                ', _production_path)
-    _publish_file_dir = '{}/{}'.format(_production_path, _file_index)
-    # print('_publish_file_dir:               ', _publish_file_dir)
-
-    if not os.path.isdir(_publish_file_dir):
-        os.makedirs(_publish_file_dir)
-    
-    _publish_file_dir = _publish_file_dir + '/'
-    export_shot(_publish_file_dir)
-    
+    if not os.path.isdir(_ue_fbx_version_dir):
+        os.makedirs(_ue_fbx_version_dir)
+    if not os.path.isdir(_ue_json_fbx_dir):
+        os.makedirs(_ue_json_fbx_dir)
+    try:
+        shot_json_file = export_shot(_ue_fbx_version_dir, zfused_dict)
+        shot_json_file_copy = "{}/{}".format(_ue_json_fbx_dir, shot_json_file.split('/')[-1])
+        shutil.copyfile(shot_json_file, shot_json_file_copy)
+    except Exception as e:
+        logger.error(e)
+        print(e)
+        return False
+    return True

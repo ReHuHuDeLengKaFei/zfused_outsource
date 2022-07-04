@@ -63,6 +63,8 @@ def receive_file(src, dst):
     if is_hash_equal(src, dst):
         return True
 
+    return shutil.copy(src, dst)
+
     _src_file = src
     _dst_file = dst
     _publish_exe = get_transer_exe()
@@ -107,6 +109,8 @@ def publish_file(src, dst, del_src = False):
     # check md5
     if is_hash_equal(src, dst):
         return True
+
+    return shutil.copy(src, dst)
 
     _publish_exe = get_transer_exe()
     print(_publish_exe)

@@ -57,7 +57,8 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
     def _search(self, data):
         if not self._search_text:
             return True
-        _in_name = self._search_text.lower() in data["Name"].lower()
+        _text =  u"{}".format(self._search_text.lower())
+        _in_name = _text in data["Name"].lower() or _text in zfused_api.task.Task(data.get("Id")).project_entity().name_code()
         if _in_name:
             return True
         return False

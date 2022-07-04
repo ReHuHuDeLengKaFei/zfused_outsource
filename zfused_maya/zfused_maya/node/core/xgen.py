@@ -14,11 +14,10 @@ import xgenm as xg
 import xgenm.xgGlobal as xgg
 
 import zfused_api
-from zcore import filefunc, zfile
-from zfused_maya.core import record
-from zfused_maya.node.core import alembiccache
 
-reload(alembiccache)
+from zcore import filefunc, zfile
+
+from zfused_maya.node.core import alembiccache
 
 ATTR = ['uvWrite', 'worldSpace', 'stripNamespaces']
 ATTrPREFIX = ['xgen']
@@ -415,7 +414,14 @@ def get_follicle_curve_outcurve(outcurve):
     _curveshape = cmds.listRelatives(outcurve, children=True, type='nurbsCurve', fullPath=True)
     _follicles = cmds.listConnections(_curveshape, destination=True)
     if _follicles:
-        _follicle = _follicles[0]
+        _follicle =""
+        for temp_follicle in _follicles:
+            temp_follicle1 = temp_follicle.split(':')[-1]
+            if temp_follicle1.startswith('follicle'):
+                _follicle = temp_follicle
+                break
+        if not _follicle:
+            return None
         _follicle_curve = cmds.listRelatives(_follicle, children=True, type='transform')
         if _follicle_curve:
             return _follicle_curve[0]
@@ -517,6 +523,13 @@ def get_outcurve_desc(desc):
         _outcurve = get_outcurve_guide(_guide)
         if _outcurve:
             _outcurves.append(_outcurve[0])
+        else:
+            try:
+                _outcurve = get_guide_override_curve(_guide)
+                if _outcurve:
+                    _outcurves.append(_outcurve[0])
+            except:
+                pass
     return _outcurves
 
 
@@ -547,3 +560,12 @@ def get_growmesh(palette):
             lname = cmds.ls(_mesh, l=1)[0]
             _mesh_list.append(lname)
     return _mesh_list
+
+
+def get_guide_override_curve(_guide):
+    _guide_shape = cmds.listRelatives(_guide, shapes=True, type = 'xgmSplineGuide')
+    _xgm_make_guide = cmds.listConnections(_guide_shape, destination=False, source=True, type='xgmMakeGuide')
+    _xgm_make_guide = list(set(_xgm_make_guide))
+    _override_curve = cmds.listConnections(_xgm_make_guide, destination=False, source=True, type='nurbsCurve')
+    if _override_curve:
+        return _override_curve

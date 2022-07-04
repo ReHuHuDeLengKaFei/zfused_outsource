@@ -34,8 +34,8 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         _data = index.data()
         _id = _data["Id"]
         _task_handle = zfused_api.task.Task(_id, _data)
-        _project_entity_handle = zfused_api.objects.Objects(_task_handle.data()["ProjectEntityType"], _task_handle.data()["ProjectEntityId"])
-        _project_step_handle = zfused_api.step.ProjectStep(_task_handle.data()["ProjectStepId"])
+        _project_entity_handle = _task_handle.project_entity() # zfused_api.objects.Objects(_task_handle.data()["ProjectEntityType"], _task_handle.data()["ProjectEntityId"])
+        _project_step_handle = _task_handle.project_step() # zfused_api.step.ProjectStep(_task_handle.data()["ProjectStepId"])
         _name = _task_handle.full_name_code().replace("/","_")
 
         painter.save()
@@ -144,6 +144,27 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
         painter.setBrush(QtGui.QBrush(QtGui.QColor(_status_handle.color())))
         painter.drawRoundedRect(_status_rect, 0, 0 )
+
+        _name = "子任务"
+        _name_width = _fm.width(_name) + self._spacing
+        _name_height = _fm.height()
+        _sub_task_rect = QtCore.QRect( _rect.x() + ( _rect.width() - _name_width) / 2,
+                                       _rect.y() + self._spacing,
+                                       _name_width,
+                                       _name_height)
+        if _task_handle.is_sub_task():
+            painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
+            painter.setBrush(QtGui.QBrush(QtGui.QColor("#e1a021")))
+            painter.drawRoundedRect(_sub_task_rect, 2, 2)
+            painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 1))
+            painter.drawText( _sub_task_rect, QtCore.Qt.AlignCenter, _name)
+        if _task_handle.has_sub_task():
+            painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
+            painter.setBrush(QtGui.QBrush(QtGui.QColor("#007fce")))
+            painter.drawRoundedRect(_sub_task_rect, 2, 2)
+            painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 1))
+            painter.drawText(_sub_task_rect, QtCore.Qt.AlignCenter, "主任务")
+
 
         if option.state & QtWidgets.QStyle.State_MouseOver:
             painter.setPen(QtGui.QColor(0, 122, 204, 0))

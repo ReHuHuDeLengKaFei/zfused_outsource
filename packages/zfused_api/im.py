@@ -98,6 +98,7 @@ def submit_message(submitter_object, submitter_id, receiver_ids, msg_data, msgty
     """ submit message 
         0 代表全部
     """
+    return True
     # 写入数据库
     _, _message_id = message.send_message( submitter_object, 
                                            submitter_id, 

@@ -5,25 +5,89 @@
 
 from __future__ import print_function
 
+import copy
 import os
 
+import maya.api.OpenMaya as om
 import maya.cmds as cmds
 import pymel.core as pm
 import xgenm as xg
 
-import maya.api.OpenMaya as om
-
 import zfused_api
+
 from zfused_maya.core import record
+
 from . import property, renderinggroup, shadingengine, texture, xgen
 
-reload(xgen)
 
 
 class Check(object):
     """ check base object
     """
     value = False
+
+
+def texture_is_chinese():
+    """
+    检查贴图路径是否有中文
+    """
+
+    _nodes = texture.nodes()
+    if not _nodes:
+        return True, None
+    _error_nodes = []
+    info = u"以下节点含有中文，请检查\n"
+    for _node_attr in _nodes:
+        _node_textures = []
+        _node = _node_attr.split(".")[0]
+        _path = texture._get_file_full_name(_node_attr)
+        _is_reference = cmds.referenceQuery(_node, isNodeReferenced=True)
+        if _is_reference:
+            continue
+        _mode, _ani = 0, 0
+        if cmds.objExists("%s.uvTilingMode" % _node):
+            _mode = cmds.getAttr("%s.uvTilingMode" % _node)
+        if cmds.objExists("%s.useFrameExtension" % _node):
+            _ani = cmds.getAttr("%s.useFrameExtension" % _node)
+        if "<UDIM>" in os.path.basename(_path):
+            _mode = 1
+        if not _mode and not _ani:
+            _node_textures.append(_path)
+        else:
+            if _mode:
+                _node_textures.extend(texture.get_udim_texfile(_path, False))
+            if _ani:
+                _node_textures.extend(texture.get_frame_texfile(_path, False))
+        for _file in _node_textures:
+            for ch in _file:
+                if u'\u4e00' <= ch <= u'\u9fff':
+                    _error_nodes.append(_node)
+                    continue
+                else:
+                    continue
+        if _error_nodes:
+            _error_nodes = list(set(_error_nodes))
+            for _error_node in _error_nodes:
+                info += u"{}\n".format(_error_node)
+            return False, info
+        return True, None
+
+    # if not _files:
+    #     return True, None
+    # _error_path = []
+    # info = u"以下路径含有中文，请检查\n"
+    # for _file in _files:
+    #     for ch in _file:
+    #         if u'\u4e00' <= ch <= u'\u9fff':
+    #             _error_path.append(_file)
+    #         else:
+    #             continue
+    # if _error_path:
+    #     _error_path = list(set(_error_path))
+    #     for _path in _error_path:
+    #         info += u"{}\n".format(_path)
+    #     return False, info
+    # return True, None
 
 
 # =======================================================================================================
@@ -113,6 +177,25 @@ def useless_camera():
             if _is_extra:
                 continue
             info += "{}\n".format(_camera)
+        return False, info
+    return True, None
+
+
+# 检查摄像机名称和Shape名重复
+def error_name_camera():
+    """ check camera shape name
+    """
+    _cameras = cmds.ls(type="camera")
+    _left_cameras = list(set(_cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
+    _repeat_name = []
+    if _left_cameras:
+        info = u"摄像机名称与Shape名重复\n"
+        for _camera in _left_cameras:
+            _parent = cmds.listRelatives(_camera, p=True)[0]
+            if _camera.split('|')[-1] == _parent.split('|')[-1]:
+                _repeat_name.append(_parent)
+                info += "{}\n".format(_parent)
+    if _repeat_name:
         return False, info
     return True, None
 
@@ -390,21 +473,21 @@ def rendering_group():
 def equal_mesh():
     _info = {}
     _error_meshs = []
-    _top_dags = cmds.ls(type = "mesh")
+    _top_dags = cmds.ls(type="mesh")
     for _top_dag in _top_dags:
-        #get dag hierarchy
-        allDags = cmds.ls(_top_dag, dag = True, ni = True, type = "mesh")
+        # get dag hierarchy
+        allDags = cmds.ls(_top_dag, dag=True, ni=True, type="mesh")
         # print allDags
         for dag in allDags:
             selectionList = om.MSelectionList()
-            selectionList.add( dag)
+            selectionList.add(dag)
             node = selectionList.getDependNode(0)
             fnMesh = om.MFnMesh(node)
             dag_info = ""
-            dag_info += " %s"%(fnMesh.numVertices)
-            dag_info += " %s"%(fnMesh.numEdges)
-            dag_info += " %s"%(fnMesh.numPolygons)
-            #_info.append(dag_info)
+            dag_info += " %s" % (fnMesh.numVertices)
+            dag_info += " %s" % (fnMesh.numEdges)
+            dag_info += " %s" % (fnMesh.numPolygons)
+            # _info.append(dag_info)
             if dag_info in _info:
                 _error_meshs.append(fnMesh.name())
                 _error_meshs.append(_info[dag_info])
@@ -605,6 +688,8 @@ def render_layer():
     return True, None
 
 
+# =========================================================================================
+# name space 相关
 def namespace():
     """ check namespace
     """
@@ -614,6 +699,105 @@ def namespace():
         info = "场景中存在命名空间\n"
         for _namespace in _namespaces:
             info += "{}\n".format(_namespace)
+        return False, info
+    return True, None
+
+
+def equal_namespace():
+    """ 检查文件中存在相同namespace
+    """
+    _rf_nodes = cmds.ls(rf=True)
+    _rf_ns_node = {}
+    _error_rf_nodes = []
+    for _rf_node in _rf_nodes:
+        _inr = cmds.referenceQuery(_rf_node, inr=True)
+        if not _inr:
+            try:
+                _namespace = cmds.referenceQuery(_rf_node, namespace=True)
+                if _namespace not in _rf_ns_node.keys():
+                    _rf_ns_node[_namespace] = _rf_node
+                else:
+                    _error_rf_nodes.append((_rf_node, _rf_ns_node[_namespace]))
+            except:
+                try:
+                    cmds.lockNode(_rf_node, lock=False)
+                    cmds.delete(_rf_node)
+                except:
+                    pass
+    # return _error_rf_nodes
+    if _error_rf_nodes:
+        info = "场景存在namespace相同参考\n"
+        for _error_rf_node in _error_rf_nodes:
+            info += "{} - {}\n".format(_error_rf_node[0], _error_rf_node[1])
+        return False, info
+    return True, None
+
+
+def multi_namespace():
+    """ 检查文件中存在 多级 namespace
+    """
+
+    # #set the current naemspace to world
+    # curNS = cmds.namespaceInfo(cur=True)
+    # cmds.namespace(set=":")
+    #
+    # #because maya can only list the child namespaces of the current set namespace, we have to recursively go through setting
+    # #and checking child namespaces
+    #
+    # #start by getting the worlds children
+    # namespaces = []
+    # childspaces = cmds.namespaceInfo(lon=True)
+    #
+    # while childspaces:
+    #     #move the current add spaces into the namespaces list (what we will return)
+    #     namespaces.extend(childspaces)
+    #     #create a list from the childspaces so that we can check for their children
+    #     checkspaces = childspaces
+    #     #empty the childspaces so all new children can be added to it for the next round
+    #     childspaces = []
+    #     #cycle through the current checkspaces and get their child namespaces
+    #     for check in checkspaces:
+    #         cmds.namespace(set=(":" + check))
+    #         grandchildspaces = cmds.namespaceInfo(lon=True)
+    #         if grandchildspaces:
+    #             childspaces.extend(grandchildspaces)
+    #
+    # #remove default namespaces
+    # if namespaces.count('UI'): namespaces.remove('UI')
+    # if namespaces.count('shared'): namespaces.remove('shared')
+    #
+    # cmds.namespace(set=(":" + curNS))
+    # namespaces.sort()
+    #
+    # _error_rf_nodes = []
+    # if namespaces:
+    #     for _namespace in namespaces:
+    #         if len(_namespace.split(":")) >= 2:
+    #             _error_rf_nodes.append(_namespace)
+    #
+    # # return _error_rf_nodes
+    # if _error_rf_nodes:
+    #     info = "场景存在 多级 namespace 参考\n"
+    #     for _error_rf_node in _error_rf_nodes:
+    #         info += "{} - {}\n".format(_error_rf_node[0], _error_rf_node[1])
+    #     return False, info
+    # return True, None
+
+    _rendergrps = renderinggroup.nodes()
+    _error_rf_nodes = []
+    for dag in _rendergrps:
+        _reference = cmds.referenceQuery(dag, inr=1)
+        if not _reference:
+            continue
+        _namespace = cmds.referenceQuery(dag, ns=True)
+        if _namespace:
+            if len(_namespace.split(":")) >= 3:
+                _error_rf_nodes.append(dag)
+
+    if _error_rf_nodes:
+        info = u"场景存在 多级 namespace 参考\n"
+        for _error_rf_node in _error_rf_nodes:
+            info += "{}\n".format(_error_rf_node)
         return False, info
     return True, None
 
@@ -647,6 +831,71 @@ def repeat(node_type="mesh"):
 
     _lists = cmds.ls(noIntermediate=1, type=node_type)
     info = "场景存在重复命名节点\n"
+    _uuid_info = get_uuid_info()
+    for _name in _lists:
+        if len(_name.split('|')) != 1:
+            _uuid = cmds.ls(_name, uuid=1)[0]
+            # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
+            if len(_uuid_info[_uuid]) == 1:
+                _is_repeat = True
+                info += "{}\n".format(_name)
+
+    if _is_repeat:
+        return False, info
+    else:
+        return True, None
+
+
+def gpu_repart():
+    """
+    检查GPU 重命名
+    """
+
+    def get_uuid_info():
+        # 记录相同uuid下的mesh
+        uuid_dict = {}
+        _meshes = cmds.ls(type='gpuCache', ap=True)
+        for _mesh in _meshes:
+            _uuid = cmds.ls(_mesh, uuid=True)[0]
+            uuid_dict.setdefault(_uuid, []).append(_mesh)
+        return uuid_dict
+
+    _is_repeat = False
+    _lists = cmds.ls(noIntermediate=1, type='gpuCache')
+    info = u"场景存在重复命名gpu节点\n"
+    _uuid_info = get_uuid_info()
+    for _name in _lists:
+        if len(_name.split('|')) != 1:
+            _uuid = cmds.ls(_name, uuid=1)[0]
+            # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
+            if len(_uuid_info[_uuid]) == 1:
+                _is_repeat = True
+                info += "{}\n".format(_name)
+
+    if _is_repeat:
+        return False, info
+    else:
+        return True, None
+
+
+def ass_repeat():
+    """
+    检查ASS是否重名
+    :return:
+    """
+
+    def get_uuid_info():
+        # 记录相同uuid下的mesh
+        uuid_dict = {}
+        _meshes = cmds.ls(type='aiStandIn', ap=True)
+        for _mesh in _meshes:
+            _uuid = cmds.ls(_mesh, uuid=True)[0]
+            uuid_dict.setdefault(_uuid, []).append(_mesh)
+        return uuid_dict
+
+    _is_repeat = False
+    _lists = cmds.ls(noIntermediate=1, type='aiStandIn')
+    info = u"场景存在重复命名ass节点\n"
     _uuid_info = get_uuid_info()
     for _name in _lists:
         if len(_name.split('|')) != 1:
@@ -752,6 +1001,29 @@ def normal_lock():
         return True, None
 
 
+def polygon_edge5():
+    '''5边或者更多边的多边形
+    '''
+    meshs = cmds.ls(type="mesh", io=0)
+    if not meshs:
+        return True, None
+    edge5_list = []
+    for _mesh in meshs:
+        cmds.select(_mesh, replace=True)
+        cmds.polySelectConstraint(mode=3, type=0x0008, size=3)
+        cmds.polySelectConstraint(disable=True)
+        edge5 = cmds.filterExpand(ex=True, sm=34) or []
+        if edge5 != []:
+            print(_mesh)
+            edge5_list.append(_mesh)
+    if edge5_list:
+        info = u"有5边或者更多边的多边形，请修改\n"
+        info += "\n".join(cmds.listRelatives(edge5_list, p=1))
+        return False, info
+    else:
+        return True, None
+
+
 # =======================================================================================================
 # key animation
 # 检查maya关于key帧的相关检查
@@ -788,6 +1060,41 @@ def useless_key():
         return True, None
     _info = u"存在错误的k帧位置，请使用控制器重新k帧并移除错误k帧信息\n"
     _info += "\n".join(key_attr)
+    return False, _info
+
+
+def keys():
+    """
+    检查文件当中是否存在K 帧信息
+    :return:
+    """
+    attr_list = ['animCurveUL', 'animCurveUA', 'parentConstraint']
+    all_trans = cmds.ls(type='transform')
+    error_node = []
+    for _tran in all_trans:
+        if cmds.keyframe(_tran, query=True, keyframeCount=True) != 0:
+            error_node.append(_tran)
+    _info = u"文件存在K 帧，请检查！\n"
+    if not error_node:
+        return True, None
+    error_node_copy = copy.deepcopy(error_node)
+    for _node in error_node_copy:
+        if cmds.nodeType(_node) in attr_list:
+            error_node.remove(_node)
+        sources = cmds.listConnections(_node, s=True, d=False)
+        if sources:
+            if cmds.nodeType(sources[0]) in attr_list:
+                error_node.remove(_node)
+    if not error_node:
+        return True, None
+    for node in error_node:
+        if cmds.nodeType(node) in attr_list:
+            continue
+        sources = cmds.listConnections(node, s=True, d=False)
+        if sources:
+            if cmds.nodeType(sources[0]) in attr_list:
+                continue
+        _info += '{}\n'.format(node)
     return False, _info
 
 
@@ -849,36 +1156,6 @@ def unrecord_reference_file():
         except:
             pass
     if _is_unrecord:
-        return False, info
-    return True, None
-
-
-def equal_namespace():
-    """ 检查文件中存在相同namespace
-    """
-    _rf_nodes = cmds.ls(rf=True)
-    _rf_ns_node = {}
-    _error_rf_nodes = []
-    for _rf_node in _rf_nodes:
-        _inr = cmds.referenceQuery(_rf_node, inr=True)
-        if not _inr:
-            try:
-                _namespace = cmds.referenceQuery(_rf_node, namespace=True)
-                if _namespace not in _rf_ns_node.keys():
-                    _rf_ns_node[_namespace] = _rf_node
-                else:
-                    _error_rf_nodes.append((_rf_node, _rf_ns_node[_namespace]))
-            except:
-                try:
-                    cmds.lockNode(_rf_node, lock=False)
-                    cmds.delete(_rf_node)
-                except:
-                    pass
-    # return _error_rf_nodes
-    if _error_rf_nodes:
-        info = "场景存在namespace相同参考\n"
-        for _error_rf_node in _error_rf_nodes:
-            info += "{} - {}\n".format(_error_rf_node[0], _error_rf_node[1])
         return False, info
     return True, None
 
@@ -1282,6 +1559,8 @@ def follicle_guide_link():
     """
     error_list = []
     all_follicles = cmds.ls(type='follicle')
+    if not all_follicles:
+        return True, None
     for _follicleshape in all_follicles:
         _follicle_curve = xgen.get_follical_curve(_follicleshape)
         if _follicle_curve:
@@ -1347,5 +1626,100 @@ def xgen_node_reference():
     return False, info
 
 
+def last_version():
+    """
+    检查参考文件是否为最新版本文件
+    :return:
+    """
+    error_nodes = []
+    _reference_nodes = cmds.ls(rf=True)
+    for _rfn in _reference_nodes:
+        try:
+            _file_path = cmds.referenceQuery(_rfn, filename=True)
+            _production_files = zfused_api.zFused.get("production_file_record", filter={
+                "Path": _file_path})
+            if not _production_files:
+                continue
+            if len(_production_files) != 1:
+                continue
+            _index = _production_files[0].get('Index')
+            _task_id = _production_files[0].get('TaskId')
+            task_entity = zfused_api.task.Task(_task_id)
+            _task_last_index = task_entity.last_version_index()
+            if _index != _task_last_index:
+                error_nodes.append(_rfn)
+        except:
+            continue
+    info = u'下列参考不是最新版资产，请检查\n'
+    if not error_nodes:
+        return True, None
+    for node in error_nodes:
+        info += '{}\n'.format(node)
+
+    return False, info
 
 
+def tx():
+    """
+    检查贴图tx 是否转换
+    :return:
+    """
+
+    def comp_ctime(file1, file2):
+        """
+        判断贴图时间和tx 时间，正常应该是tx 时间大于贴图时间
+        :param file1: 贴图
+        :param file2: tx
+        :return:
+        """
+        time1 = os.path.getmtime(file1)
+        time2 = os.path.getmtime(file2)
+        if time1 > time2:
+            return True
+        return False
+
+    _files = texture.files()
+    _error_nodes = []
+    for _file in _files:
+        _file_name, _suffix = os.path.splitext(_file)
+        _tx_file = _file_name + '.tx'
+        if not os.path.exists(_tx_file):
+            _error_nodes.append(_file)
+            continue
+        if comp_ctime(_file, _tx_file) is False:
+            _error_nodes.append(_file)
+    if not _error_nodes:
+        return True, None
+    info = u'下列贴图文件的tx不存在或时间不正确 \n'
+    for _node in _error_nodes:
+        info += '{}\n'.format(_node)
+    return False, info
+
+
+def collection_path():
+    """
+    检查collection的路径是否为多重路径
+    :return:
+    """
+
+    all_palette = xg.palettes()
+    if not all_palette:
+        return True,None
+    error_node = []
+    for _palette in all_palette:
+        _file_path = xg.expandFilepath(xg.getAttr('xgDataPath', _palette), '', False, False)
+        _paths_ = _file_path.split(';')
+        if len(_paths_) != 1:
+            error_node.append(_palette)
+            continue
+        if not os.path.exists(_paths_[0]):
+            error_node.append(_palette)
+            continue
+
+    if not error_node:
+        return True, None
+    info = u'xgen 路径为多重路径或文件路径不存在\n'
+    for _node in error_node:
+        info += '{}\n'.format(_node)
+
+    return False, info

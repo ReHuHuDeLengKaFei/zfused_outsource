@@ -2,8 +2,6 @@
 # --author-- lanhua.zhou
 from __future__ import print_function
 
-import os
-import shutil
 import logging
 
 from Qt import QtWidgets, QtGui, QtCore
@@ -20,25 +18,24 @@ __all__ = ["TaskManageWidget"]
 logger = logging.getLogger(__name__)
 
 
-# ====================================================
-# delete unused folder
-_dir = os.path.dirname(__file__)
-_del_path = "{}/taskpanelwidget".format(_dir)
-if os.path.isdir(_del_path):
-    shutil.rmtree(_del_path)
-# ====================================================
-
-
 class TaskManageWidget(panel.ShowPanelWidget):
+
+    viewed = QtCore.Signal(int)
+    checked = QtCore.Signal(int)
+
     def __init__(self, parent = None):
         super(TaskManageWidget, self).__init__(parent)
         self._build()
         self.build_panel()
         
-        self.task_panel_widget = taskpanelwidget.TaskPanelWidget()
+        self.task_panel_widget = taskpanelwidget.TaskPanelWidget(self)
         self.load_panel_widget("task panel", self.task_panel_widget)
+
         self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)
         self.filter_widget._step_changed.connect(self._filter_step)
+
+        self.task_listwidget.viewed.connect(self.viewed.emit)
+        self.task_listwidget.checked.connect(self.checked.emit)
 
     def _show_panel(self, model_index):
         """ show panel 
@@ -47,8 +44,8 @@ class TaskManageWidget(panel.ShowPanelWidget):
         self.task_panel_widget.load_task_id(_task_data["Id"])
         self.show_panel()
         
-    def load_project_id(self, project_id, company_id = 0):
-        self.task_listwidget.load_project_id(project_id, company_id)
+    def load(self, project_id, company_id):
+        self.task_listwidget.load(project_id, company_id)
         self.filter_widget.load_project_id(project_id)
 
     def _search(self):
@@ -72,8 +69,6 @@ class TaskManageWidget(panel.ShowPanelWidget):
         self.asset_list_widget.asset_proxy_model.filter_type(type_ids)
 
     def _filter_asset_project_steps(self, project_step_id):
-        """
-        """
         if self.only_show_version():
             self.asset_list_widget.asset_proxy_model.filter_project_steps([self._project_step_id])
         else:
@@ -87,6 +82,7 @@ class TaskManageWidget(panel.ShowPanelWidget):
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
         _layout.setSpacing(2)
+        _layout.setContentsMargins(0, 0, 0, 0)
 
         self.splitter = QtWidgets.QSplitter()
         _layout.addWidget(self.splitter)

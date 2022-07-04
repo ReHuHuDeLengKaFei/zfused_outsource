@@ -314,12 +314,12 @@ def error_nodes():
        判断 file 节点是否错误,填入错误贴图地址
     :rtype: list
     """
-    _all_files = cmds.file(query=1, list=1, withoutCopyNumber=1)
-    _all_files_dict = {}
-    for _file in _all_files:
-        _file_dir_name = os.path.dirname(_file)
-        _, _file_suffix = os.path.splitext(_file)
-        _all_files_dict[_file] = [ _file_dir_name, _file_suffix ]
+    # _all_files = cmds.file(query=1, list=1, withoutCopyNumber=1)
+    # _all_files_dict = {}
+    # for _file in _all_files:
+    #     _file_dir_name = os.path.dirname(_file)
+    #     _, _file_suffix = os.path.splitext(_file)
+    #     _all_files_dict[_file] = [ _file_dir_name, _file_suffix ]
 
     _error_nodes = []
 
@@ -499,6 +499,15 @@ def get_udim_texfile(filepath,boolean = True):
                 for _j in os.listdir(_path):
                     if re.search(r"%s\d{4}%s"%(_check_str,_suffix),_j):
                         filelist.append("{}/{}".format(_path,_j))
+
+                # 判断类似“body_1001_normal.jpg”的多象限贴图
+                if re.findall("_\d{4}_",_str):
+                    ele = _str.split(_udim[-1])
+                    for _j in os.listdir(_path):
+                        if re.search("%s\d{4}"%(ele[0]),_j):
+                            _file_path = "{}/{}".format(_path,_j)
+                            if os.path.isfile(_file_path):
+                                filelist.append("{}/{}".format(_path,_j))
     if filelist:
         if boolean:
             return True

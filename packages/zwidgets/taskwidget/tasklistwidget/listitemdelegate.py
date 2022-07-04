@@ -32,8 +32,8 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
     def paint(self, painter, option, index):
         _data = index.data()
         _id = _data["Id"]
-        _task_handle = zfused_api.task.Task(_id, _data)
-        _name = _task_handle.full_name_code().replace("/","_")
+        _task = zfused_api.task.Task(_id, _data)
+        _name = _task.full_name_code().replace("/","_")
 
         painter.save()
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
@@ -41,9 +41,9 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         _pen = QtGui.QPen(QtGui.QColor(constants.Constants.INFO_TEXT_COLOR), 0.1)
         painter.setPen(_pen)
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
-        painter.drawRoundedRect(option.rect, 0, 0)
+        painter.drawRoundedRect(_rect, 0, 0)
 
-        _pixmap = _pixmap = cache.ThumbnailCache.get_pixmap(_task_handle, self.parent().update)
+        _pixmap = _pixmap = cache.ThumbnailCache.get_pixmap(_task, self.parent().update)
         if _pixmap:
             _pixmap_size = _pixmap.size()
             if _pixmap_size.width() and _pixmap_size.height():
@@ -61,7 +61,7 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
                                                   _label_size.height() )
                 painter.drawPixmap(_rect.x(), _rect.y(), _thumbnail_pixmap)
         else:
-            _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
+            _thumbnail_rect = QtCore.QRect( _rect.x(), _rect.y(), 
                                             constants.Constants.THUMBNAIL_SIZE[0], 
                                             constants.Constants.THUMBNAIL_SIZE[1] )
             painter.setBrush(QtGui.QColor(color.LetterColor.color(_data["Name"].lower()[0])))
@@ -72,20 +72,20 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
             painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
         # info widget
-        _info_rect = QtCore.QRectF(
+        _info_rect = QtCore.QRect(
                 _rect.x() + constants.Constants.THUMBNAIL_SIZE[0],
                 _rect.y(),
                 _rect.width() - constants.Constants.THUMBNAIL_SIZE[0],
                 _rect.height()
             )
         #  painter status rect
-        _status_rect = QtCore.QRectF(
+        _status_rect = QtCore.QRect(
                 _info_rect.x(),
                 _info_rect.y(),
                 _info_rect.width(),
                 5
             )
-        _status_id = _task_handle.data()["StatusId"]
+        _status_id = _task.data()["StatusId"]
         _status_handle = zfused_api.status.Status(_status_id)
         painter.setBrush(QtGui.QColor(_status_handle.data()["Color"]))
         painter.drawRoundedRect(_status_rect, 0, 0)
@@ -97,8 +97,8 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         _fm = QtGui.QFontMetrics(_font)
         painter.setFont(_font)
         painter.setPen(QtGui.QPen(QtGui.QColor(constants.Constants.INFO_TEXT_COLOR), 1))
-        _name_code = _task_handle.data()["Name"]
-        _name_rect = QtCore.QRectF(
+        _name_code = _task.data()["Name"]
+        _name_rect = QtCore.QRect(
                 _status_rect.x() + self._extend_width,
                 _status_rect.y() + _status_rect.height() + self._spacing,
                 _fm.width(_name_code) + self._extend_width,
@@ -107,9 +107,9 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.drawText(_name_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _name_code)
 
         #  绘制任务状态
-        _status_handle = zfused_api.status.Status(_task_handle.data()["StatusId"])
+        _status_handle = zfused_api.status.Status(_task.data()["StatusId"])
         _status_code = _status_handle.name_code()
-        _status_rect = QtCore.QRectF(
+        _status_rect = QtCore.QRect(
                 #_name_rect.x() + _name_rect.width() + self._extend_width,
                 _rect.x() + _rect.width() - _fm.width(_status_code) - self._extend_width -self._spacing,
                 _name_rect.y() + self._spacing,
@@ -124,12 +124,12 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
 
 
         # 绘制link
-        _link_handle = _task_handle.project_entity()
-        if _task_handle.data()["Object"] == "asset":
-            _link_full_name = _link_handle.full_name()
+        _project_entity = _task.project_entity()
+        if _task.data()["ProjectEntityType"] == "asset":
+            _link_full_name = _project_entity.full_name()
         else:
-            _link_full_name = _link_handle.full_code()
-        _link_rect = QtCore.QRectF(
+            _link_full_name = _project_entity.full_code()
+        _link_rect = QtCore.QRect(
                 _name_rect.x(),
                 _name_rect.y() + _name_rect.height() + self._spacing,
                 _fm.width(_link_full_name),
@@ -139,17 +139,17 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.drawText(_link_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _link_full_name)
         
         #  绘制任务步骤
-        _project_step_handle = zfused_api.step.ProjectStep(_task_handle.data()["ProjectStepId"])
-        _step_handle = zfused_api.step.Step(_task_handle.data()["StepId"])
+        _project_step_handle = zfused_api.step.ProjectStep(_task.data()["ProjectStepId"])
+        #_step_handle = zfused_api.step.Step(_task.data()["StepId"])
         _step_code = _project_step_handle.name_code()
-        _step_rect = QtCore.QRectF(
+        _step_rect = QtCore.QRect(
                 _link_rect.x() + _link_rect.width() + self._extend_width,
                 _link_rect.y() + self._spacing,
                 _fm.width(_step_code) + self._extend_width,
                 20 - self._spacing*2
             )
         painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
-        painter.setBrush(QtGui.QColor(_step_handle.data()["Color"]))
+        painter.setBrush(QtGui.QColor(_project_step_handle.color()))
         painter.drawRoundedRect(_step_rect, 2, 2)
         painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 1))
         painter.drawText(_step_rect, QtCore.Qt.AlignCenter, _step_code)
@@ -161,14 +161,14 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         _fm = QtGui.QFontMetrics(_font)
         painter.setFont(_font)
         try:
-            _start_time_text = _task_handle.start_time().strftime("%Y-%m-%d")
+            _start_time_text = _task.start_time().strftime("%Y-%m-%d")
         except:
             _start_time_text = u"未设置起始时间"
         try:
-            _end_time_text = _task_handle.end_time().strftime("%Y-%m-%d")
+            _end_time_text = _task.end_time().strftime("%Y-%m-%d")
         except:
             _end_time_text = u"未设置结束时间"
-        _time_rect = QtCore.QRectF(
+        _time_rect = QtCore.QRect(
                 _link_rect.x(),
                 _link_rect.y() + _link_rect.height() + self._spacing,
                 _info_rect.width() - self._extend_width*2,
@@ -178,7 +178,7 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.drawText(_time_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, u"{}".format(_start_time_text))
         painter.drawText(_time_rect, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter, u"{}".format(_end_time_text))
 
-        if _task_handle.start_time() and _task_handle.end_time():
+        if _task.start_time() and _task.end_time():
             _time_progress_x = _time_rect.x()
             _time_progress_y = _time_rect.y() + _time_rect.height()
             _time_progress_width = _time_rect.width()
@@ -186,12 +186,12 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
             painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 0), 1))
             painter.setBrush(QtGui.QColor("#5C5C5C"))
             painter.drawRoundedRect(_time_progress_x, _time_progress_y, _time_progress_width, _time_progress_height, 2, 2)
-            if not _task_handle.start_time() > datetime.datetime.now():
-                _use_date = _task_handle.end_time() - datetime.datetime.now()
+            if not _task.start_time() > datetime.datetime.now():
+                _use_date = _task.end_time() - datetime.datetime.now()
                 if _use_date.days <= 0:
                     _use_time_width = _time_progress_width
                 else:
-                    _all_date = _task_handle.end_time() - _task_handle.start_time()
+                    _all_date = _task.end_time() - _task.start_time()
                     _use_per = _use_date.days/float(_all_date.days)
                     _use_time_width = _time_progress_width * _use_per
                 painter.setBrush(QtGui.QColor("#FF0000"))

@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 #     if _softwares:
 #         return [Software(_software)]
 
+def get_software_ids(code, version):
+    _softwares = zfused_api.zFused.get("Software", filter = {"Code": code, "Version": version})
+    if _softwares:
+        return [_software.get("Id") for _software in _softwares]
+    return []
 
 
 class Software(_Entity):
@@ -45,14 +50,34 @@ class Software(_Entity):
         """
         return u"{}{}".format(self._data["Code"], self._data["Version"])
 
+        # _update = self._data.get("Update")
+        # if _update:
+        #     return u"{}{}{}".format(self._data["Code"], self._data["Version"], _update)
+        # else:
+        #     return u"{}{}".format(self._data["Code"], self._data["Version"])
+
     # def name(self):
     #     """ get software name
     #     rtype: str
     #     """
     #     return u"{}{}".format(self._data["Name"], self._data["Version"])
 
+    def update(self):
+        return self._data.get("Update")
+
     def version(self):
         return self._data.get("Version")
+
+    def dcc_code(self):
+        return self._data.get("Code")
+
+    def full_code(self):
+        # 完整代号 包含update版本
+        _update = self._data.get("Update")
+        if _update:
+            return u"{}{}{}".format(self._data["Code"], self._data["Version"], _update)
+        else:
+            return u"{}{}".format(self._data["Code"], self._data["Version"])
 
     def file_path(self):
         return self.code()

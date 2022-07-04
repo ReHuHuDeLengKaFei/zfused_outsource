@@ -108,7 +108,8 @@ def cache(user_ids = []):
     """ init cache
     """
     if user_ids:
-        _users = zfused_api.zFused.get("user", filter = {"Id__in": "|".join(map(str, user_ids)), "Active":"true"} ,sortby=["Username"], order=["asc"])
+        # _users = zfused_api.zFused.get("user", filter = {"Id__in": "|".join(map(str, user_ids)), "Active":"true"} ,sortby=["Username"], order=["asc"])
+        _users = zfused_api.zFused.get("user", filter = {"Id__in": "|".join(map(str, user_ids)), "Active":"true"})
         _user_profiles = zfused_api.zFused.get("user_profile", filter = {"UserId__in": "|".join(map(str, user_ids))})
         _post_users = zfused_api.zFused.get("post_user", filter = {"UserId__in": "|".join(map(str, user_ids))})
         _department_users = zfused_api.zFused.get("department_user", filter = {"UserId__in": "|".join(map(str, user_ids))})
@@ -120,8 +121,6 @@ def cache(user_ids = []):
 
     if _users:
         list(map(lambda _user: User.global_dict.setdefault(_user["Id"], _user), _users))
-        # list(map(lambda _user: User.global_post.setdefault(_user["Id"], set([])), _users))
-        # list(map(lambda _user: User.global_department.setdefault(_user["Id"], set([])), _users))
     if _user_profiles:
         list(map(lambda _user_profile: User.global_profile.setdefault(_user_profile["UserId"], _user_profile), _user_profiles))
     if _post_users:

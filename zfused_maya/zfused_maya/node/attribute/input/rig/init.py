@@ -23,7 +23,7 @@ def _set_color(obj, color = (1,1,1)):
     for channel, color in zip(rgb, color):
         cmds.setAttr(obj + ".overrideColor%s" %channel, color)
 
-def init():
+def init(task_id):
     # create group
     _group = cmds.group( n='Group', em=True )
     cmds.group( n='geometry', em=True ,parent=_group)

@@ -41,7 +41,7 @@ def is_reference(node):
     return _is_reference
 
 
-def gpu_elements():
+def gpu_elements(ignore_reference = True):
     _gpu_elements = []
 
     _gpu_caches = cmds.ls(type = "gpuCache")
@@ -52,7 +52,7 @@ def gpu_elements():
         _file = cmds.getAttr("{}.cacheFileName".format(_cache))
         if not os.path.isfile(_file):
             continue
-        if is_reference(_cache):
+        if ignore_reference and is_reference(_cache):
             continue
         # if _file not in _files:
         _files.append(_file)
@@ -503,12 +503,6 @@ class GPUElement(object):
             cmds.setAttr("{}.dso".format(_ai_node), _ass_file, type = "string")
             cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type = "float3")
             cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type = "float3")
-        
-
-
-
-
-
 
     def replace_by_derivative(self, link_object, link_id):
         """ replace by derivative
@@ -578,3 +572,12 @@ def get_asset(elements, title, _dict = {}):
                 _dict[_assetname]["path"] = _version_handle.production_file()
             _dict[_assetname]["namespace"] = list(set(_dict[_assetname]["namespace"]))
     return _dict
+
+
+def update_reference_elements():
+    _elements = reference_elements()
+    if not _elements:
+        return
+    for _element in _elements:
+        _element_cls = ReferenceElement(_element)
+        _element_cls.update()

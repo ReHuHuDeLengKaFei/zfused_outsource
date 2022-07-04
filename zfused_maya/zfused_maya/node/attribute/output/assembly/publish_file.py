@@ -11,6 +11,9 @@ import zfused_api
 
 from zcore import zfile,transfer,filefunc
 
+from zfused_maya.node.core import assembly
+
+import zfused_maya.node.core.alembiccache as alembiccache
 import zfused_maya.node.core.texture as texture
 import zfused_maya.node.core.material as material
 import zfused_maya.node.core.fixmeshname as fixmeshname
@@ -21,7 +24,7 @@ __all__ = ["publish_file"]
 logger = logging.getLogger(__name__)
 
 def publish_file(*args, **kwargs):
-    """ 上传任务模型文件
+    """ 上传任务assembly文件
     """
     
     _task_id, _output_attr_id = args
@@ -51,11 +54,13 @@ def publish_file(*args, **kwargs):
         # save publish file
         cmds.file(rename = _publish_file)
         cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
-        
+
+        assembly.fix_to_render()
+
         # fix mesh name
-        _is_rendering = renderinggroup.nodes()
-        fixmeshname.fix_mesh_name("_rendering", _is_rendering)
-        
+        # _is_rendering = renderinggroup.nodes()
+        # fixmeshname.fix_mesh_name("_rendering", _is_rendering)
+        #
         # recore material
         # material.record()
         
@@ -71,15 +76,15 @@ def publish_file(*args, **kwargs):
             if _file_nodes:
                 texture.change_node_path(_file_nodes, _intersection_path, _project_entity_production_path + "/texture/production")
 
-        # # publish alembic cache
-        # _alembic_files = alembiccache.files()
-        # if _alembic_files:
-        #     _path_set = alembiccache.paths(_alembic_files)[0]
-        #     _intersection_path = max(_path_set)
-        #     alembiccache.publish_file(_alembic_files, _intersection_path, _production_file_dir + "/cache/alembic")
-        #     _file_nodes = alembiccache.nodes()
-        #     if _file_nodes:
-        #         alembiccache.change_node_path(_file_nodes, _intersection_path, _production_file_dir + "/cache/alembic")
+        # publish alembic cache
+        _alembic_files = alembiccache.files()
+        if _alembic_files:
+            _path_set = alembiccache.paths(_alembic_files)[0]
+            _intersection_path = max(_path_set)
+            alembiccache.publish_file(_alembic_files, _intersection_path, _project_entity_production_path + "/cache/alembic")
+            _file_nodes = alembiccache.nodes()
+            if _file_nodes:
+                alembiccache.change_node_path(_file_nodes, _intersection_path, _project_entity_production_path + "/cache/alembic")
         
         # save publish file
         cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
@@ -94,9 +99,8 @@ def publish_file(*args, **kwargs):
 
         # record in file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
         zfused_api.task.new_production_file([_file_info, _cover_file_info] + _texture_infos, _task_id, _output_attr_id, int(_file_index) )
-
 
     except Exception as e:
         logger.error(e)

@@ -20,6 +20,8 @@ import zfused_maya.node.core.fixmeshname as fixmeshname
 import zfused_maya.node.core.renderinggroup as renderinggroup
 import zfused_maya.node.core.referencefile as referencefile
 
+from zfused_maya.node.core import xgen
+
 __all__ = ["publish_file"]
 
 logger = logging.getLogger(__name__)
@@ -46,6 +48,7 @@ def publish_file(*args, **kwargs):
         _file_index = "{:0>4d}".format(_task.last_version_index() + 1)
 
     _production_file = "{}/{}/{}.{}{}".format( _production_path, _attr_code, _file_code, _file_index, _suffix )
+    _production_file_dir = os.path.dirname(_production_file)
     _cover_file = "{}/{}/{}{}".format(_production_path, _attr_code, _file_code, _suffix)
     _publish_file = "{}/{}/{}.{}{}".format( _temp_path, _attr_code, _file_code, _file_index, _suffix )
     _publish_file_dir = os.path.dirname(_publish_file)
@@ -63,11 +66,11 @@ def publish_file(*args, **kwargs):
         if _texture_files:
             _path_set = texture.paths(_texture_files)[0]
             _intersection_path = max(_path_set)
-            _texture_infos = texture.publish_file(_texture_files, _intersection_path, _project_entity_production_path + "/texture/production")
+            _texture_infos = texture.publish_file(_texture_files, _intersection_path, _project_entity_production_path + "/texture/rig")
             # change maya texture node path
             _file_nodes = texture.nodes()
             if _file_nodes:
-                texture.change_node_path(_file_nodes, _intersection_path, _project_entity_production_path + "/texture/production")
+                texture.change_node_path(_file_nodes, _intersection_path, _project_entity_production_path + "/texture/rig")
         
         # publish yeti node texture
         _yeti_texture_dict = yeti._get_yeti_attr("texture","file_name")
@@ -86,6 +89,14 @@ def publish_file(*args, **kwargs):
             _file_nodes = alembiccache.nodes()
             if _file_nodes:
                 alembiccache.change_node_path(_file_nodes, _intersection_path, _project_entity_production_path + "/cache/alembic")
+
+        #传输xgen相关信息
+        if xgen.files():
+            xgen.publish_file(_production_path)
+            cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
+            xgen.publish_xgen(_production_file_dir)
+        # save publish file
+        cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
 
         # import all reference
         referencefile.import_all_references()
@@ -163,7 +174,7 @@ def publish_file(*args, **kwargs):
 
         # record to database
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
         zfused_api.task.new_production_file([_file_info, _cover_file_info] + _texture_infos, _task_id, _output_attr_id, int(_file_index) )
 
     except Exception as e:

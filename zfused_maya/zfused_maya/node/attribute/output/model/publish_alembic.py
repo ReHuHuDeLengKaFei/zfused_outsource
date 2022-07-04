@@ -69,7 +69,7 @@ def publish_alembic(*args, **kwargs):
 
         # record in file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
         zfused_api.task.new_production_file([_file_info, _cover_file_info], _task_id, _output_attr_id, int(_file_index) )
 
 

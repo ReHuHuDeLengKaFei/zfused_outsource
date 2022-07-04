@@ -16,10 +16,11 @@ import xgenm as xg
 import xgenm.xgGlobal as xgg
 
 import zfused_api
+
+from zcore import filefunc
+
 from zfused_maya.node.core import renderinggroup
 import zfused_maya.node.core.xgen as xgens
-reload(xgens)
-from zcore import filefunc
 
 
 def task_to_project_entity(task_id):
@@ -240,8 +241,7 @@ def get_assets():
         _namespace = cmds.referenceQuery(_node, namespace=True)
         if _namespace.startswith(":"):
             _namespace = _namespace[1::]
-        _production_files = zfused_api.zFused.get("production_file_record", filter={
-            "Path": _file_path})
+        _production_files = zfused_api.zFused.get( "production_file_record", filter = {"Path": _file_path} )
         if _production_files:
             _production_file = _production_files[-1]
             _task_id = _production_file.get("TaskId")

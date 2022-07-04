@@ -82,9 +82,9 @@ def publish_file(*args, **kwargs):
         zfused_api.files.new_file("task", _task_id, _production_file, int(_file_index))
         zfused_api.files.new_file("task", _task_id, _cover_file, int(_file_index))
 
-        # production file
+        # record production file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
         zfused_api.task.new_production_file([_file_info, _cover_file_info] + _texture_infos, _task_id, _output_attr_id, int(_file_index) )
 
     except Exception as e:

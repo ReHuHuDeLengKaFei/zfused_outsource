@@ -463,7 +463,6 @@ class Project(_Entity):
         if not _property:
             return default
         _property = eval(_property)
-        print(_property)
         if key:
             if key not in _property:
                 if default:

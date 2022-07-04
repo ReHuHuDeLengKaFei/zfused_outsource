@@ -25,7 +25,6 @@ def new(project_id, name, code, type_id, status_id, active = "true", create_by =
     """ create new asset
 
     """
-    # asset is exists
     _assets = zfused_api.zFused.get( "asset", 
                                      filter = {"ProjectId": project_id, "Code": code})
     if _assets:
@@ -53,7 +52,6 @@ def new(project_id, name, code, type_id, status_id, active = "true", create_by =
 
 def new_asset(project_id, name, code, type_id, status_id, active = "true", create_by = None, description = None):
     """ create new asset
-
     """
     # asset is exists
     _assets = zfused_api.zFused.get( "asset", 
@@ -66,19 +64,17 @@ def new_asset(project_id, name, code, type_id, status_id, active = "true", creat
         _create_by_id = create_by
     else:
         _create_by_id = zfused_api.zFused.USER_ID
-    _value, _status = zfused_api.zFused.post(key = "asset", data = { "Name": name,
-                                                                     "Code": code,
-                                                                     "ProjectId": project_id,
-                                                                     "TypeId": type_id,
-                                                                     "Description":description,
-                                                                     "StatusId":status_id,
-                                                                     # "CreateTime":_current_time, 
-                                                                     "StartTime":"0001-01-01T00:00:00Z", 
-                                                                     "EndTime":"0001-01-01T00:00:00Z",
-                                                                     # "CreateBy":_create_by_id,
-                                                                     "Active":active,
-                                                                     "CreatedBy":_create_by_id,
-                                                                     "CreatedTime":_current_time })
+    _value, _status = zfused_api.zFused.post( key = "asset", data = { "Name": name,
+                                                                      "Code": code,
+                                                                      "ProjectId": project_id,
+                                                                      "TypeId": type_id,
+                                                                      "Description":description,
+                                                                      "StatusId":status_id,
+                                                                      "StartTime":"0001-01-01T00:00:00Z", 
+                                                                      "EndTime":"0001-01-01T00:00:00Z",
+                                                                      "Active":active,
+                                                                      "CreatedBy":_create_by_id,
+                                                                      "CreatedTime":_current_time } )
     if _status:
         return _value["Id"], True
     return "{} create error".format(name), False
@@ -91,6 +87,7 @@ def cache(project_id_list = [], extract_freeze = True):
     """
 
     _s_t = time.clock()
+
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -98,25 +95,20 @@ def cache(project_id_list = [], extract_freeze = True):
     _status_ids = "|".join([str(_status_id["Id"]) for _status_id in _status_ids])
 
     if not project_id_list:
-        # _assets = zfused_api.zFused.get("asset", sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"StatusId__in": _status_ids})
-        # _asset_historys = zfused_api.zFused.get("asset_history")
         _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     else:
         _project_ids = "|".join(map(str,project_id_list))
-        # _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids}, sortby = ["Code"], order = ["asc"])
         _assets = zfused_api.zFused.get("asset", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
-        # _asset_historys = zfused_api.zFused.get("asset_history", filter = {"ProjectId__in": _project_ids})
         _asset_tasks = zfused_api.zFused.get("task", filter = {"ProjectEntityType": "asset", "ProjectId__in": _project_ids, "StatusId__in": _status_ids}, sortby = ["ProjectStepId"], order = ["asc"])
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
         list(map(lambda _asset: clear(Asset.global_tasks[_asset["Id"]]) if Asset.global_tasks[_asset["Id"]] else False, _assets))
-    # if _asset_historys:
-    #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
         list(map(lambda _task: Asset.global_tasks[_task["ProjectEntityId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
+    
     # cache tags
     _str_asset_ids = [str(_asset_id) for _asset_id in Asset.global_dict]
     _tag_links = zfused_api.zFused.get("tag_link", filter = {"LinkObject": "asset", "LinkId__in": "|".join(_str_asset_ids)}, fields = ["LinkId", "TagId"] )
@@ -124,12 +116,16 @@ def cache(project_id_list = [], extract_freeze = True):
         for _tag_link in  _tag_links:
             _asset_id = _tag_link["LinkId"]
             Asset.global_tags[_asset_id].append(_tag_link["TagId"])
+    
     _e_t = time.clock()
     logger.info("asset cache time = " + str(1000*(_e_t - _s_t)) + "ms")
+
     return _assets
+
 
 def cache_from_ids(ids, extract_freeze = False):
     _s_t = time.clock()
+
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -143,12 +139,13 @@ def cache_from_ids(ids, extract_freeze = False):
     if _assets:
         list(map(lambda _asset: Asset.global_dict.setdefault(_asset["Id"],_asset), _assets))
         list(map(lambda _asset: clear(Asset.global_tasks[_asset["Id"]]) if Asset.global_tasks[_asset["Id"]] else False, _assets))
-    # if _asset_historys:
-    #     list(map(lambda _asset: Asset.global_historys[_asset["AssetId"]].append(_asset), _asset_historys))
     if _asset_tasks:
         from . import task
         list(map(lambda _task: Asset.global_tasks[_task["ProjectEntityId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
+
+    _e_t = time.clock()
+    logger.info("asset cache time = " + str(1000*(_e_t - _s_t)) + "ms")
 
     return _assets
 
@@ -193,9 +190,7 @@ class Asset(_Entity):
         return self.code().replace("/", "_")
 
     def full_code(self):
-        """
-        get full path code
-
+        """get full path code
         rtype: str
         """
         _code = self._data["Code"]
@@ -207,9 +202,7 @@ class Asset(_Entity):
             return _code
 
     def full_name(self):
-        """
-        get full path name
-
+        """get full path name
         rtype: str
         """
         _name = self._data["Name"]
@@ -221,9 +214,7 @@ class Asset(_Entity):
             return _name
 
     def full_name_code(self):
-        """
-        get full path name and code
-
+        """get full path name and code
         rtype: str
         """
         return u"{}({})".format(self.full_name(), self.full_code())

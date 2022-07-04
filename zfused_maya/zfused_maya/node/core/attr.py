@@ -85,12 +85,9 @@ def get_node_attr(node):
     """
     _attr_data = {}
     _fix_node(node)
-    # if not cmds.objExists("{}.project_id".format(node)):
-    #     _fix_node(node)
-    #     return 
     if not cmds.objExists("{}.project_id".format(node)):
-        # _fix_node(node)
         return _attr_data
+
     _attr_data["project_id"] = int(cmds.getAttr("%s.project_id" % node))
     _attr_data["project_step_id"] = int(cmds.getAttr("%s.project_step_id" % node))
     _attr_data["task_id"] = int(cmds.getAttr("%s.task_id" % node))

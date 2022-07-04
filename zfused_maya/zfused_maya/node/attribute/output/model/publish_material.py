@@ -72,20 +72,20 @@ def publish_material(*args, **kwargs):
         # cmds.select(_mat,r =1)
         cmds.select(cl = True)
         cmds.select(_sgs, r = True, ne = True)
-        cmds.file(_publish_file, op = "v=0;", type = "mayaBinary", pr = True, es = True, f = True)
+        cmds.file(_publish_file, op = "v=0;", type = _file_format, pr = True, es = True, f = True)
         
         
         # publish file
         _result = filefunc.publish_file(_publish_file, _production_file)
         _result = filefunc.publish_file(_publish_file, _cover_file)
         
-        # link files
-        zfused_api.files.new_file("task", _task_id, _production_file, int(_file_index))
-        zfused_api.files.new_file("task", _task_id, _cover_file, int(_file_index))
+        # # link files
+        # zfused_api.files.new_file("task", _task_id, _production_file, int(_file_index))
+        # zfused_api.files.new_file("task", _task_id, _cover_file, int(_file_index))
         
-        # production file
+        # record production file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
         zfused_api.task.new_production_file([_file_info, _cover_file_info], _task_id, _output_attr_id, int(_file_index) )
 
     except Exception as e:

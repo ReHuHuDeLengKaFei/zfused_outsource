@@ -12,19 +12,24 @@ from zcore import resource
 
 from zwidgets.widgets import lineedit
 
-from . import iconitemdelegate,listview,listmodel
+from . import iconitemdelegate,listview,listmodel,listitemdelegate
 
 
 __all__ = ["TaskListWidget"]
 
 
 class TaskListWidget(QtWidgets.QFrame):
-    published = QtCore.Signal(str, int, dict)
+
+    viewed = QtCore.Signal(int)
+    checked = QtCore.Signal(int)
+
     def __init__(self, parent = None):
         super(TaskListWidget, self).__init__(parent)
         self._build()
         self.search_lineedit.search_clicked.connect(self._search)
-        self.listwidget.published.connect(self.published.emit)
+
+        self.listwidget.viewed.connect(self.viewed.emit)
+        self.listwidget.checked.connect(self.checked.emit)
 
     def _search(self, text):
         """ search task
@@ -32,23 +37,18 @@ class TaskListWidget(QtWidgets.QFrame):
         self.task_proxy_model.search(text)
         #self.setFocus()
 
-    def load_project_id(self, project_id, company_id = 0):
+    def load(self, project_id, company_id):
         """ 加载激活中任务
-
         """
-        zfused_api.zFused.RESET = True
         _current_project_id = project_id
         _current_company_id = company_id
-        # 获取项目外包公司id
+        # # 获取项目外包公司id
         # _project_companys = zfused_api.zFused.get("project_company", filter = {"ProjectId": project_id})
         # _company_ids = [str(_project_company.get("CompanyId")) for _project_company in _project_companys]
         
-        # _tasks = zfused_api.zFused.get("task", filter={"ProjectId": _current_project_id, "IsOutsource__in":"|".join(_company_ids)}, sortby = ["Name"], order = ["asc"])
-        _tasks = zfused_api.zFused.get("task", filter = {"ProjectId": _current_project_id, "IsOutsource": _current_company_id}, sortby = ["Name"], order = ["asc"])
-
+        _tasks = zfused_api.zFused.get("task", filter={"ProjectId": _current_project_id, "IsOutsource": _current_company_id}, sortby = ["Name"], order = ["asc"])
         model = listmodel.ListModel(_tasks, self.listwidget)
         self.task_proxy_model.setSourceModel(model)
-        zfused_api.zFused.RESET = False
 
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
@@ -75,5 +75,4 @@ class TaskListWidget(QtWidgets.QFrame):
         self.task_proxy_model = listmodel.ListFilterProxyModel()
         self.listwidget.setModel(self.task_proxy_model)
         self.listwidget.setItemDelegate(iconitemdelegate.IconItemDelegate(self.listwidget))
-
-        # 自定义右击菜单
+        # self.listwidget.setItemDelegate(listitemdelegate.ListItemDelegate(self.listwidget))

@@ -1,0 +1,1 @@
+from .taskassemblywidget import TaskAssemblyWidget

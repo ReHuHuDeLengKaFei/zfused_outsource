@@ -43,7 +43,7 @@ class Conn(_Entity):
 class Input(_Entity):
 
     @classmethod
-    def new(cls, name, code, project_step_id, script, format, suffix, rely = "self", rule = "single"):
+    def new(cls, name, code, project_step_id, script, format, suffix, extended_version = 1, rely = "self", rule = "single"):
         _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         _created_by = zfused_api.zFused.USER_ID
         _input_attribute, _status = zfused_api.zFused.post( key = "attr_input", data = { "Name": name,
@@ -52,6 +52,7 @@ class Input(_Entity):
                                                                                          "Script": script,
                                                                                          "Format": format,
                                                                                          "Suffix": suffix,
+                                                                                         "ExtendedVersion": extended_version,
                                                                                          "Rely": rely,
                                                                                          "Rule": rule,
                                                                                          "CreatedBy":_created_by,

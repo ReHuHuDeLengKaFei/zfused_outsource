@@ -7,9 +7,11 @@ import os
 import shutil
 
 import maya.cmds as cmds
-import  maya.mel as mel
-from zcore import filefunc
+import maya.mel as mel
 import xgenm as xg
+
+from zcore import filefunc
+
 
 
 def publish_file(files, src, dst):
@@ -77,12 +79,13 @@ def files():
     
     :rtype: list
     """
-    _all_files = cmds.file(query=1, list=1, withoutCopyNumber=1)
-    _all_files_dict = {}
-    for _file in _all_files:
-        _file_dir_name = os.path.dirname(_file)
-        _, _file_suffix = os.path.splitext(_file)
-        _all_files_dict[_file] = [_file_dir_name, _file_suffix]
+    # _all_files = cmds.file(query=1, list=1, withoutCopyNumber=1)
+    # _all_files_dict = {}
+    # for _file in _all_files:
+    #     _file_dir_name = os.path.dirname(_file)
+    #     _, _file_suffix = os.path.splitext(_file)
+    #     _all_files_dict[_file] = [_file_dir_name, _file_suffix]
+
     _file_nodes = cmds.ls(type = "AlembicNode")
     _alembic_files = []
     for _file_node in _file_nodes:
@@ -91,13 +94,16 @@ def files():
         if _is_reference and _is_lock:
             continue
         _file_name = cmds.getAttr("{}.abc_File".format(_file_node))
-        _node_dir_name = os.path.dirname(_file_name)
-        _, _node_suffix = os.path.splitext(_file_name)
+        if os.path.isfile(_file_name):
+            _alembic_files.append(_file_name)
+
+        # _node_dir_name = os.path.dirname(_file_name)
+        # _, _node_suffix = os.path.splitext(_file_name)
+        # for _file in _all_files:
+        #     _file_dir_name,_file_suffix = _all_files_dict[_file]
+        #     if _node_dir_name == _file_dir_name and _node_suffix == _file_suffix:
+        #         _alembic_files.append(_file)
         
-        for _file in _all_files:
-            _file_dir_name,_file_suffix = _all_files_dict[_file]
-            if _node_dir_name == _file_dir_name and _node_suffix == _file_suffix:
-                _alembic_files.append(_file)
     return _alembic_files
 
 
@@ -494,7 +500,7 @@ class AlembicCache(object):
                 cmds.disconnectAttr(k,v)
 
 
-def create_xgen_frame_cache(_path,startTime,endTime,_pallette,*args):
+def create_xgen_frame_cache(_path,startTime,endTime,_pallette,*args,**kwargs):
     '''生成创建缓存命令
     '''
     # _dir = os.path.dirname(_path)
@@ -509,12 +515,12 @@ def create_xgen_frame_cache(_path,startTime,endTime,_pallette,*args):
     # #     exOptions = ''.join([" -%s"%j for j in args])
     # # else:
     # #     exOptions = ''
-    # # if kwargs:
-    # #     other_attr = ''
-    # #     for key,value in kwargs.items():
-    # #         other_attr = other_attr + ' -{} {}'.format(key,value)
-    # # else:
-    # #     other_attr = ''
+    if kwargs:
+        other_attr = ''
+        for key,value in kwargs.items():
+            other_attr = other_attr + ' -{} {}'.format(key,value)
+    else:
+        other_attr = ''
     # #
     # # joborder = "-frameRange %s %s %s %s -dataFormat hdf %s -file %s"%(startTime,endTime,other_attr,exOptions,roots,_path)
 
@@ -526,6 +532,8 @@ def create_xgen_frame_cache(_path,startTime,endTime,_pallette,*args):
     cmdAlembicBase = ''
     cmdAlembicBase = cmdAlembicBase + '-frameRange ' + str(startTime) + ' ' + str(endTime)
     cmdAlembicBase = cmdAlembicBase + ' -uvWrite -attrPrefix xgen -worldSpace'
+    cmdAlembicBase += " {}".format(other_attr)
+    
     palette = _pallette
     #for p in range(len(palette)):
     descShapes = cmds.listRelatives(palette, type="xgmDescription", ad=True)

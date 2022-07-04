@@ -11,11 +11,8 @@ import zfused_api
 
 from zcore import zfile,transfer,filefunc
 
-import zfused_maya.node.core.texture as texture
+from zfused_maya.node.core import texture, xgen, alembiccache, renderinggroup, fixmeshname
 
-import zfused_maya.node.core.xgen as xgen
-
-import zfused_maya.node.core.alembiccache as alembiccache
 
 __all__ = ["publish_file"]
 
@@ -33,7 +30,7 @@ def publish_file(*args, **kwargs):
     _suffix = _output_attr_handle.suffix()
     _attr_code = _output_attr_handle.code()
 
-    _task = zfused_api.task.Task(_task_id)    
+    _task = zfused_api.task.Task(_task_id)
     _production_path = _task.production_path()
     _project_entity_production_path = _task.project_entity().production_path()
     _temp_path = _task.temp_path()
@@ -55,9 +52,10 @@ def publish_file(*args, **kwargs):
     #     xgen.publishxgen()
     
     try:
-        # save publish file
         cmds.file(rename = _publish_file)
-        cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
+
+        # 取消多次保存
+        # cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
 
         # _xgen_list = xgen.xgenfile()
         # if _xgen_list:
@@ -94,7 +92,11 @@ def publish_file(*args, **kwargs):
             _file_nodes = alembiccache.nodes()
             if _file_nodes:
                 alembiccache.change_node_path(_file_nodes, _intersection_path, _production_path + "/cache/alembic")
-        
+
+        # # fix mesh name
+        # _is_rendering = renderinggroup.nodes()
+        # fixmeshname.fix_mesh_name("_rendering", _is_rendering)
+
         # save publish file
         cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
         
@@ -108,8 +110,8 @@ def publish_file(*args, **kwargs):
 
         # production file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
-        _cover_file_info = zfile.get_file_info(_cover_file, _cover_file)
-        zfused_api.task.new_production_file([_file_info, _cover_file_info], _task_id, _output_attr_id, int(_file_index) )
+        _cover_file_info = zfile.get_file_info(_publish_file, _cover_file)
+        zfused_api.task.new_production_file([_file_info, _cover_file_info] + _texture_infos, _task_id, _output_attr_id, int(_file_index) )
 
         # if _xgen_list:
         #     for _xgen_node in _xgen_list:

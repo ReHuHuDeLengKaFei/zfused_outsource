@@ -13,11 +13,14 @@ __all__ = ["ListView"]
 logger = logging.getLogger(__name__)
 
 class ListView(QtWidgets.QListView):
-    published = QtCore.Signal(str, int, dict)
+
+    viewed = QtCore.Signal(int)
+    checked = QtCore.Signal(int)
+
     def __init__(self, parent=None):
         super(ListView, self).__init__(parent)
 
-        self.setSpacing(12)
+        self.setSpacing(8)
 
         self.setMouseTracking(True)
         
@@ -40,13 +43,29 @@ class ListView(QtWidgets.QListView):
     def custom_context_menu(self, pos):
         """ 自定义右击菜单
         """
+        _selected_indexs = self.selectionModel().selectedRows()
         _menu = QtWidgets.QMenu(self)
+        # _menu.setFixedWidth(200)
         _current_index = self.indexAt(pos)
         _index = _current_index.sibling(_current_index.row(),0)
         if _index.isValid():
-            _menu.addAction(QtGui.QIcon(resource.get("icons", "publish.png")), u"上传文件" , self._upload )
+            _data = _index.data()
+            _menu.addSeparator()
+            _menu.addAction(QtGui.QIcon(resource.get("icons", "view.png")), u"查看任务信息", self._view)
+            _menu.addSeparator()
+            _menu.addAction(QtGui.QIcon(resource.get("icons", "check.png")), u"任务检查", self._check)
+
+
         _menu.exec_(QtGui.QCursor().pos())
 
-    def _upload(self):
-        _task_id = self.currentIndex().data().get("Id")
-        self.published.emit("new", _task_id, {})
+    def _view(self):
+        _index = self.currentIndex()
+        if _index.isValid():
+            _data = _index.data()
+            self.viewed.emit(_data.get("Id"))
+
+    def _check(self):
+        _index = self.currentIndex()
+        if _index.isValid():
+            _data = _index.data()
+            self.checked.emit(_data.get("Id"))

@@ -140,6 +140,8 @@ def cache_from_ids(ids, extract_freeze = False):
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _assembly_tasks))
     return _assemblys
 
+
+
 class Assembly(_Entity):
     global_dict = {}
     global_historys = defaultdict(list)
@@ -174,15 +176,12 @@ class Assembly(_Entity):
 
     def file_code(self):
         """ task version file name
-
         :rtype: str
         """
         return self.code().replace("/", "_")
 
     def full_code(self):
-        """
-        get full path code
-
+        """get full path code
         rtype: str
         """
         _code = self._data["Code"]
@@ -194,9 +193,7 @@ class Assembly(_Entity):
             return _code
 
     def full_name(self):
-        """
-        get full path name
-
+        """get full path name
         rtype: str
         """
         _name = self._data["Name"]
@@ -208,15 +205,14 @@ class Assembly(_Entity):
             return _name
 
     def full_name_code(self):
-        """
-        get full path name and code
-
+        """get full path name and code
         rtype: str
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
     def type(self):
         """get type handle
+        rtype: str
         """
         _type_id = self._data.get("TypeId")
         if _type_id:
@@ -231,12 +227,13 @@ class Assembly(_Entity):
 
     def project_id(self):
         """ get project id
-
+        rtype: str
         """
         return self._data["ProjectId"]
 
     def status_id(self):
         """ get status id 
+        rtype: int
         """
         return self.global_dict[self._id]["StatusId"]
 
@@ -245,13 +242,12 @@ class Assembly(_Entity):
 
     def level(self):
         """ get assembly level
-
+        rtype: str
         """
         return self.global_dict[self._id]["Level"]
 
     def start_time(self):
         """ get start time
-
         rtype: datetime.datetime
         """
         _time_text = self._data["StartTime"]
@@ -262,7 +258,6 @@ class Assembly(_Entity):
 
     def end_time(self):
         """ get end time
-
         rtype: datetime.datetime
         """
         _time_text = self._data["EndTime"]
@@ -273,7 +268,7 @@ class Assembly(_Entity):
 
     def create_time(self):
         """ get create time
-
+        rtype: datetime.datetime
         """
         _time_text = self._data["CreateTime"]
         if _time_text.startswith("0001"):

@@ -21,7 +21,6 @@ def set_node_attr(node):
 
 def nodes():
     """ get rendering node
-
     :rtype: list
     """
     _is_rendering = []
