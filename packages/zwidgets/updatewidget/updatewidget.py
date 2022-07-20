@@ -119,7 +119,7 @@ class UpdateWidget(QtWidgets.QFrame):
                 self._receive_label.setText(u"下载中。。。")
                 QtWidgets.QApplication.processEvents()
                 # 
-                filefunc.receive_file(_server_script_path, _local_script_path)
+                filefunc.receive_file(_server_script_path, _local_script_path, is_cloud = True)
             else:
                 self._receive_label.setText(u"无需更新")
 

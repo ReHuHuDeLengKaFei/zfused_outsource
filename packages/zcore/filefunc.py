@@ -49,7 +49,7 @@ def is_hash_equal(f1, f2):
         return str1 == str2 
     return False
 
-def receive_file(src, dst):
+def receive_file(src, dst, is_cloud = False):
     """ 获取文件
         类似拷贝服务器文件
         返回是否领取成功
@@ -62,8 +62,9 @@ def receive_file(src, dst):
     # check md5
     if is_hash_equal(src, dst):
         return True
-
-    return shutil.copy(src, dst)
+    
+    if not is_cloud:
+        return shutil.copy(src, dst)
 
     _src_file = src
     _dst_file = dst
@@ -72,10 +73,10 @@ def receive_file(src, dst):
         return False
     _ztranser_addr = get_internal_trans_server_addr()
     arg = u'"{}" {} get {} {}'.format(_publish_exe, _ztranser_addr, _src_file, _dst_file)
-    # print(arg)
+    print(arg)
     arg = arg.encode(locale.getdefaultlocale()[1])
 
-    #logger.info(arg)
+    # logger.info(arg)
 
     # publish info temp
     _publish_temp = tempfile.SpooledTemporaryFile(1024)
@@ -96,7 +97,7 @@ def receive_file(src, dst):
     return False
 
 
-def publish_file(src, dst, del_src = False):
+def publish_file(src, dst, del_src = False, is_cloud = False):
     """ 上传文件
     
     :pargarms: src 源文件
@@ -110,7 +111,8 @@ def publish_file(src, dst, del_src = False):
     if is_hash_equal(src, dst):
         return True
 
-    return shutil.copy(src, dst)
+    if not is_cloud:
+        return shutil.copy(src, dst)
 
     _publish_exe = get_transer_exe()
     print(_publish_exe)
