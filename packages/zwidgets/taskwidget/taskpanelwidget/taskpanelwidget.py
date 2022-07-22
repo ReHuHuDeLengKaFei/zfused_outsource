@@ -26,6 +26,7 @@ class TaskPanelWidget(QtWidgets.QFrame):
     received = QtCore.Signal(str, int, list)
     published = QtCore.Signal(int, dict, dict)
     opened = QtCore.Signal(str)
+
     def __init__(self, parent=None):
         super(TaskPanelWidget, self).__init__(parent)
         self._build()
@@ -35,6 +36,7 @@ class TaskPanelWidget(QtWidgets.QFrame):
 
         self.operation_widget.received.connect(self.received.emit)
         self.operation_widget.published.connect(self.published.emit)
+
         self.operation_widget.opened.connect(self.opened.emit)
 
     def refresh(self):

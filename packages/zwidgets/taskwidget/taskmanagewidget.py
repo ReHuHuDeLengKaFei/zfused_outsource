@@ -22,6 +22,8 @@ class TaskManageWidget(panel.ShowPanelWidget):
 
     viewed = QtCore.Signal(int)
     checked = QtCore.Signal(int)
+    quick_downloaded = QtCore.Signal(int)
+    quick_published = QtCore.Signal(int)
 
     def __init__(self, parent = None):
         super(TaskManageWidget, self).__init__(parent)
@@ -31,11 +33,13 @@ class TaskManageWidget(panel.ShowPanelWidget):
         self.task_panel_widget = taskpanelwidget.TaskPanelWidget(self)
         self.load_panel_widget("task panel", self.task_panel_widget)
 
-        self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)
+        # self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)
         self.filter_widget._step_changed.connect(self._filter_step)
 
         self.task_listwidget.viewed.connect(self.viewed.emit)
         self.task_listwidget.checked.connect(self.checked.emit)
+        self.task_listwidget.quick_downloaded.connect(self.quick_downloaded.emit)
+        self.task_listwidget.quick_published.connect(self.quick_published.emit)
 
     def _show_panel(self, model_index):
         """ show panel 

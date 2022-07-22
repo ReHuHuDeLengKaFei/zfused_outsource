@@ -32,6 +32,9 @@ class TaskManageWidget(window._Window):
         self._build()
 
         self.task_widget.checked.connect(self._check)
+        self.task_widget.quick_downloaded.connect(self._quick_download)
+        self.task_widget.quick_published.connect(self._quick_publish)
+
         self.task_widget.task_panel_widget.received.connect(self._receive_file)
         self.task_widget.task_panel_widget.published.connect(self._publish_file)
         self.task_widget.task_panel_widget.opened.connect(self._open_file)
@@ -45,6 +48,15 @@ class TaskManageWidget(window._Window):
         if _project_step_checks:
             _ui = checkwidget.CheckWidget(_project_step_checks)
             _ui.show()
+
+    def _quick_download(self, task_id):
+        _task = zfused_api.task.Task(task_id)
+        _last_version_id = _task.last_version_id()
+        if _last_version_id:
+            in_util.receive_version_file(_last_version_id)
+
+    def _quick_publish(self, task_id):
+        out_util.publish_file(task_id, {"description": u"快速发布"})
 
     def _open_file(self, file_path):
         cmds.file(file_path, o = True, f = True)    

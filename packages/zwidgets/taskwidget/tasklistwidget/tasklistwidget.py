@@ -22,6 +22,8 @@ class TaskListWidget(QtWidgets.QFrame):
 
     viewed = QtCore.Signal(int)
     checked = QtCore.Signal(int)
+    quick_downloaded = QtCore.Signal(int)
+    quick_published = QtCore.Signal(int)
 
     def __init__(self, parent = None):
         super(TaskListWidget, self).__init__(parent)
@@ -30,6 +32,8 @@ class TaskListWidget(QtWidgets.QFrame):
 
         self.listwidget.viewed.connect(self.viewed.emit)
         self.listwidget.checked.connect(self.checked.emit)
+        self.listwidget.quick_downloaded.connect(self.quick_downloaded.emit)
+        self.listwidget.quick_published.connect(self.quick_published.emit)
 
     def _search(self, text):
         """ search task

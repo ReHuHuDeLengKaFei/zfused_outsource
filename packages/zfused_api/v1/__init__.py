@@ -224,7 +224,40 @@ class zFused(object):
         else:
             return False
 
+    def xattr(self, attr_code):
+        u""" 获得扩展属性值,没有返回默认值
+        """
+        _attr_datas = self.get('xattr', filter={'Code': attr_code})
+        if not _attr_datas:
+            return
+        else:
+            _attr_data = _attr_datas[0]
+            _attr_links = self.get('xattr_link', filter={'LinkObject': self.object(), 'LinkId': self._id, 'XattrId': _attr_data['Id']})
+            if not _attr_links:
+                return _attr_data['DefaultValue']
+            if _attr_data['Type'].startswith('@'):
+                _object = _attr_data['Type'][1::]
+                return [ zfused_api.objects.Objects(_object, int(_attr_link['Value'])) for _attr_link in _attr_links ]
+            return [ _attr_link['Value'] for _attr_link in _attr_links ][0]
 
+    def update_xattr(self, attr_code, value):
+        """ 
+        """
+        _attr_datas = self.get('xattr', filter={'Code': attr_code})
+        _attr_data = _attr_datas[0]
+        _attr_links = self.get('xattr_link', filter={'LinkObject': self.object(), 'LinkId': self._id, 'XattrId': _attr_data['Id']})
+        if not _attr_links:
+            _data = {'XattrId': _attr_data['Id'], 'LinkObject': self.object(), 'LinkId': self._id, 'Value': value}
+            self.post('xattr_link', _data)
+        else:
+            _data = _attr_links[0]
+            _data['Value'] = value
+            v = self.put('xattr_link', _data['Id'], _data)
+            if v:
+                return True
+            return False
+
+            
 
 class _Entity(zFused):
     global_dict = {}
