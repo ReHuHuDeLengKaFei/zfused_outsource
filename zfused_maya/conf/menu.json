@@ -46,7 +46,13 @@
                 "title":"模型分组\nModel Arrange",
                 "cmd":"import zfused_maya.tool.modeling.modelArrange_new as modelArrange;ui = modelArrange.Ui();ui.showUi()",
                 "color":"#ff99cc",
-                "category":"分组"}
+                "category":"分组"},
+            {   "name":"切换至maya标准材质(standardSurface)",
+                "code":"to standard surface",
+                "title":"切换至maya标准材质(standardSurface)\nto standard surface",
+                "cmd":"from zfused_maya.tool.modeling import to_standard_surface;ui = to_standard_surface.ToStandardSurface();ui.show()",
+                "color":"#007acc",
+                "category":"材质"}
         ],
     "utility":
         [
