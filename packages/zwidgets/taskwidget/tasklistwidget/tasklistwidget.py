@@ -74,6 +74,7 @@ class TaskListWidget(QtWidgets.QFrame):
         # task list widget
         self.listwidget = listview.ListView()
         self.listwidget.setViewMode(QtWidgets.QListView.IconMode)
+        # self.listwidget.setViewMode(QtWidgets.QListView.ListMode)
         self.contant_layout.addWidget(self.listwidget)
         self.listwidget.setObjectName("listwidget")
         self.task_proxy_model = listmodel.ListFilterProxyModel()
