@@ -64,6 +64,9 @@ def receive_file(src, dst, is_cloud = False):
         return True
     
     if not is_cloud:
+        _dir = os.path.dirname(dst)
+        if not os.path.isdir(_dir):
+            os.makedirs(_dir)
         return shutil.copy(src, dst)
 
     _src_file = src
@@ -112,6 +115,9 @@ def publish_file(src, dst, del_src = False, is_cloud = False):
         return True
 
     if not is_cloud:
+        _dir = os.path.dirname(dst)
+        if not os.path.isdir(_dir):
+            os.makedirs(_dir)
         return shutil.copy(src, dst)
 
     _publish_exe = get_transer_exe()
