@@ -319,3 +319,25 @@ def rename_ass():
                 _trasform_name = cmds.listRelatives(_name, p=True)[0]
                 new_name = _trasform_name + 'aiStandIn'
                 cmds.rename(_name, new_name)
+
+
+def del_unused_nodes():
+    '''
+    删除未使用的节点
+    '''
+    delete_list = []
+    undel = cmds.ls(ud = True)
+    nodes = cmds.ls()
+    for node in nodes:
+        if node not in undel:
+            type = cmds.nodeType(node)
+            cons = cmds.listConnections(node)
+            relatives_des = cmds.listRelatives(node,ap = True)
+            relatives_par = cmds.listRelatives(node,ad = True)
+            if not cons and not relatives_des and not relatives_par:
+                try :
+                    cmds.delete(node)
+                    delete_list.append(node)
+                except :
+                    pass
+    print (delete_list)

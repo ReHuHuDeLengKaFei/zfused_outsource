@@ -25,12 +25,18 @@ def fix_mesh_name(post_fix_name, group_list = [], repair_shader = False):
 
     # 获取组内transform
 
-    def get_members(shape,transform):
+    def get_members(shape,transform,engine_dict=None):
         # 速度最快
+        try:
+            engine_dict = shader_dict
+        except:
+            engine_dict = {}
         meshdict = {}
         _sgs = cmds.listConnections(shape,d = 1,type = "shadingEngine")
         if _sgs:
             for _sg in _sgs:
+                if _sg in engine_dict.keys():
+                    continue
                 cmds.hyperShade(objects = _sg)
                 sel = cmds.ls(sl = 1,l = 1)
                 meshdict[_sg] = [i for i in sel if transform == i.split(".")[0]]
@@ -85,7 +91,7 @@ def fix_mesh_name(post_fix_name, group_list = [], repair_shader = False):
         _dict = {}
         for _shape in _show_shapes:
             if repair_shader:
-                _dict = get_members(_shape,_transform)
+                _dict = get_members(_shape,_transform,shader_dict)
             _new_shape = "{}{}".format(_transform, post_fix_name)
             if "|" in "{}{}".format(_transform, post_fix_name):
                 _new_shape = _new_shape.split("|")[-1]

@@ -20,7 +20,6 @@ from zfused_maya.core import record
 from . import property, renderinggroup, shadingengine, texture, xgen
 
 
-
 class Check(object):
     """ check base object
     """
@@ -31,7 +30,7 @@ def texture_is_chinese():
     """
     检查贴图路径是否有中文
     """
-
+    
     _nodes = texture.nodes()
     if not _nodes:
         return True, None
@@ -71,7 +70,7 @@ def texture_is_chinese():
                 info += u"{}\n".format(_error_node)
             return False, info
         return True, None
-
+    
     # if not _files:
     #     return True, None
     # _error_path = []
@@ -111,11 +110,11 @@ def texture_work_path():
     _backup_path = _project.backup_path()
     _work_path = _project.work_path()
     _production_path = _project.production_path()
-
+    
     _files = texture.files()
     if not _files:
         return True, None
-
+    
     _error_path = []
     info = u"以下路径的贴图未在项目work路径下\n"
     for _file in _files:
@@ -425,7 +424,7 @@ def check_history():
         for child in _history:
             info += u"%s\n" % child
         return False, info
-
+    
     return True, None
 
 
@@ -594,6 +593,8 @@ def animation_layer():
     """ check animation layer
     """
     _lays = cmds.ls(type="animLayer")
+    if _lays:
+        _lays.remove('BaseAnimation')
     if len(_lays) > 0:
         info = u"场景存在多余动画层\n"
         for _layer in _lays:
@@ -638,7 +639,7 @@ def light():
     """ check light
     """
     _lights = cmds.ls(type=cmds.listNodeTypes("light"))
-
+    
     if _lights:
         info = "场景存在多余灯光节点\n"
         for _light in _lights:
@@ -666,6 +667,7 @@ def display_layer():
     _layers = [Layer for Layer in core.ls(type='displayLayer') if not core.referenceQuery(Layer,
                                                                                           isNodeReferenced=True) and Layer.name() != 'defaultLayer' and cmds.getAttr(
         "%s.identification" % Layer) != 0]
+    _layers = [_layer for _layer in _layers if _layer != "norender"]
     if _layers:
         info = "场景存在显示层\n"
         for _layer in _layers:
@@ -736,7 +738,7 @@ def equal_namespace():
 def multi_namespace():
     """ 检查文件中存在 多级 namespace
     """
-
+    
     # #set the current naemspace to world
     # curNS = cmds.namespaceInfo(cur=True)
     # cmds.namespace(set=":")
@@ -782,7 +784,7 @@ def multi_namespace():
     #         info += "{} - {}\n".format(_error_rf_node[0], _error_rf_node[1])
     #     return False, info
     # return True, None
-
+    
     _rendergrps = renderinggroup.nodes()
     _error_rf_nodes = []
     for dag in _rendergrps:
@@ -793,7 +795,7 @@ def multi_namespace():
         if _namespace:
             if len(_namespace.split(":")) >= 3:
                 _error_rf_nodes.append(dag)
-
+    
     if _error_rf_nodes:
         info = u"场景存在 多级 namespace 参考\n"
         for _error_rf_node in _error_rf_nodes:
@@ -805,7 +807,7 @@ def multi_namespace():
 def repeat(node_type="mesh"):
     """ 检查重命名
     """
-
+    
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
@@ -814,9 +816,9 @@ def repeat(node_type="mesh"):
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-
+    
     _is_repeat = False
-
+    
     # _lists = cmds.ls(noIntermediate = 1, type = node_type)
     # _repeat_list = defaultdict(list)
     # for _shape, _index in [(_shape.split("|")[-1], _index) for _index, _shape in enumerate(_lists) ]:
@@ -828,7 +830,7 @@ def repeat(node_type="mesh"):
     #         for _index in _index_list:
     #             _name = _lists[_index]
     #             info += "{}\n".format(_name)
-
+    
     _lists = cmds.ls(noIntermediate=1, type=node_type)
     info = "场景存在重复命名节点\n"
     _uuid_info = get_uuid_info()
@@ -839,7 +841,7 @@ def repeat(node_type="mesh"):
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-
+    
     if _is_repeat:
         return False, info
     else:
@@ -850,7 +852,7 @@ def gpu_repart():
     """
     检查GPU 重命名
     """
-
+    
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
@@ -859,7 +861,7 @@ def gpu_repart():
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-
+    
     _is_repeat = False
     _lists = cmds.ls(noIntermediate=1, type='gpuCache')
     info = u"场景存在重复命名gpu节点\n"
@@ -871,7 +873,7 @@ def gpu_repart():
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-
+    
     if _is_repeat:
         return False, info
     else:
@@ -883,7 +885,7 @@ def ass_repeat():
     检查ASS是否重名
     :return:
     """
-
+    
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
@@ -892,7 +894,7 @@ def ass_repeat():
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-
+    
     _is_repeat = False
     _lists = cmds.ls(noIntermediate=1, type='aiStandIn')
     info = u"场景存在重复命名ass节点\n"
@@ -904,7 +906,7 @@ def ass_repeat():
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-
+    
     if _is_repeat:
         return False, info
     else:
@@ -1032,7 +1034,7 @@ def useless_key():
         缓存是从geometry组开始发布的
         该组的父组不允许存在任何k帧信息
     '''
-
+    
     def get_key_attr(grp, _list=[]):
         checkattr = set(
             ["visibility", "translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ", "scaleX",
@@ -1049,7 +1051,7 @@ def useless_key():
                     if _checkattr:
                         _list.append(grp)
         return _list
-
+    
     _rendergrps = renderinggroup.nodes()
     if not _rendergrps:
         return True, None
@@ -1167,7 +1169,7 @@ def postfix_group():
     _gro_list = []
     _is_error = False
     info = u"场景存在不是以_group为后缀的组名\n"
-
+    
     for i in _node_list:
         _child = cmds.listRelatives(i, c=True, type='shape')
         if _child == None:
@@ -1199,11 +1201,11 @@ def node_name():
     _task_id = record.current_task_id()
     _task_entity = zfused_api.task.Task(_task_id)
     _asset_name = _task_entity.project_entity().code()
-
+    
     _node_list = cmds.ls(dag=True, transforms=True)
     _wrongnode = []
     info = u"场景存在不规范的命名\n"
-
+    
     _defult_cam = ['persp', 'top', 'front', 'side']
     for cam in _defult_cam:
         _node_list.remove(cam)
@@ -1224,11 +1226,11 @@ def material_name():
     _task_id = record.current_task_id()
     _task_entity = zfused_api.task.Task(_task_id)
     _asset_name = _task_entity.project_entity().code()
-
+    
     _node_list = cmds.ls(mat=True)
     _wrongnode = []
     info = u"场景存在不规范的材质命名\n"
-
+    
     _defult_shader = ['standardSurface1', 'particleCloud1', 'lambert1']
     for _shader in _defult_shader:
         _node_list.remove(_shader)
@@ -1290,24 +1292,42 @@ def unrecord_gpu():
 #         return False, info
 #     return True, None
 
+# def texture_space():
+#     """
+#        检查贴图文件路径带空格
+#     """
+#     path_list = cmds.filePathEditor(query=True, ld="")
+#     info = u'有路径内带空格的贴图文件：\n'
+#     _is_error = False
+#
+#     if not path_list:
+#         return True, None
+#
+#     for path in path_list:
+#         names = cmds.filePathEditor(query=True, lf=path)
+#         for name in names:
+#             fullpath = u"{}/{}\n".format(path, name)
+#             if ' ' in fullpath:
+#                 info += u"{}\n".format(fullpath)
+#                 _is_error = True
+#     if _is_error:
+#         return False, info
+#     return True, None
+
+
 def texture_space():
     """
        检查贴图文件路径带空格
     """
-    path_list = cmds.filePathEditor(query=True, ld="")
     info = u'有路径内带空格的贴图文件：\n'
+    _file_list = texture.files()
     _is_error = False
-
-    if not path_list:
+    if not _file_list:
         return True, None
-
-    for path in path_list:
-        names = cmds.filePathEditor(query=True, lf=path)
-        for name in names:
-            fullpath = u"{}/{}\n".format(path, name)
-            if ' ' in fullpath:
-                info += u"{}\n".format(fullpath)
-                _is_error = True
+    for _path in _file_list:
+        if ' ' in _path:
+            info += u"{}\n".format(_path)
+            _is_error = True
     if _is_error:
         return False, info
     return True, None
@@ -1339,7 +1359,7 @@ def constraint_pos():
     _gro_list = []
     _is_error = False
     info = u"存在非规范位置的约束节点\n"
-
+    
     for _node in _node_list:
         _child = cmds.listRelatives(_node, c=True, type='shape')
         if _child == None:
@@ -1363,16 +1383,16 @@ def meshuv_sets():
     info = u"存在多套uvSet 或uvSet名称不为map1\n"
     _is_error = False
     for mesh in cmds.ls(type='mesh', long=1):
-        uvsets = cmds.polyUVSet(mesh, q=1, auv=1)
+        uvsets = list(set(cmds.polyUVSet(mesh, q=1, auv=1)))
         if len(uvsets) > 1:
-            info += u"{}存在多套uvSet\n".format(mesh)
+            info += u"{}\n".format(mesh)
             _is_error = True
         else:
             if len(uvsets) == 1:
                 if uvsets[0] != 'map1':
-                    info += u'{}uvSet名称不为map1\n'.format(mesh)
+                    info += u'{}\n'.format(mesh)
                     _is_error = True
-
+    
     if _is_error is True:
         return False, info
     return True, None
@@ -1389,7 +1409,7 @@ def groom_caching_grp():
         if cmds.objExists('{}.groom_caching'.format(tr)) is True:
             if not tr in check_list:
                 check_list.append(tr)
-
+    
     if len(check_list) == 1:
         return True, None
     elif len(check_list) == 0:
@@ -1413,7 +1433,7 @@ def out_curve_grp():
         if cmds.objExists('{}.out_curve'.format(tr)) is True:
             if not tr in check_list:
                 check_list.append(tr)
-
+    
     if len(check_list) == 1:
         return True, None
     elif len(check_list) == 0:
@@ -1457,7 +1477,7 @@ def growmesh_sole():
     else:
         for _mesh in error_meshs:
             info += u'{}\n'.format(_mesh)
-
+    
     return False, info
 
 
@@ -1500,7 +1520,7 @@ def model_description():
     for _transform in _trs:
         if not _transform in _all_mesh:
             error_meshs.append(_transform)
-
+    
     info = u'下列模型不为生长面但是在生长面组\n'
     if len(error_meshs) == 0:
         return True, None
@@ -1593,7 +1613,7 @@ def guide_sole():
         return True, None
     for _error in error_list:
         info += '{}\n'.format(_error)
-
+    
     return False, info
 
 
@@ -1655,7 +1675,7 @@ def last_version():
         return True, None
     for node in error_nodes:
         info += '{}\n'.format(node)
-
+    
     return False, info
 
 
@@ -1664,7 +1684,7 @@ def tx():
     检查贴图tx 是否转换
     :return:
     """
-
+    
     def comp_ctime(file1, file2):
         """
         判断贴图时间和tx 时间，正常应该是tx 时间大于贴图时间
@@ -1672,12 +1692,12 @@ def tx():
         :param file2: tx
         :return:
         """
-        time1 = os.path.getmtime(file1)
-        time2 = os.path.getmtime(file2)
-        if time1 > time2:
+        time1 = int(os.path.getmtime(file1))
+        time2 = int(os.path.getmtime(file2))
+        if time1 <= time2:
             return True
         return False
-
+    
     _files = texture.files()
     _error_nodes = []
     for _file in _files:
@@ -1701,10 +1721,10 @@ def collection_path():
     检查collection的路径是否为多重路径
     :return:
     """
-
+    
     all_palette = xg.palettes()
     if not all_palette:
-        return True,None
+        return True, None
     error_node = []
     for _palette in all_palette:
         _file_path = xg.expandFilepath(xg.getAttr('xgDataPath', _palette), '', False, False)
@@ -1715,11 +1735,66 @@ def collection_path():
         if not os.path.exists(_paths_[0]):
             error_node.append(_palette)
             continue
-
+    
     if not error_node:
         return True, None
     info = u'xgen 路径为多重路径或文件路径不存在\n'
     for _node in error_node:
         info += '{}\n'.format(_node)
-
+    
     return False, info
+
+
+def check_unused_nodes():
+    '''
+    检查没有用到的节点
+    '''
+    delete_list = []
+    info = u'存在未使用的节点\n'
+    undel = cmds.ls(ud = True)
+    nodes = cmds.ls()
+    for node in nodes:
+        if node not in undel:
+            type = cmds.nodeType(node)
+            cons = cmds.listConnections(node)
+            relatives_des = cmds.listRelatives(node,ap = True)
+            relatives_par = cmds.listRelatives(node,ad = True)
+            if not cons and not relatives_des and not relatives_par:
+                delete_list.append(node)
+                info += u'{}\n'.format(node)
+
+    if delete_list:
+        return False,info
+    else:
+        return True,None
+
+
+def check_default_name():
+    '''
+    检查默认命名
+    '''
+    defaults = [
+    'polySurface', 'pSphere','pCube','pCylinder','pCone','pPlane','pTorus','pPrism',
+    'pPyramid','pPipe','pHelix','pSolid',
+    'nurbSurface', 'nurbsSphere',
+    'nurbsCube', 'topnurbsCube','bottomnurbsCube','leftnurbsCube',
+    'rightnurbsCube','frontnurbsCube',
+    'backnurbsCube','nurbsCylinder','nurbsCone','nurbsPlane','nurbsTorus',
+    'nurbsCircle','curve','nurbsSquare','topnurbsSquare','leftnurbsSquare','bottomnurbsSquare','rightnurbsSquare',
+    'locator', 'group','null','joint']
+   
+    info = u"场景存在默认命名\n"
+    _wrongnode = []
+    
+    lists = cmds.ls(dag = True, transforms = True)
+    for default in defaults:
+        for list in lists:
+            if default in list:
+                _wrongnode.append(list)
+    
+    if _wrongnode != []:
+        for _node in _wrongnode:
+            _node_name = str(_node)
+            info += u"{}\n".format(_node)
+        return False, info
+    return True, None
