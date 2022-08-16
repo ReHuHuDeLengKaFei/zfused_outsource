@@ -326,18 +326,41 @@ def del_unused_nodes():
     删除未使用的节点
     '''
     delete_list = []
+    ignore_list = cmds.ls(defaultNodes = True)
+    ignore_list += [u'shapeEditorManager',u'poseInterpolatorManager',u'sceneConfigurationScriptNode',u'xgenGlobals']
+
     undel = cmds.ls(ud = True)
     nodes = cmds.ls()
     for node in nodes:
         if node not in undel:
-            type = cmds.nodeType(node)
-            cons = cmds.listConnections(node)
-            relatives_des = cmds.listRelatives(node,ap = True)
-            relatives_par = cmds.listRelatives(node,ad = True)
-            if not cons and not relatives_des and not relatives_par:
-                try :
-                    cmds.delete(node)
-                    delete_list.append(node)
-                except :
-                    pass
+            _is_reference = cmds.referenceQuery(node, isNodeReferenced=True)
+            if _is_reference:
+                continue
+            if 'xgenGlobals' in node:
+                continue
+            if node not in ignore_list:
+                type = cmds.nodeType(node)
+                cons = cmds.listConnections(node)
+                relatives_des = cmds.listRelatives(node,ap = True)
+                relatives_par = cmds.listRelatives(node,ad = True)
+                if not cons and not relatives_des and not relatives_par:
+                    try :
+                        cmds.delete(node)
+                        delete_list.append(node)
+                    except :
+                        pass
     print (delete_list)
+
+def delete_type_node():
+    '''
+    删除特殊类型节点
+    '''
+    delete_type = ['shapeEditorManager','poseInterpolatorManager']
+
+    for de in delete_type:
+        node_list = cmds.ls(type = de)
+        for node in node_list:
+            _inr = cmds.referenceQuery(node, inr = True)
+            if not _inr:
+                print ('{} is deep reference node , cannot be deleted'.format(node))
+            cmds.delete(node)
