@@ -1751,22 +1751,31 @@ def check_unused_nodes():
     '''
     delete_list = []
     info = u'存在未使用的节点\n'
-    undel = cmds.ls(ud = True)
+    ignore_list = cmds.ls(defaultNodes=True)
+    ignore_list += [u'shapeEditorManager', u'poseInterpolatorManager', u'sceneConfigurationScriptNode', u'xgenGlobals']
+    undel = cmds.ls(ud=True)
+    
     nodes = cmds.ls()
     for node in nodes:
         if node not in undel:
-            type = cmds.nodeType(node)
-            cons = cmds.listConnections(node)
-            relatives_des = cmds.listRelatives(node,ap = True)
-            relatives_par = cmds.listRelatives(node,ad = True)
-            if not cons and not relatives_des and not relatives_par:
-                delete_list.append(node)
-                info += u'{}\n'.format(node)
-
+            _is_reference = cmds.referenceQuery(node, isNodeReferenced=True)
+            if _is_reference:
+                continue
+            if 'xgenGlobals' in node:
+                continue
+            if node not in ignore_list:
+                type = cmds.nodeType(node)
+                cons = cmds.listConnections(node)
+                relatives_des = cmds.listRelatives(node, ap=True)
+                relatives_par = cmds.listRelatives(node, ad=True)
+                if not cons and not relatives_des and not relatives_par:
+                    delete_list.append(node)
+                    info += u'{}\n'.format(node)
+    
     if delete_list:
-        return False,info
+        return False, info
     else:
-        return True,None
+        return True, None
 
 
 def check_default_name():
@@ -1774,19 +1783,20 @@ def check_default_name():
     检查默认命名
     '''
     defaults = [
-    'polySurface', 'pSphere','pCube','pCylinder','pCone','pPlane','pTorus','pPrism',
-    'pPyramid','pPipe','pHelix','pSolid',
-    'nurbSurface', 'nurbsSphere',
-    'nurbsCube', 'topnurbsCube','bottomnurbsCube','leftnurbsCube',
-    'rightnurbsCube','frontnurbsCube',
-    'backnurbsCube','nurbsCylinder','nurbsCone','nurbsPlane','nurbsTorus',
-    'nurbsCircle','curve','nurbsSquare','topnurbsSquare','leftnurbsSquare','bottomnurbsSquare','rightnurbsSquare',
-    'locator', 'group','null','joint']
-   
+        'polySurface', 'pSphere', 'pCube', 'pCylinder', 'pCone', 'pPlane', 'pTorus', 'pPrism',
+        'pPyramid', 'pPipe', 'pHelix', 'pSolid',
+        'nurbSurface', 'nurbsSphere',
+        'nurbsCube', 'topnurbsCube', 'bottomnurbsCube', 'leftnurbsCube',
+        'rightnurbsCube', 'frontnurbsCube',
+        'backnurbsCube', 'nurbsCylinder', 'nurbsCone', 'nurbsPlane', 'nurbsTorus',
+        'nurbsCircle', 'curve', 'nurbsSquare', 'topnurbsSquare', 'leftnurbsSquare', 'bottomnurbsSquare',
+        'rightnurbsSquare',
+        'locator', 'group', 'null', 'joint']
+    
     info = u"场景存在默认命名\n"
     _wrongnode = []
     
-    lists = cmds.ls(dag = True, transforms = True)
+    lists = cmds.ls(dag=True, transforms=True)
     for default in defaults:
         for list in lists:
             if default in list:
@@ -1798,3 +1808,31 @@ def check_default_name():
             info += u"{}\n".format(_node)
         return False, info
     return True, None
+
+
+def repet_model():
+    """
+    检查模型组里是否有完全相同的模型
+    :return:
+    """
+    all_nodes = cmds.ls(type='mesh')
+    _dict = {}
+    error_nodes =[]
+    
+    for _node in all_nodes:
+        _node_max = cmds.getAttr('{}.boundingBoxMax'.format(_node))
+        _node_min = cmds.getAttr('{}.boundingBoxMin'.format(_node))
+        _list = [_node_min,_node_max]
+        if not _list in _dict.values():
+            _dict[_node] = _list
+        else:
+            error_nodes.append(_node)
+            _a = list(_dict.keys())[list(_dict.values()).index(_list)]
+            error_nodes.append(_a)
+    info = u'以下节点有疑似完全相同\n'
+    if not error_nodes:
+        return True,None
+    for _n in error_nodes:
+        info += _n+'\n'
+    return False,info
+        
