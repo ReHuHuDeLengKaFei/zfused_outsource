@@ -24,6 +24,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._help_url = None
         self._is_press = False
+        
         self._drag_position = QtCore.QPoint(0, 0)
 
         self.setMouseTracking(True)
