@@ -27,10 +27,11 @@ def reset():
     SUB_LABLE_TEXT = ""
     MINIMUM = 0
     MAXIMUM = 1
-    VALUE = 1
+    VALUE = 0
     SUB_MINIMUM = 0
     SUB_MAXIMUM = 1
     SUB_VALUE = 1
+    QtWidgets.QApplication.processEvents()
 
 def set_range(mini, maxi):
     global MINIMUM,MAXIMUM

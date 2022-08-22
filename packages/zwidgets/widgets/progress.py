@@ -42,7 +42,7 @@ def progress(title):
         def wrap( *args, **kwargs ):
             # QtWidgets.QApplication.processEvents()
             __progress.start()
-            # QtWidgets.QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
             try:
                 return func( *args, **kwargs )
             except Exception as e:

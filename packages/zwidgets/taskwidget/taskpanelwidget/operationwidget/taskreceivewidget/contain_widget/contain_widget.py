@@ -228,7 +228,9 @@ class AssetWidget(RelyWidget):
     def load_task_id(self, task_id):
         _attrs = super(AssetWidget, self).load_task_id(task_id)
         self.title_button.setText(language.word(self._title))
-
+        if not _attrs:
+            return
+            
         _task = zfused_api.task.Task(task_id)   
         _project_entity = _task.project_entity()
         
@@ -241,9 +243,6 @@ class AssetWidget(RelyWidget):
                 
         _asset_ids = [ _relative_asset.get("SourceId") for _relative_asset in _relative_assets ]
         _asset_widget = {}
-
-        if not _attrs:
-            return
 
         _input_tasks = []
         _task_input_tasks = _task.input_tasks()

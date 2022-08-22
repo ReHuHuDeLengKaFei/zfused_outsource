@@ -46,9 +46,9 @@ class ProjectEntityWidget(QtWidgets.QFrame):
 
     def load_project_entity(self, project_entity):
         self._project_entity = project_entity
-        _thumbnail = self._project_entity.get_thumbnail()
-        if _thumbnail:
-            self.thumbnail_button.set_thumbnail(_thumbnail)
+        # _thumbnail = self._project_entity.get_thumbnail()
+        # if _thumbnail:
+        #     self.thumbnail_button.set_thumbnail(_thumbnail)
         self.name_button.setText(self._project_entity.full_name_code())
 
     def set_namespace(self, namespace):
@@ -87,11 +87,11 @@ class ProjectEntityWidget(QtWidgets.QFrame):
         _project_entity = _task.project_entity()
 
         self.name_button.setText(_task.name())
-        _thumbnail = _project_entity.get_thumbnail()
-        if not _thumbnail:
-            _thumbnail = _task.get_thumbnail()
-        if _thumbnail:
-            self.thumbnail_button.set_thumbnail(_thumbnail)
+        # _thumbnail = _project_entity.get_thumbnail()
+        # if not _thumbnail:
+        #     _thumbnail = _task.get_thumbnail()
+        # if _thumbnail:
+        #     self.thumbnail_button.set_thumbnail(_thumbnail)
 
         self.project_entity_button.setIcon(QtGui.QIcon(resource.get("icons", "{}.png".format(_project_entity.object()))))
         self.project_entity_button.setText(_project_entity.full_name())
@@ -123,6 +123,7 @@ class ProjectEntityWidget(QtWidgets.QFrame):
         self.name_layout.setContentsMargins(0,0,0,0)
         self.thumbnail_button = button.ThumbnailButton()
         self.thumbnail_button.setFixedSize(192*self._scale, 108*self._scale)
+        self.thumbnail_button.hide()
         self.name_layout.addWidget(self.thumbnail_button)
         self.name_button = QtWidgets.QPushButton()
         self.name_button.setObjectName("title_button")

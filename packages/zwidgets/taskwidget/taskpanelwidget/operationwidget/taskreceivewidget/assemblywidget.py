@@ -28,10 +28,8 @@ class AssemblyWidget(QtWidgets.QFrame):
     def load_task_id(self, task_id):
         # load task id
         _task_handle = zfused_api.task.Task(task_id)
-        _tasks = _task_handle.input_tasks()
-        
         self.input_listwidget.load_task_id(task_id)
-
+        _tasks = self.input_listwidget.input_tasks()
         if not _tasks:
             self.no_version_widget.setHidden(False)
             self.input_listwidget.setHidden(True)
