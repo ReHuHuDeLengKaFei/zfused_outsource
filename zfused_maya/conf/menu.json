@@ -103,6 +103,16 @@
                 "color":"#1C9FF0",
                 "category":"材质引擎"}
         ],
+    "assembly":
+    [
+            {   "name"    :"gpu转模型",
+                "code"    :"gpu to model",
+                "title"   :"gpu转模型\ngpu to model",
+                "cmd"     :"from zfused_maya.tool.assembly import gpu_to_model;reload(gpu_to_model);ui = gpu_to_model.Window();ui.show()",
+                "color"   :"#343D46",
+                "category":"gpu"
+            }
+    ],
     "help":
         [
             {   "name":"更新",

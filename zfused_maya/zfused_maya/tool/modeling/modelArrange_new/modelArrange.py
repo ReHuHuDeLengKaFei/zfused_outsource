@@ -1105,6 +1105,7 @@ class Ui(object):
     #     #     else :
     #     #         return transName + 'Shape'
 #修复shape命名错误的bug
+    '''
     def getShapeName(self, transName):
         if transName.replace("_", "").isalnum() is True:#判断去掉_以后是否为纯字母，目的是判断有数字
             temp_num = []
@@ -1119,6 +1120,24 @@ class Ui(object):
             return transName[:stop] + 'Shape' + "{}".format("".join(temp_num))#重命名
         else:
             return transName + 'Shape'#如果为纯字母的话就直接改名字
+    '''
+
+    def getShapeName(self, transName):
+        numlist = []
+        alphalist = []
+        if transName.replace("_", "").isalpha() is True:
+            name = transName + 'Shape'
+        else:
+            for i in transName:
+                if i.isdigit():
+                    numlist.append(i)
+                else:    
+                    alphalist.append(i)
+            alpha = ''.join(alphalist)
+            num = ''.join(numlist)
+            name = alpha + 'Shape' + num
+    
+        return name
 
     def colliderApp(self):
         colliderGroup.ColliderGroup().showUi()
