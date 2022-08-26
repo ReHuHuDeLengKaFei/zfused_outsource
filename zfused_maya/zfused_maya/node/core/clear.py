@@ -364,3 +364,14 @@ def delete_type_node():
             if not _inr:
                 print ('{} is deep reference node , cannot be deleted'.format(node))
             cmds.delete(node)
+
+def cancle_rendering_attr():
+    from . import renderinggroup
+    imported_assets = []
+    all_assets = renderinggroup.nodes()
+    for asset in all_assets:
+        _is_reference = cmds.referenceQuery(asset, isNodeReferenced=True)
+        if not _is_reference:
+            imported_assets.append(asset)
+    for _node in imported_assets:
+        cmds.setAttr("%s.rendering"%_node, 0)

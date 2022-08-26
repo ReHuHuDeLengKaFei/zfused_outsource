@@ -323,6 +323,8 @@ def lost_material():
     _is_error = False
     info = u"场景存在mesh丢失材质球(lost material)\n"
     for _polygon in _polygons:
+        if cmds.nodeType(_polygon) != "mesh":
+            continue
         _sgs = cmds.listConnections(_polygon, type="shadingEngine")
         if not _sgs:
             _is_error = True
@@ -339,6 +341,8 @@ def multi_material():
     _is_error = False
     info = u"场景存在单mesh多材质球(multi material)\n"
     for _polygon in _polygons:
+        if cmds.nodeType(_polygon) != "mesh":
+            continue
         _sgs = cmds.listConnections(_polygon, type="shadingEngine")
         if _sgs:
             _sgs = list(set(_sgs))
@@ -357,6 +361,8 @@ def material_assign_faces():
     _is_error = False
     info = u"场景存在单材质球按面赋材质(face assign)[重新选择物体赋下材质]\n"
     for _polygon in _polygons:
+        if cmds.nodeType(_polygon) != "mesh":
+            continue
         _trans = cmds.listRelatives(_polygon, p=True)[0]
         _sgs = cmds.listConnections(_polygon, type="shadingEngine")
         if _sgs:
@@ -478,6 +484,8 @@ def equal_mesh():
         allDags = cmds.ls(_top_dag, dag=True, ni=True, type="mesh")
         # print allDags
         for dag in allDags:
+            if cmds.nodeType(dag) != "mesh":
+                continue
             selectionList = om.MSelectionList()
             selectionList.add(dag)
             node = selectionList.getDependNode(0)
@@ -811,8 +819,11 @@ def repeat(node_type="mesh"):
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
+        #render_node  =renderinggroup.nodes()
         _meshes = cmds.ls(type='mesh', ap=True)
         for _mesh in _meshes:
+            if cmds.nodeType(_mesh) != "mesh":
+                continue
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
@@ -830,13 +841,14 @@ def repeat(node_type="mesh"):
     #         for _index in _index_list:
     #             _name = _lists[_index]
     #             info += "{}\n".format(_name)
-    
+    #render_node = renderinggroup.nodes()
     _lists = cmds.ls(noIntermediate=1, type=node_type)
     info = "场景存在重复命名节点\n"
     _uuid_info = get_uuid_info()
     for _name in _lists:
         if len(_name.split('|')) != 1:
             _uuid = cmds.ls(_name, uuid=1)[0]
+            print(_uuid)
             # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
@@ -988,6 +1000,8 @@ def normal_lock():
     if not meshs:
         return True, None
     for _mesh in meshs:
+        if cmds.nodeType(_mesh) != "mesh":
+            continue
         try:
             _allvtx = cmds.polyEvaluate(_mesh, v=1)
             tempvtx = "{}.vtx[{}]".format(_mesh, randint(0, _allvtx))
@@ -1011,6 +1025,8 @@ def polygon_edge5():
         return True, None
     edge5_list = []
     for _mesh in meshs:
+        if cmds.nodeType(_mesh) != "mesh":
+            continue
         cmds.select(_mesh, replace=True)
         cmds.polySelectConstraint(mode=3, type=0x0008, size=3)
         cmds.polySelectConstraint(disable=True)
@@ -1383,6 +1399,8 @@ def meshuv_sets():
     info = u"存在多套uvSet 或uvSet名称不为map1\n"
     _is_error = False
     for mesh in cmds.ls(type='mesh', long=1):
+        if cmds.nodeType(mesh) != "mesh":
+            continue
         uvsets = list(set(cmds.polyUVSet(mesh, q=1, auv=1)))
         if len(uvsets) > 1:
             info += u"{}\n".format(mesh)
@@ -1820,6 +1838,8 @@ def repet_model():
     error_nodes =[]
     
     for _node in all_nodes:
+        if cmds.nodeType(_node) != "mesh":
+            continue
         _node_max = cmds.getAttr('{}.boundingBoxMax'.format(_node))
         _node_min = cmds.getAttr('{}.boundingBoxMin'.format(_node))
         _list = [_node_min,_node_max]
@@ -1835,4 +1855,19 @@ def repet_model():
     for _n in error_nodes:
         info += _n+'\n'
     return False,info
-        
+
+def imported_assets():
+    """检查被导入的资产
+    """
+    imported_assets = []
+    all_assets = renderinggroup.nodes()
+    info = u'存在导入的资产，请视情况清理；如果没有用处请删掉或者点击修复按钮\n'
+    for asset in all_assets:
+        _is_reference = cmds.referenceQuery(asset, isNodeReferenced=True)
+        if not _is_reference:
+            imported_assets.append(asset)
+            info += u"{}\n".format(asset)
+    if not imported_assets:
+        return True, None
+    else:
+        return False, info
