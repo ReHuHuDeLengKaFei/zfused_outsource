@@ -64,12 +64,12 @@ def texture_is_chinese():
                     continue
                 else:
                     continue
-        if _error_nodes:
-            _error_nodes = list(set(_error_nodes))
-            for _error_node in _error_nodes:
-                info += u"{}\n".format(_error_node)
-            return False, info
-        return True, None
+    if _error_nodes:
+        _error_nodes = list(set(_error_nodes))
+        for _error_node in _error_nodes:
+            info += u"{}\n".format(_error_node)
+        return False, info
+    return True, None
     
     # if not _files:
     #     return True, None

@@ -11,7 +11,7 @@ import maya.cmds as cmds
 import zfused_api
 from zcore import filefunc
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 def nodes():
     '''get pgYteiMaya nodes

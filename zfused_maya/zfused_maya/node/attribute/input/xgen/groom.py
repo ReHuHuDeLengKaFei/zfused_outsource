@@ -187,6 +187,8 @@ def alembic_assign(*args,**kwargs):
                         xg.setAttr("custom__arnold_rendermode", "1", _palette, _desc, "RendermanRenderer")
                         # 开启读取缓存
                         xg.setAttr("custom__arnold_useAuxRenderPatch", "1", _palette, _desc, "RendermanRenderer")
+                        #开启多线程
+                        xg.setAttr('custom__arnold_multithreading', '1', _palette, _desc, 'RendermanRenderer')
                         oldpatchfile = xg.getAttr("custom__arnold_auxRenderPatch", _palette, _desc, "RendermanRenderer")
                         if _production_file == oldpatchfile:
                             continue

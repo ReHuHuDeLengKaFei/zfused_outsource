@@ -10,7 +10,7 @@ import maya.cmds as cmds
 
 from zcore import filefunc
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 def convert_path(path):
     return path.replace(r'\/'.replace(os.sep, ''), os.sep)

@@ -195,10 +195,12 @@ def gpu_to_model(is_sel = True, is_hide_gpu = True):
 
         print(_maya_file)
         
+        _init_scene_node = "init_instance_grp"
         _shot_scene_node = "shotscene_instance_grp"
-        if not cmds.objExists(_shot_scene_node):
-            cmds.createNode("transform", name = _shot_scene_node)
-        
+        for _node in ["init_instance_grp", "shotscene_instance_grp"]:
+            if not cmds.objExists(_node):
+                cmds.createNode("transform", name = _node)
+
         _name = os.path.basename(_gpu_file).split(".")[0]
         _parent_node = "{}_instance_grp".format(_name)
         if not cmds.objExists(_parent_node):
@@ -213,7 +215,7 @@ def gpu_to_model(is_sel = True, is_hide_gpu = True):
             
         if not cmds.objExists(_instance_node):
             cmds.createNode("transform", name = _instance_node)
-            cmds.parent(_instance_node, _parent_node)
+            cmds.parent(_instance_node, _init_scene_node)
             # refernce file
             _ori_assemblies = cmds.ls(assemblies=True)
             rf = cmds.file(_maya_file, r = True, ns = "{}_instance".format(_name))
@@ -232,6 +234,7 @@ def gpu_to_model(is_sel = True, is_hide_gpu = True):
             _sel = cmds.listRelatives(_sel, p = True)[0]
         _mt = cmds.xform(_sel, q = True, m = True, ws = True)
         _instance = cmds.instance(_instance_node)[0]
+        cmds.parent(_instance, _parent_node)
         cmds.xform(_instance, m = _mt, ws = True)
         # cmds.parent(_instance, _parent_node)
 
@@ -456,4 +459,3 @@ def _test():
     cmds.delete(_instances.values())
     # remove instance grp
     cmds.delete(_instance_group)
-    

@@ -24,7 +24,7 @@ if not _is_load:
 
 # 缓存预留帧 后面需要存放在数据库上 
 PREPFRAME = 8
-EXPORTATTR = ["worldSpace", "writeVisibility", "uvWrite"]
+EXPORTATTR = ["worldSpace", "writeVisibility", "uvWrite","writeUVSets"]
 
 
 def publish_camera(*args, **kwargs):
@@ -37,7 +37,7 @@ def publish_camera(*args, **kwargs):
     _attr_code = _output_attr_handle.code()
 
     _task = zfused_api.task.Task(_task_id)
-    _task_step =_task.project_step().code()
+    _task_step = _task.project_step().code()
     # _production_path = _task.cache_path()
     # if not os.path.dirname(_production_path):
     _production_path = _task.production_path()
@@ -49,16 +49,26 @@ def publish_camera(*args, **kwargs):
         _file_index = "{:0>4d}".format(_task.last_version_index() + 1)
 
     _project_porperty = _project_entity.property()
+    print(_project_porperty)
 
     _start_frame = int(cmds.playbackOptions(q = True,min = True))-50
     _end_frame = int(cmds.playbackOptions(q = True,max = True))+PREPFRAME
 
     _publish_path = _task.temp_path()
     _cache_path =_task.cache_path()
-    renderdags =renderinggroup.nodes()
+    # renderdags = renderinggroup.nodes()
     _trans_list =[]
 
     _cameras = _project_porperty.get('camera')
+    if not _cameras:
+        _cameras = _project_porperty.get('camera')
+
+    #_cameras = _project_porperty.get('asset')
+    print(_cameras)
+
+    if not _cameras:
+        return True
+
     for _camera in _cameras:
         # _attr_code = "camera"
         camera_node =_camera.get('node')        

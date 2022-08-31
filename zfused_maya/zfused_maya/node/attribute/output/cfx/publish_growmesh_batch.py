@@ -31,7 +31,7 @@ if not _is_load:
 
 # 缓存预留帧 后面需要存放在数据库上
 PREPFRAME = 8
-EXPORTATTR = ["worldSpace", "uvWrite",'stripNamespaces']
+EXPORTATTR = ["worldSpace", "uvWrite",'stripNamespaces',"writeUVSets"]
 
 
 def publish_alembic(*args, **kwargs):

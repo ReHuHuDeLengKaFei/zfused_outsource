@@ -19,7 +19,7 @@ from zcore import filefunc
 
 from zwidgets.widgets import progress
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 # TEXT_NODE = ["file", "imagePlane", "RedshiftNormalMap","RedshiftCameraMap",'RedshiftSprite','RedshiftEnvironment', 'RedshiftLensDistortion', 'RedshiftDomeLight', 'RedshiftIESLight', 'RedshiftLightGobo']
@@ -96,7 +96,7 @@ def _copy_file(src, dst):
         _dst_md5 = md5_for_file(dst)
         if _src_md5 == _dst_md5:
             return True
-    return shutil.copy(src, dst)
+    return shutil.copy2(src, dst)
 
 # @progress.progress(u"上传贴图")
 def publish_file(files, src, dst):

@@ -27,7 +27,7 @@ import zfused_maya.node.core.relatives as relatives
 import zfused_maya.node.core.xgen as xgen
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 # 此函数输入参数需要修改 目前不算合理
 def receive_file(argv_task_id, argv_attr_id, argv_attr_code, argv_attr_type, argv_attr_mode, argv_attr_local, task_id = 0, input_attr_id = 0):
@@ -338,14 +338,6 @@ def assembly_file(task_id, input_tasks = []):
     else:
         _name = "{}.{:>04d}".format(_name, 0)
 
-    # 可以从key output获取
-    # if _task.project_entity_type() == "asset":
-    #     _format = "mayaBinary"
-    #     _file_name = "%s/%s.mb"%(_work_path, _name)
-    # else:    
-    #     _format = "mayaAscii"
-    #     _file_name = "%s/%s.ma"%(_work_path, _name)
-
     _file_name = "{}/{}{}".format(_work_path, _name, _suffix)
     
     _file_dir = os.path.dirname(_file_name)
@@ -373,7 +365,7 @@ def assembly_file(task_id, input_tasks = []):
     _is_new_attribute_solution = _project_step.is_new_attribute_solution()
 
     # get input task
-    _input_tasks = _task.input_tasks()
+    _input_tasks = input_tasks # _task.input_tasks()
     _input_attr_ids = [_input_task["Id"] for _input_task in _input_attrs]
 
 
@@ -513,7 +505,8 @@ def assembly_file(task_id, input_tasks = []):
     cmds.setAttr("defaultResolution.height", _project.config.get("ImageHeight"))
 
     _project_entity = _task.project_entity()
-    cmds.setAttr("defaultRenderGlobals.imageFilePrefix", _project_entity.image_path(), type = "string")
+    _image_path = _project_entity.image_path() + '\image\<Scene>\<RenderLayer>\<Scene>'
+    cmds.setAttr("defaultRenderGlobals.imageFilePrefix",_image_path, type = "string")
 
     # cmds.file(save = True, options = "v=0;", f = True, type = _format)
 
@@ -542,7 +535,11 @@ def assembly_file(task_id, input_tasks = []):
         _start_frame = _project_entity.start_frame()
         _end_frame = _project_entity.end_frame()
         cmds.playbackOptions( min = _start_frame, max = _end_frame )
+        #设置渲染属性为起始帧
+        cmds.setAttr('defaultRenderGlobals.startFrame',_start_frame)
+        cmds.setAttr('defaultRenderGlobals.endFrame',_end_frame)
         cmds.currentTime(_start_frame)
+        
 
     cmds.file(save = True, options = "v=0;", f = True, type = _format)
     return True

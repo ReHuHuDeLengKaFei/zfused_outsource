@@ -10,7 +10,6 @@ import maya.cmds as cmds
 import zfused_api
 
 from zcore import zfile,transfer,filefunc
-
 import zfused_maya.node.core.texture as texture
 import zfused_maya.node.core.material as material
 import zfused_maya.node.core.fixmeshname as fixmeshname

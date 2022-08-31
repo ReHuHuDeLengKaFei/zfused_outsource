@@ -79,6 +79,10 @@ def publish_without_collection_file(*args, **kwargs):
         # remove all namesapce
         referencefile.remove_all_namespaces()
 
+        # fix mesh name
+        _is_rendering = renderinggroup.nodes()
+        shader_dict = fixmeshname.fix_mesh_name("_rendering", _is_rendering, True)
+
         # save publish file
         cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
 

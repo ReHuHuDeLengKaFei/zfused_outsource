@@ -36,7 +36,7 @@ if not _is_load:
 
 # 缓存预留帧 后面需要存放在数据库上
 PREPFRAME = 8
-EXPORTATTR = ["worldSpace", "writeVisibility", "uvWrite"]
+EXPORTATTR = ["worldSpace", "writeVisibility", "uvWrite","writeUVSets"]
 ATTPREFIX = {
     "attrPrefix": 'xgen'
 }

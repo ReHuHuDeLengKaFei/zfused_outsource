@@ -210,7 +210,7 @@ def reference_file(*args, **kwargs):
     _ori_assemblies = cmds.ls(assemblies=True)
     
     if _namespace:
-        rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.code(), _input_task_attr_output.code()))
+        rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.file_code(), _input_task_attr_output.code()))
     else:
         rf = cmds.file(_production_file, r = True, ns = "{}__ns__00".format(_input_task.file_code()))
     rfn = cmds.referenceQuery(rf, rfn = True)
@@ -220,9 +220,12 @@ def reference_file(*args, **kwargs):
     if _namespace:
         _new_assemblies = cmds.ls(assemblies=True)
         _tops = list(set(_new_assemblies) - set(_ori_assemblies))
-        print(_tops)
         if _tops:
             for _top in _tops:
+                if cmds.ls(_top,type='xgmPalette',dag=True):
+                    if len(_namespace)>=20:
+                        continue
+                    
                 try:
                     cmds.parent(_top, _namespace)
                 except:
@@ -254,15 +257,7 @@ def reference_abc_(*args, **kwargs):
     _out_put_attr_id =43
     _input_task_attr_output = zfused_api.attr.Output(_out_put_attr_id)
     _out_put_attr_code = _input_task_attr_output.code()
-    #材质stepid =315
-    #动画step = 385
-    #角色特效step =412
-    # _input_task = zfused_api.task.Task(_input_task_id)
-    # _input_task_attr_output = zfused_api.attr.Output(_input_task_attr_output_id)
-    # _input_task_project_step_id = _input_task_attr_output.project_step().code()
-    # print(_input_task_project_step_id)
-    #
-    #
+
     _output_step_id =318
     #steps_list =[318]
     #zfused_api.attr.Output(_output_attr_id)

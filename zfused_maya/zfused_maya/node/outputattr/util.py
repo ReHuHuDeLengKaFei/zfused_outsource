@@ -21,7 +21,7 @@ from zfused_maya.node.core import yeti, check, alembiccache, texture, referencef
 from zfused_maya.ui.widgets import checkwidget
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def get_mov(file_path):
@@ -109,7 +109,7 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                             if _file_check.get("version_index") != _last_version.get("Index"):
                                 _is_error = True
                         if _is_error:
-                            cmds.confirmDialog(message=u"未领取最新提交版本文件修改")
+                            cmds.confirmDialog(message=u"未领取最新提交版本文件修改\n请联系制片修改")
                             return
         
         # 检查节点

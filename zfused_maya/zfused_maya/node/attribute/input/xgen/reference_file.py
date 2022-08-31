@@ -14,7 +14,7 @@ import zfused_api
 import zfused_maya.node.core.attr as attr
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def reference_file(*args, **kwargs):
