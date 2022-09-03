@@ -101,9 +101,17 @@ class RelyWidget(QtWidgets.QFrame):
     updated = QtCore.Signal(list)
     def __init__(self, parent = None):
         super(RelyWidget, self).__init__(parent)
-        self._title = "rely"
+        # self._title = "rely"
+        self._build()
 
         self._project_entity_widgets = []
+
+        self.all_selected_checkbox.stateChanged.connect(self._all_selected)
+    
+    def _all_selected(self, is_selected):
+        if self._project_entity_widgets:
+            for _project_entity_widget in self._project_entity_widgets:
+                _project_entity_widget.set_selected(is_selected)
 
     def set_extended_version(self, is_extended):
         if not self._project_entity_widgets:
@@ -167,7 +175,13 @@ class RelyWidget(QtWidgets.QFrame):
         self.title_button.setText(self._title)
         # self.title_button.setObjectName("title_button")
         self.title_layout.addWidget(self.title_button)
+
         self.title_layout.addStretch(True)
+
+        self.all_selected_checkbox = QtWidgets.QCheckBox("全选")
+        self.title_layout.addWidget(self.all_selected_checkbox)
+        self.all_selected_checkbox.setChecked(True)
+
         self.view_checkbox = QtWidgets.QCheckBox()
         self.view_checkbox.setChecked(True)
         self.view_checkbox.stateChanged.connect(self._set_contant_show)
@@ -185,11 +199,14 @@ class RelyWidget(QtWidgets.QFrame):
 
 class SelfWidget(RelyWidget):
     def __init__(self, parent = None):
-        super(SelfWidget, self).__init__(parent)
-
+        
         self._title = "self"
 
-        self._build()
+        super(SelfWidget, self).__init__(parent)
+
+        
+
+        # self._build()
 
     def load_task_id(self, task_id):
         _attrs = super(SelfWidget, self).load_task_id(task_id)
@@ -218,19 +235,20 @@ class SelfWidget(RelyWidget):
 
 class AssetWidget(RelyWidget):
     def __init__(self, parent = None):
-        super(AssetWidget, self).__init__(parent)
-
+        
         self._title = "asset"
 
-        self._build()
+        super(AssetWidget, self).__init__(parent)
+        # self._build()
 
     @progress.progress(u"分析资产...")
     def load_task_id(self, task_id):
         _attrs = super(AssetWidget, self).load_task_id(task_id)
         self.title_button.setText(language.word(self._title))
+        
         if not _attrs:
             return
-            
+
         _task = zfused_api.task.Task(task_id)   
         _project_entity = _task.project_entity()
         
@@ -297,57 +315,17 @@ class AssetWidget(RelyWidget):
 
                     if _input_task.get("NameSpace") == _namespace:
                         _widget.add_task_output_attr( _input_task.get("Id"),  _attr.id(), _conn_attr.get("AttrInputId"))
-                        
-
-        # return 
-
-        # for _attr in _attrs:
-        #     _conn_attrs = zfused_api.zFused.get("attr_conn", filter = {"AttrInputId": _attr.get("Id")})
-        #     if not _conn_attrs:
-        #         return
-
-        #     # _conn_attr = _conn_attrs[0]
-
-        #     for _conn_attr in _conn_attrs:
-        #         _mode = _conn_attr.get("Mode")
-        #         _attr = zfused_api.attr.Output(_conn_attr.get("AttrOutputId"))
-
-        #         for _relative_asset in _relative_assets:
-        #             _asset_id = _relative_asset.get("SourceId")
-        #             _namespace = _relative_asset.get("NameSpace")
-        #             _asset = zfused_api.asset.Asset(_asset_id)
-        #             if _asset_id not in _asset_widget:
-        #                 _widget = project_entity_widget.ProjectEntityWidget()
-        #                 _widget.updated.connect(self.updated.emit)
-        #                 _widget.set_namespace(_namespace)
-        #                 _widget.load_project_entity(_asset)
-        #                 _asset_widget[_asset_id] = _widget
-        #                 self.add_widget(_widget)
-        #                 self._project_entity_widgets.append(_widget)
-        #             _widget = _asset_widget[_asset_id]
-
-        #             if _mode == "relative":
-        #                 _tasks = _asset.tasks([_attr.project_step_id()])
-        #                 if not _tasks:
-        #                     continue
-        #                 _task = _tasks[0]
-        #                 _widget.add_task_output_attr( _task.get("Id"),  _attr.id(), _conn_attr.get("AttrInputId"))
-        #             elif _mode == "direct":
-        #                 _tasks = _project_entity.tasks([_attr.project_step_id()])
-        #                 if not _tasks:
-        #                     continue
-        #                 _task = _tasks[0]
-        #                 _widget.add_task_output_attr(_task.get("Id"),  _attr.id(), _conn_attr.get("AttrInputId"))
 
 
 
 class AssemblyWidget(RelyWidget):
     def __init__(self, parent = None):
-        super(AssemblyWidget, self).__init__(parent)
 
         self._title = "assembly"
 
-        self._build()
+        super(AssemblyWidget, self).__init__(parent)
+
+        # self._build()
 
     def load_task_id(self, task_id):
         _attrs = super(AssemblyWidget, self).load_task_id(task_id)

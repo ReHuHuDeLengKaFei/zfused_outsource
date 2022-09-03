@@ -24,7 +24,6 @@ class Window(QtWidgets.QMainWindow):
 
         self._help_url = None
         self._is_press = False
-        
         self._drag_position = QtCore.QPoint(0, 0)
 
         self.setMouseTracking(True)
@@ -33,6 +32,8 @@ class Window(QtWidgets.QMainWindow):
         self.__is_press = False
         self.__drag_position = QtCore.QPoint(0, 0)
 
+        self._drag_move = True
+
         self.close_button.clicked.connect(self.close)
         self.infomation_button.clicked.connect(self._infomation_show)
 
@@ -40,10 +41,10 @@ class Window(QtWidgets.QMainWindow):
         self.title_widget.hide()
 
     def set_title(self, title):
-        self.title_label.setText(u"  {}  ".format(title))
+        self.title_label.setText(u"{}".format(title))
 
     def set_title_name(self, name_text):
-        self.title_label.setText(u"  {}  ".format(name_text))
+        self.title_label.setText(u"{}".format(name_text))
 
     def add_central_widget(self, widget):
         self.central_layout.addWidget(widget)
@@ -85,6 +86,18 @@ class Window(QtWidgets.QMainWindow):
         """ resize event
         """
         self.__edge_place()
+
+    def showEvent(self, event):
+        _edges = [ self.top_left_edge_frame, 
+                   self.top_right_edge_frame, 
+                   self.top_edge_frame, 
+                   self.left_edge_frame, 
+                   self.right_edge_frame, 
+                   self.bottom_edge_frame, 
+                   self.bottom_left_edge_frame,
+                   self.bottom_right_edge_frame]
+        for _edge in _edges:
+            _edge.setEnabled(self._drag_move)
 
     def __edge_place(self):
         """ place edge frame
@@ -187,7 +200,7 @@ class Window(QtWidgets.QMainWindow):
     def _base_build(self):
         self.resize(1200,600)
         self.widget = QtWidgets.QFrame()
-        # self.widget.setObjectName("window_frame")
+        #self.widget.setObjectName("window_frame")
         self.widget.setMouseTracking(True)
         self.widget.installEventFilter(self)
         self.layout = QtWidgets.QVBoxLayout( self.widget )
@@ -204,25 +217,32 @@ class Window(QtWidgets.QMainWindow):
         self.title_layout = QtWidgets.QHBoxLayout(self.title_widget)
         self.title_layout.setSpacing(0)
         self.title_layout.setContentsMargins(15, 0, 15, 0)
+        
+        # logo 
+        self.logo_button = QtWidgets.QPushButton()
+        self.logo_button.setObjectName("window_title_button")
+        self.logo_button.setFlat(True)
+        self.logo_button.setIcon(QtGui.QIcon(resource.get("icons", "z_title.png")))
+        self.title_layout.addWidget(self.logo_button)
+
         #  name frame
         self.name_widget = QtWidgets.QWidget()
         self.title_layout.addWidget(self.name_widget)
-        self.name_layout = QtWidgets.QHBoxLayout(self.name_widget)
-        self.name_layout.setContentsMargins(0, 0, 0, 0)
+        self.name_layout = QtWidgets.QVBoxLayout(self.name_widget)
+        self.name_layout.setContentsMargins(10, 8, 4, 8)
+        self.name_layout.setSpacing(0)
         self.name_button = QtWidgets.QPushButton()
         self.name_button.setObjectName("window_title_button")
         self.name_button.setFlat(True)
-        self.name_button.setIcon(QtGui.QIcon(resource.get("icons", "z_title.png")))
         self.name_layout.addWidget(self.name_button)
-        # title label
+
         self.title_label = QtWidgets.QPushButton()
         self.title_label.setFlat(True)
-        # self.title_label.setObjectName("title_button")
-        self.title_label.setMaximumHeight(30)
         self.title_label.setText("Title")
         self.title_label.setFlat(True)
-        self.title_label.setObjectName("window_title_button")
-        self.title_layout.addWidget(self.title_label)
+        self.title_label.setObjectName("title_button")
+        self.name_layout.addWidget(self.title_label)
+
         self.title_layout.addStretch(True)
         # close frame
         self.close_widegt = QtWidgets.QWidget()
@@ -268,7 +288,7 @@ class Window(QtWidgets.QMainWindow):
         self.infomation_widget = QtWidgets.QFrame()
         self.layout.addWidget(self.infomation_widget)
         self.infomation_widget.setObjectName("window_menu_frame")
-        self.infomation_widget.setFixedHeight(24)
+        self.infomation_widget.setFixedHeight(20)
         self.infomation_layout = QtWidgets.QHBoxLayout(self.infomation_widget)
         self.infomation_layout.setSpacing(0)
         self.infomation_layout.setContentsMargins(10,2,10,2)
@@ -278,6 +298,8 @@ class Window(QtWidgets.QMainWindow):
         self.infomation_layout.addWidget(self.infomation_button)
         self.infomation_layout.addStretch(True)
 
+        # self.infomation_widget.hide()
+
         #_qss = resource.get("qss", "./window.qss")
         _qss = "{}/window.qss".format(os.path.dirname(__file__))
         with open(_qss) as f:
@@ -286,7 +308,7 @@ class Window(QtWidgets.QMainWindow):
 
 
 class _Button(QtWidgets.QPushButton):
-    def __init__(self, parent=None, normal_icon=None, hover_icon=None, pressed_icon=None):
+    def __init__(self, parent = None, normal_icon = None, hover_icon = None, pressed_icon = None):
         super(_Button, self).__init__(parent)
         
         self.setStyleSheet("QPushButton{background-color:transparent;}")
@@ -410,6 +432,7 @@ class edge_frame(QtWidgets.QFrame):
                                           self._glo_parent_point_top_left.y(), 
                                           _mouse_fix.x() + self.width(),
                                           _mouse_fix.y() + self.height() )
+                # self.geometry.emit(bottom_rect )
                 self.parent().setGeometry(_rect)
         else:
             self._glo_parent_point_top_left = _parent.mapToParent(_parent_rect.topLeft())

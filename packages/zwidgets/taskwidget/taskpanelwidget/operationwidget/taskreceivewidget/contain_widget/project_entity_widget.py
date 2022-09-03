@@ -35,8 +35,17 @@ class ProjectEntityWidget(QtWidgets.QFrame):
 
     def _update(self):
         self.updated.emit(self.input_tasks())
+    
+    def is_selected(self):
+        return self.selected_checkbox.isChecked()
+    
+    def set_selected(self, is_selected):
+        self.selected_checkbox.setChecked(is_selected)
 
     def input_tasks(self):
+        print(self.is_selected())
+        if not self.is_selected():
+            return []
         _input_tasks = []
         for _task_widget in self._task_widgets:
             _input_task = _task_widget.input_task()
@@ -100,7 +109,7 @@ class ProjectEntityWidget(QtWidgets.QFrame):
     def _build(self):
         _layout = QtWidgets.QVBoxLayout(self)
         _layout.setSpacing(2)
-        _layout.setContentsMargins(0,0,0,0)
+        _layout.setContentsMargins(10,0,10,0)
     
         self.project_entity_widget = QtWidgets.QFrame()
         _layout.addWidget(self.project_entity_widget)
@@ -121,15 +130,22 @@ class ProjectEntityWidget(QtWidgets.QFrame):
         self.name_layout = QtWidgets.QHBoxLayout(self.name_widget)
         self.name_layout.setSpacing(4)
         self.name_layout.setContentsMargins(0,0,0,0)
-        self.thumbnail_button = button.ThumbnailButton()
-        self.thumbnail_button.setFixedSize(192*self._scale, 108*self._scale)
-        self.thumbnail_button.hide()
-        self.name_layout.addWidget(self.thumbnail_button)
+
+        # self.thumbnail_button = button.ThumbnailButton()
+        # self.thumbnail_button.setFixedSize(192*self._scale, 108*self._scale)
+        # self.name_layout.addWidget(self.thumbnail_button)
+
+        self.selected_checkbox = QtWidgets.QCheckBox()
+        self.selected_checkbox.setChecked(True)
+        self.name_layout.addWidget(self.selected_checkbox)
+
         self.name_button = QtWidgets.QPushButton()
         self.name_button.setObjectName("title_button")
         self.name_button.setIcon(QtGui.QIcon(resource.get("icons", "task.png")))
         self.name_layout.addWidget(self.name_button)
+
         self.name_layout.addStretch(True)
+
         self.namespace_button = QtWidgets.QPushButton()
         self.namespace_button.setObjectName("title_button")
         self.name_layout.addWidget(self.namespace_button)

@@ -2,7 +2,8 @@
 import maya.cmds as cmds
 import string
 import colliderGroup
-reload(colliderGroup)
+
+_SUFFIX_SIZE = 3
 
 class Ui(object):
     def showUi(self):
@@ -284,9 +285,11 @@ class Ui(object):
                         self.sceneTree()
                     if typeOMI == 4:
                         self.meshGenTree()
+
     def snakeCommand(self, button):
         buttonL = cmds.button(button, query = True, label = True)
         self.parentGrp(buttonL)
+
     def lashCommand_L(self):
         groupName = cmds.textField(self.textFG, query = True, text = True)
         Groups = '' + groupName +'_l_lash_group'
@@ -774,15 +777,18 @@ class Ui(object):
                 cmds.delete(deleteList)
     def confirmDA(self):
         cmds.confirmDialog(message = u'请创建组', button = ['Yes'], defaultButton = 'Yes')
+
     def parentGrp(self, buttonName):
         #~ if cmds.objExists('*_model_group') == True:
         GRPName = [x for x in cmds.ls(type='transform') if ('_model_group' in x) ]
+        
         if GRPName !=[]:
             groupName = cmds.textField(self.textFG, query = True, text = True)
             objectName = cmds.ls(selection = True)
             self.objectName = objectName
             parentName = ''
             typeOMI = cmds.optionMenu(self.typeOM, query = True, select = True)
+            print typeOMI
             if typeOMI == 1: # or typeOMI == 4:
                 parentName = '' + groupName + '_' + buttonName + '_group'
                 self.parentName = parentName
@@ -827,11 +833,13 @@ class Ui(object):
 
         else:
             self.confirmDA()       
+
     def parentGrpA(self):
         groupName = cmds.textField(self.textFG, query = True, text = True)
         typeOMI = cmds.optionMenu(self.typeOM, query = True, select = True)
         objectName = self.objectName
         parentName = self.parentName
+        
         if cmds.listRelatives(objectName,c=1,shapes=1) == None:
             cmds.confirmDialog(message=u'请先选择物体')
             return
@@ -840,8 +848,9 @@ class Ui(object):
         if self.textnameDialog=='':
             return
         if typeOMI == 2:
+            #角色
             newGroupName = '' + groupName + '_' + self.textnameDialog + '_group'
-            newObjName = '' + groupName + '_' + self.textnameDialog + '_1'
+            newObjName = '' + groupName + '_' + self.textnameDialog
             if cmds.objExists(newGroupName):
                 for obj in objectName:
                     cmds.select(obj)
@@ -852,7 +861,13 @@ class Ui(object):
                     if  cmds.listRelatives(sel,p=1) == None :
                         cmds.parent(sel, newGroupName)
                     sel = cmds.ls(sl= True)[0]
-                    cmds.rename(sel, newObjName) 
+                    new_group_list = cmds.listRelatives(newGroupName,children=True)
+                    if len(new_group_list) > 1:
+                        new_num = len(cmds.listRelatives(parentName, children=True)) - 1
+                        _objectNewName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                    else:
+                        _objectNewName = newObjName
+                    cmds.rename(sel, _objectNewName)
                     sel = cmds.ls(sl= True)[0]                         
                     shape = cmds.listRelatives(sel,shapes=1,f=1)[0]
                     cmds.rename(shape,self.getShapeName(sel))                   
@@ -871,7 +886,14 @@ class Ui(object):
                     try:   
                         cmds.parent(sel, newGroupName)
                         sel = cmds.ls(sl= True)[0]
-                        cmds.rename(sel, newObjName) 
+
+                        new_group_list = cmds.listRelatives(newGroupName, children=True)
+                        if len(new_group_list) >1:
+                            new_num = len(cmds.listRelatives(newGroupName, children=True))-1
+                            _newObjName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                        else:
+                            _newObjName = newObjName
+                        cmds.rename(sel, _newObjName)
                         sel = cmds.ls(sl= True)[0]                         
                         shape = cmds.listRelatives(sel,shapes=1,f=1)[0]
                         cmds.rename(shape,self.getShapeName(sel))                    
@@ -883,17 +905,38 @@ class Ui(object):
             cmds.select(clear = True)            
         if typeOMI == 3:
             newGroupName = '' + groupName + '_' + self.textnameDialog+'_group'
-            newObjName ='' + groupName + '_' + self.textnameDialog +'_1'
+            newObjName ='' + groupName + '_' + self.textnameDialog
             if cmds.objExists(newGroupName):
                 for obj in objectName:
                     cmds.select(obj)
                     sel = cmds.ls(sl = True)
+                    
                     if cmds.listRelatives(sel,p=1):
                         if cmds.listRelatives(sel,p=1)[0] != newGroupName:
                             cmds.parent(sel, newGroupName)
                     if  cmds.listRelatives(sel,p=1) == None :
                         cmds.parent(sel, newGroupName)
-                    cmds.rename(sel, newObjName)   
+
+                    ch_list = cmds.listRelatives(newGroupName, children=True)
+                    if len(ch_list) > 1:
+                        new_num = len(cmds.listRelatives(newGroupName, children=True))-1
+                        _newObjName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                    else:
+                        _newObjName = newObjName
+
+                    
+                    #
+                    # if cmds.objExists(newObjName):
+                    #     num_str = newObjName.split('_')[-1]
+                    #     try:
+                    #
+                    #         num_int = int(num_str) + 1
+                    #     except:
+                    #         num_int =1
+                    #     num_str = str(num_int).zfill(3)
+                    #     newObjName = newObjName + num_str
+                    
+                    cmds.rename(sel, _newObjName)
                     cmds.select(cl=1)
             else :
                 cmds.select(cl=1)
@@ -909,7 +952,13 @@ class Ui(object):
                     try:
                         cmds.parent(sel, newGroupName)
                         sel = cmds.ls(sl = True,long=1)
-                        cmds.rename(sel[0], newObjName) 
+                        ch_list = cmds.listRelatives(newGroupName, children=True)
+                        if len(ch_list) > 1:
+                            new_num = len(cmds.listRelatives(newGroupName, children=True))-1
+                            _newObjName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                        else:
+                            _newObjName = newObjName
+                        cmds.rename(sel[0], _newObjName)
                         cmds.select(cl=1) 
                     except:
                         print 'no grouped'
@@ -918,7 +967,7 @@ class Ui(object):
             cmds.select(clear = True)      
         if typeOMI == 4:
             newGroupName = '' + groupName + '_' + self.textnameDialog+'_group'
-            newObjName ='' + groupName + '_' + self.textnameDialog +'_1'
+            newObjName ='' + groupName + '_' + self.textnameDialog
             if cmds.objExists(newGroupName):
                 for obj in objectName:
                     cmds.select(obj)
@@ -928,7 +977,19 @@ class Ui(object):
                             cmds.parent(sel, newGroupName)
                     if  cmds.listRelatives(sel,p=1) == None :
                         cmds.parent(sel, newGroupName)
-                    cmds.rename(sel, newObjName)   
+                    ch_list = cmds.listRelatives(newGroupName, children=True)
+                    if len(ch_list) >1:
+                        new_num = len(cmds.listRelatives(newGroupName, children=True))-1
+                        _newObjName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                    else:
+                        _newObjName = newObjName
+                    #
+                    # if cmds.objExists(newObjName):
+                    #     num_str = newObjName.split('_')[-1]
+                    #     num_int = int(num_str) + 1
+                    #     num_str = str(num_int).zfill(3)
+                    #     newObjName = newObjName + num_str
+                    cmds.rename(sel, _newObjName)
                     cmds.select(cl=1)
             else :
                 cmds.select(cl=1)
@@ -944,7 +1005,19 @@ class Ui(object):
                     try:
                         cmds.parent(sel, newGroupName)
                         sel = cmds.ls(sl = True,long=1)
-                        cmds.rename(sel[0], newObjName) 
+                        ch_list = cmds.listRelatives(newGroupName, children=True)
+                        if len(ch_list) > 1:
+                            new_num = len(cmds.listRelatives(newGroupName, children=True))-1
+                            _newObjName = newObjName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                        else:
+                            _newObjName = newObjName
+                        
+                        # if cmds.objExists(newObjName):
+                        #     num_str = newObjName.split('_')[-1]
+                        #     num_int = int(num_str) + 1
+                        #     num_str = str(num_int).zfill(3)
+                        #     newObjName = newObjName + num_str
+                        cmds.rename(sel[0], _newObjName)
                         cmds.select(cl=1) 
                     except:
                         print 'no grouped'
@@ -953,12 +1026,13 @@ class Ui(object):
             cmds.select(clear = True)      
     def parentGrpB(self):
         objectName = self.objectName
+
         if cmds.listRelatives(objectName,c=1,shapes=1) == None:
             cmds.confirmDialog(message=u'请先选择物体')
             return
         parentName = self.parentName
         typeOMI = cmds.optionMenu(self.typeOM, query = True, select = True)
-
+        
         objectNewName = parentName.split('_group')[0]
         parentList = cmds.listRelatives(parentName, children = True)
         if parentList == None:
@@ -967,7 +1041,14 @@ class Ui(object):
                 sel = cmds.ls(sl= True)[0]
                 cmds.parent(sel, parentName)
                 sel = cmds.ls(sl= True)[0]
-                cmds.rename(sel, objectNewName)
+                ch_list = cmds.listRelatives(parentName, children=True)
+                if len(ch_list)>1:
+                    new_num = len( cmds.listRelatives(parentName, children = True))-1
+                    _objectNewName = objectNewName+'_'+str(new_num).zfill(_SUFFIX_SIZE)
+                else:
+                    _objectNewName = objectNewName
+                    
+                cmds.rename(sel, _objectNewName)
                 sel = cmds.ls(sl= True)[0]                         
                 shape = cmds.listRelatives(sel,shapes=1,f=1)[0]
                 cmds.rename(shape,self.getShapeName(sel))                
@@ -990,14 +1071,25 @@ class Ui(object):
                             cmds.parent(sel, parentName)
                     else :
                         cmds.parent(sel, parentName)
+                    
                     sel = cmds.ls(sl= True)[0]
-                    cmds.rename(sel, objectNewName)       
+                    ch_list = cmds.listRelatives(parentName, children=True)
+                    if ch_list:
+                        ch_list = [i for i in ch_list if cmds.listRelatives(i, c = True, type = "mesh")]
+                    if len(ch_list) > 1:
+                        # new_num = len(cmds.listRelatives(parentName, children=True)) - 1
+                        new_num = len(ch_list) - 1
+                        _objectNewName = objectNewName + '_' + str(new_num).zfill(_SUFFIX_SIZE)
+                    else:
+                        _objectNewName = objectNewName
+                    cmds.rename(sel, _objectNewName)
                     sel = cmds.ls(sl= True)[0]                         
                     shape = cmds.listRelatives(sel,shapes=1,f=1)[0]
                     cmds.rename(shape,self.getShapeName(sel))
                     cmds.optionVar(iv = ['inViewMessageEnable', 1])
                     cmds.inViewMessage(amg = u'已入组', pos = 'midCenter', fade = True)
-                    cmds.select(clear = True)                    
+                    cmds.select(clear = True)        
+
     def nameDialog(self):
         result = cmds.promptDialog(title='Rename Object',message='Enter Name:',button=['OK', 'Cancel'],defaultButton='OK',cancelButton='Cancel')
         if result == 'OK' :
@@ -1104,6 +1196,7 @@ class Ui(object):
     #     #         return transName[:-1] + 'Shape' + transName[-1]
     #     #     else :
     #     #         return transName + 'Shape'
+
 #修复shape命名错误的bug
     '''
     def getShapeName(self, transName):

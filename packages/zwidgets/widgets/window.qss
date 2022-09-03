@@ -77,9 +77,11 @@ background-color:#444444;
 /*====================== window_title_button ======================*/
 QPushButton#window_title_button{
     padding-left: 0;
-    font: bold 15px;
+    font: bold 14px;
     background-color: transparent;
     color: #FFFFFF;
+    qproperty-iconSize: 30px;
+    Text-align: left;
 }
 
 /*====================== icon_button ======================*/
@@ -97,7 +99,6 @@ QPushButton#title_button{
     qproperty-iconSize: 20px;
     Text-align: left;
     border: 0px solid;
-    padding-left: 4px;
     background-color: transparent;
 }
 QPushButton#title_button:hover{
@@ -320,4 +321,23 @@ QSlider::handle:horizontal {
     border: 4px solid transparent;
     margin: -2px 0;
     border-radius: 6px;
+}
+
+
+/* 
+===============================================================
+//QGroupBox
+===============================================================
+*/
+QGroupBox{
+    font: bold 12px;
+    color: #DDDDDD;
+    border: 1px solid #444444;
+}
+
+QGroupBox::title {
+    font: bold 12px;
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+    padding: 0 3px;
 }
