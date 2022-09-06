@@ -113,6 +113,16 @@
                 "category":"gpu"
             }
     ],
+    "fx":
+    [
+            {   "name"    :"创建毛发组",
+                "code"    :"create hair group",
+                "title"   :"创建毛发组\ncreate hair group",
+                "cmd"     :"from zfused_maya.tool.fx.hair_group import create_group;reload(create_group);create_group.create_group()",
+                "color"   :"#343D46",
+                "category":"group"
+            }
+    ],
     "help":
         [
             {   "name":"更新",
