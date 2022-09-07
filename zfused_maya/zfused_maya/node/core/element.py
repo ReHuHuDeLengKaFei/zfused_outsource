@@ -57,8 +57,10 @@ def gpu_elements(ignore_reference = True):
         # if _file not in _files:
         _files.append(_file)
         _caches.append(cmds.listRelatives(_cache, parent = True)[0])
-            
-    _production_files = zfused_api.zFused.get("production_file", filter = {"Path__in": "|".join(_files)})
+
+    _zf_files = list(set(_files))
+    _production_files = zfused_api.zFused.get("production_file", filter = {"Path__in": "|".join(_zf_files)})
+    # _production_files = zfused_api.zFused.get("production_file", filter = {"Path__in": "|".join(_files)})
     _production_file_dict = {}    
     for _production_file in _production_files:
         # print(_production_file)

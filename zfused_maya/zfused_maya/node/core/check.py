@@ -842,11 +842,15 @@ def repeat(node_type="mesh"):
     #             _name = _lists[_index]
     #             info += "{}\n".format(_name)
     #render_node = renderinggroup.nodes()
+
     _lists = cmds.ls(noIntermediate=1, type=node_type)
     info = "场景存在重复命名节点\n"
     _uuid_info = get_uuid_info()
     for _name in _lists:
-        if len(_name.split('|')) != 1:
+        _trans = cmds.listRelatives(_name, p = True, pa = True)[0]
+        print(_trans)
+        if len(_name.split('|')) != 1 or len(_trans.split('|')) != 1:
+        # if len(_name.split('|')) != 1:
             _uuid = cmds.ls(_name, uuid=1)[0]
             print(_uuid)
             # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）

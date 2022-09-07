@@ -365,11 +365,12 @@ def assembly_file(task_id, input_tasks = []):
     _is_new_attribute_solution = _project_step.is_new_attribute_solution()
 
     # get input task
-    _input_tasks = input_tasks # _task.input_tasks()
+    if not input_tasks:
+        _input_tasks = _task.input_tasks()
+    else:
+        _input_tasks = input_tasks # _task.input_tasks()
     _input_attr_ids = [_input_task["Id"] for _input_task in _input_attrs]
 
-
-    
     # zfused link sets
     _sets = cmds.sets(name = "zfused_link_sets", em = True)
     print(_sets)
