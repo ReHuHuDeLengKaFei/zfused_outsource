@@ -62,6 +62,7 @@ class AssemblyManageWidget(window._Window):
     def _build(self):
         self.resize(1600, 900)
         self.set_title_name(u"场景装配管理(assembly management)")
+        self.set_help_url("tool/utility/assembly_management")
 
         self.assembly_widget = assemblymanagewidget.AssemblyManageWidget()
         self.set_central_widget(self.assembly_widget)

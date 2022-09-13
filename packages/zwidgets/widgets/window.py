@@ -7,6 +7,8 @@ import webbrowser
 
 from Qt import QtWidgets, QtGui, QtCore
 
+import zfused_api
+
 from zcore import resource
 
 from . import button
@@ -15,14 +17,13 @@ from . import button
 class Window(QtWidgets.QMainWindow):
     def __init__(self, parent = None):
         super(Window, self).__init__(parent)
-        # QtWidgets.QMainWindow.__init__(parent)
-        
+
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Window)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
 
         self._base_build()
 
-        self._help_url = None
+        self._help_url = "#/outsource/maya"
         self._is_press = False
         self._drag_position = QtCore.QPoint(0, 0)
 
@@ -36,6 +37,7 @@ class Window(QtWidgets.QMainWindow):
 
         self.close_button.clicked.connect(self.close)
         self.infomation_button.clicked.connect(self._infomation_show)
+        self.help_button.clicked.connect(self._help_browser)
 
     def set_title_hide(self):
         self.title_widget.hide()
@@ -61,8 +63,11 @@ class Window(QtWidgets.QMainWindow):
         self.tail_layout.addWidget(widget)
 
     def set_help_url(self, url):
-        self._help_url = url
-    
+        self._help_url = "{}/{}".format(self._help_url, url)
+
+    def _help_browser(self):
+        webbrowser.open("http://{}:3000/{}".format(zfused_api.zFused.HOST, self._help_url))
+
     def _infomation_show(self):
         webbrowser.open("http://www.unitcg.com/")
 
@@ -215,7 +220,7 @@ class Window(QtWidgets.QMainWindow):
         self.title_widget.setMinimumHeight(50)
         self.title_widget.setMaximumHeight(50)
         self.title_layout = QtWidgets.QHBoxLayout(self.title_widget)
-        self.title_layout.setSpacing(0)
+        self.title_layout.setSpacing(4)
         self.title_layout.setContentsMargins(15, 0, 15, 0)
         
         # logo 
@@ -244,6 +249,15 @@ class Window(QtWidgets.QMainWindow):
         self.name_layout.addWidget(self.title_label)
 
         self.title_layout.addStretch(True)
+        # help icon
+        self.help_button = button.Button()
+        self.help_button = _Button(self, resource.get("icons", "help.png"), 
+                                                       resource.get("icons", "help_hover.png"), 
+                                                       resource.get("icons", "help_hover.png"))        
+        self.help_button.setFlat(True)
+        self.help_button.setFixedSize(20,20)
+        self.title_layout.addWidget(self.help_button)
+
         # close frame
         self.close_widegt = QtWidgets.QWidget()
         self.title_layout.addWidget(self.close_widegt)

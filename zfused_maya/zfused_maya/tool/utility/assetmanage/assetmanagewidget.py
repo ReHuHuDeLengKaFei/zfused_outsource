@@ -61,6 +61,7 @@ class AssetManageWidget(window._Window):
     def _build(self):
         self.resize(1600, 900)
         self.set_title_name(u"资产管理(asset management)")
+        self.set_help_url("tool/utility/asset_management")
 
         self.asset_widget = assetmanagewidget.AssetManageWidget()
         self.set_central_widget(self.asset_widget)

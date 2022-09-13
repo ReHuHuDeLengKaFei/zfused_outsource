@@ -54,6 +54,9 @@ class zFused(object):
     
     # company
     COMPANY_ID = 0
+
+    HOST = "47.103.77.93"
+    PORT = 80
     
     INTERNAL_API_SERVER_ADDR = "http://47.103.77.93:80"
     INTERNAL_API_SERVER_PATH = "{}/{}".format(INTERNAL_API_SERVER_ADDR, __version__)
