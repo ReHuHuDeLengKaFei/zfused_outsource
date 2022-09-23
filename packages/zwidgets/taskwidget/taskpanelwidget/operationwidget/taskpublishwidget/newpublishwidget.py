@@ -144,11 +144,11 @@ class NewPublishWidget(QtWidgets.QFrame):
         for _attr in _attrs:
             self._load_attr(_attr)
 
-    def _load_attr(self, attr = {}):
+    def _load_attr(self, attr):
         """
         """
         _widget = QtWidgets.QFrame()
-        self.attr_tabwidget.addTab(_widget, attr["Name"])
+        self.attr_tabwidget.addTab(_widget, attr.name())
 
     def _video(self):
         """ get video

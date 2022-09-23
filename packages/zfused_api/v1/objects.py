@@ -51,6 +51,9 @@ OBJECT = {
     "production_file": zfused_api.production_file.ProductionFile,
     "attr_input": zfused_api.attr.Input,
     "attr_output": zfused_api.attr.Output,
+    "development": zfused_api.development.Development,
+    "login": zfused_api.login.Login,
+    "note": zfused_api.note.Note
 }
 
 
@@ -95,6 +98,9 @@ ENTITY_MAP = {
     "production_file": zfused_api.production_file.ProductionFile,
     "attr_input": zfused_api.attr.Input,
     "attr_output": zfused_api.attr.Output,
+    "development": zfused_api.development.Development,
+    "login": zfused_api.login.Login,
+    "note": zfused_api.note.Note
 }
 
 logger = logging.getLogger(__file__) 

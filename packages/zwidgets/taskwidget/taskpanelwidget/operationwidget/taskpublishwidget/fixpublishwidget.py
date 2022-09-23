@@ -341,8 +341,8 @@ class AttrWidget(QtWidgets.QFrame):
             self.contain_layout.itemAt(i).widget().deleteLater()
 
         for _attr in attrs:
-            name = _attr.get('Name')
-            code = _attr.get('Code')
+            name = _attr.name()
+            code = _attr.code()
             _check_box = QtWidgets.QCheckBox(u'{} - {}'.format(name,code))
             _check_box.setChecked(True)
             self._attr_widgets[_check_box] = _attr

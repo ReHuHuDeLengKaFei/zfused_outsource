@@ -229,6 +229,7 @@ class BaseWidget(QtWidgets.QFrame):
         
         # approvalto and cc user
         self.user_widget = QtWidgets.QFrame()
+        self.user_widget.hide()
         _layout.addWidget(self.user_widget)
         self.user_layout = QtWidgets.QVBoxLayout(self.user_widget)
         self.user_layout.setSpacing(2)

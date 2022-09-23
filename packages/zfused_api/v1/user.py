@@ -168,6 +168,9 @@ class User(_Entity):
     def __init__(self, entity_id, entity_data = None):
         super(User, self).__init__("user", entity_id, entity_data)
 
+        if entity_id == 0:
+            return
+
         if not self.global_dict.__contains__(self._id) or zfused_api.zFused.RESET:
             _datas = self.get_one("user", self._id)
             if not _datas:

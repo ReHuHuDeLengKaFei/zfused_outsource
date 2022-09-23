@@ -281,6 +281,8 @@ class ProjectStep(_Entity):
         :rtype: str
         """
         _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id}, sortby = ["Sort"], order = ["asc"])
+        if _attrs:
+            return [zfused_api.attr.Output(_attr.get("Id")) for _attr in _attrs]
         if not _attrs:
             _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []
@@ -290,6 +292,8 @@ class ProjectStep(_Entity):
         :rtype: str
         """
         _attrs = self.get("attr_output", filter = {"ProjectStepId":self._id, "Code": "file"}, sortby = ["Sort"], order = ["asc"])
+        if _attrs:
+            return zfused_api.attr.Output(_attrs[0].get("Id"))
         if not _attrs:
             _attrs = self.get("step_attr_output", filter = {"ProjectStepId":self._id, "Code": "file"})
         return _attrs[0] if _attrs else None
@@ -299,6 +303,8 @@ class ProjectStep(_Entity):
         :rtype: str
         """
         _attrs = self.get("attr_input", filter = {"ProjectStepId":self._id}, sortby = ["Sort"], order = ["asc"])
+        if _attrs:
+            return [zfused_api.attr.Input(_attr.get("Id")) for _attr in _attrs]
         if not _attrs:
             _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []

@@ -47,9 +47,10 @@ class TaskListWidget(QtWidgets.QFrame):
         _current_project_id = project_id
         _current_company_id = company_id
         # # 获取项目外包公司id
-        # _project_companys = zfused_api.zFused.get("project_company", filter = {"ProjectId": project_id})
-        # _company_ids = [str(_project_company.get("CompanyId")) for _project_company in _project_companys]
-        
+        # zfused_api.asset.cache([_current_project_id])
+        # zfused_api.assembly.cache([_current_project_id])
+        # zfused_api.sequence.cache([_current_project_id])
+        # zfused_api.shot.cache([_current_project_id])
         _tasks = zfused_api.zFused.get("task", filter={"ProjectId": _current_project_id, "IsOutsource": _current_company_id}, sortby = ["Name"], order = ["asc"])
         model = listmodel.ListModel(_tasks, self.listwidget)
         self.task_proxy_model.setSourceModel(model)

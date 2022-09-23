@@ -101,6 +101,12 @@ class Review(_Entity):
     def file_path(self):
         return self.code()
 
+    def production_path(self):
+        """ get version task production path
+        rtype: str
+        """
+        return self.task().production_path()
+
     def color(self):
         """ return review color
         """

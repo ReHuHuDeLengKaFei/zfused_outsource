@@ -341,7 +341,7 @@ class ReferenceElement(object):
         _file = _version_handle.production_file()
         _reference_node = self.reference_node()
         
-        attr.set_node_attr(_reference_node, _key_output_attr["Id"], _version_handle.id(), "true")
+        attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
         # relatives.create_relatives()
 
         cmds.file(_file, loadReference = _reference_node)
@@ -365,7 +365,7 @@ class ReferenceElement(object):
         # _production_file = _production_file.replace(_project_handle.production_path(),"$PRODUCTION_PATH")
 
         _reference_node = self.reference_node()
-        attr.set_node_attr(_reference_node, _key_output_attr["Id"], _version_handle.id(), "true")
+        attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
         cmds.file(_production_file, loadReference = _reference_node)
 
     def update(self):
@@ -455,7 +455,7 @@ class GPUElement(object):
         # _file = _version_handle.production_file()
         # _reference_node = self.reference_node()
         
-        # attr.set_node_attr(_reference_node, _key_output_attr["Id"], _version_handle.id(), "true")
+        # attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
 
         # cmds.file(_file, loadReference = _reference_node)
 
@@ -521,7 +521,7 @@ class GPUElement(object):
         _production_file = _version_handle.production_file()
 
         _reference_node = self.reference_node()
-        attr.set_node_attr(_reference_node, _key_output_attr["Id"], _version_handle.id(), "true")
+        attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
         cmds.file(_production_file, loadReference = _reference_node)
 
     def update(self):

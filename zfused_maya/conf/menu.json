@@ -59,7 +59,7 @@
             {   "name":"重载插件",
                 "code":"refresh",
                 "title":"重新登陆\nRefresh And Reload",
-                "cmd":"from zfused_maya.core import init;init.clear()",
+                "cmd":"from zfused_maya.core import init;init.clear();init.login()",
                 "color":"#81C2D6",
                 "category":"通用"
             },
@@ -92,7 +92,15 @@
                 "title":"项目环节检查\nproject step check",
                 "cmd":"from zfused_maya.tool.utility.check_manage import check_manage_widget;ui = check_manage_widget.CheckManageWidget();ui.show()",
                 "color":"#dd001b",
-                "category":"工具"}
+                "category":"工具"},
+            {
+                "name": "无版本资产",
+                "code": "no version asset",
+                "title":"打开无版本资产文件",
+                "cmd": "from zfused_maya.tool.technology .re_version import re_version;reload(re_version);re_version.without_version_open_file()",
+                "color": "#54FF9F",
+                "category": "工具"
+            }
         ],
     "shading":
         [

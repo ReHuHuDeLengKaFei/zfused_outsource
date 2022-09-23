@@ -146,7 +146,7 @@ class RelyWidget(QtWidgets.QFrame):
         _attrs = []
         if _input_attrs:
             for _input_attr in _input_attrs:
-                _rely = _input_attr.get("Rely")
+                _rely = _input_attr.rely()
                 if _rely == self._title:
                     _attrs.append(_input_attr)
         if _attrs:
@@ -214,7 +214,7 @@ class SelfWidget(RelyWidget):
         _project_entity = _task.project_entity()
         if _attrs:
             for _index, _attr in enumerate(_attrs):
-                _conn_attr = zfused_api.zFused.get("attr_conn", filter = {"AttrInputId": _attr.get("Id")})
+                _conn_attr = zfused_api.zFused.get("attr_conn", filter = {"AttrInputId": _attr.id()})
                 if _conn_attr:
                     _conn_attr = _conn_attr[0]
                     _attr = zfused_api.attr.Output(_conn_attr.get("AttrOutputId"))
@@ -340,7 +340,7 @@ class AssemblyWidget(RelyWidget):
         # _assembly_ids = [ _relative_assembly.get("SourceId") for _relative_assembly in _relative_assemblys ]
         if _attrs:
             for _attr in _attrs:
-                _conn_attr = zfused_api.zFused.get("attr_conn", filter = {"AttrInputId": _attr.get("Id")})
+                _conn_attr = zfused_api.zFused.get("attr_conn", filter = {"AttrInputId": _attr.id()})
                 if _conn_attr:
                     _conn_attr = _conn_attr[0]
                     _attr = zfused_api.attr.Output(_conn_attr.get("AttrOutputId"))

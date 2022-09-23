@@ -194,7 +194,7 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
             publish_result = False
             _output_entity_type = _task.project_entity_type()
             _output_entity_id = _task.project_entity_id()
-            _output_attr_id = _output_script["Id"]
+            _output_attr_id = _output_script.id()
             # 为了兼容新旧attribute 需要设定 _is_new_attribute_solution
             kwargs = {"is_new_attribute_solution": _is_new_attribute_solution}
             if extend_attr:
@@ -207,17 +207,17 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
             zfused_api.zFused.RESET = True
             print(args)
             print(kwargs)
-            print(_output_script["Script"])
-            exec(_output_script["Script"])
+            print(_output_script.script())
+            exec(_output_script.script())
             zfused_api.zFused.RESET = False
             if not publish_result:
-                cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script["Script"]))
+                cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
                 cmds.file(_current_file, o=True, f=True, pmt=False)
                 return False
 
     # 此处获取信息 是主 file 文件
     _key_output_attr = _project_step.key_output_attr()
-    _file_suffix = _key_output_attr["Suffix"].replace(".", "")
+    _file_suffix = _key_output_attr.suffix().replace(".", "")
 
     _name = _task.file_code()
     
@@ -354,23 +354,21 @@ def batch_alone_publish_file(task_id, infomation={}, is_auto=False):
             publish_result = False
             _output_entity_type = _task.project_entity_type()
             _output_entity_id = _task.project_entity_id()
-            _output_attr_id = _output_script["Id"]
+            _output_attr_id = _output_script.id()
             args = (_output_entity_type, _output_entity_id, _output_attr_id)
             kwargs = {}
             # run scrpt
             zfused_api.zFused.RESET = True
-            #print(args)
-            #print(_output_script["Script"])
-            exec (_output_script["Script"])
+            exec (_output_script.script())
             zfused_api.zFused.RESET = False
             if not publish_result:
-                # cmds.confirmDialog(message = u"发布失败 \n{}".format(_output_script["Script"]))
+                # cmds.confirmDialog(message = u"发布失败 \n{}".format(_output_script.script()))
                 cmds.file(_current_file, o=True, f=True, pmt=False)
                 return False
 
     # 此处获取信息 是主 file 文件
     _key_output_attr = _project_step.key_output_attr()
-    _file_suffix = _key_output_attr["Suffix"].replace(".", "")
+    _file_suffix = _key_output_attr.suffix().replace(".", "")
 
     _name = _task.file_code()
     _index = "%04d" % (_task.last_version_index() + 1)
@@ -477,21 +475,21 @@ def single_publish_file(task_id, output_attr):
     publish_result = False
     _output_entity_type = _task.project_entity_type()
     _output_entity_id = _task.project_entity_id()
-    _output_attr_id = _output_script["Id"]
+    _output_attr_id = _output_script.id()
     args = (_output_entity_type, _output_entity_id, _output_attr_id)
     kwargs = {"fix_version": True}
     # run scrpt
     zfused_api.zFused.RESET = True
-    exec (_output_script["Script"])
+    exec (_output_script.script())
     zfused_api.zFused.RESET = False
     if not publish_result:
-        cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script["Script"]))
+        cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
         cmds.file(_current_file, o=True, f=True, pmt=False)
         return
 
     # # 此处获取信息 是主 file 文件
     # _key_output_attr = _project_step.key_output_attr()
-    # _file_suffix = _key_output_attr["Suffix"].replace(".", "")
+    # _file_suffix = _key_output_attr.suffix().replace(".", "")
 
     _name = _task.file_code()
     _index = "%04d" % (_task.last_version_index(0))
@@ -503,7 +501,7 @@ def single_publish_file(task_id, output_attr):
                                  _user_id,
                                  _project_step.approvalto_user_ids() + _project_step.cc_user_ids(),
                                  {"msgtype": "text",
-                                  "text": "single publish - {}.{} - {}".format(_name, _index, _output_script["Name"])},
+                                  "text": "single publish - {}.{} - {}".format(_name, _index, _output_script.name())},
                                  "text",
                                  "",
                                  0)
@@ -561,7 +559,7 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
             publish_result = False
             _output_entity_type = _task.project_entity_type()
             _output_entity_id = _task.project_entity_id()
-            _output_attr_id = _output_script["Id"]
+            _output_attr_id = _output_script.id()
             # 为了兼容新旧attribute 需要设定 _is_new_attribute_solution
             # kwargs = {"is_new_attribute_solution": _is_new_attribute_solution}
             kwargs = {"fix_version":True, "is_new_attribute_solution":_is_new_attribute_solution}
@@ -575,17 +573,17 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
             zfused_api.zFused.RESET = True
             print(args)
             print(kwargs)
-            print(_output_script["Script"])
-            exec(_output_script["Script"])
+            print(_output_script.script())
+            exec(_output_script.script())
             zfused_api.zFused.RESET = False
             if not publish_result:
-                cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script["Script"]))
+                cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
                 # cmds.file(_current_file, o=True, f=True, pmt=False)
                 return False
 
     # # 此处获取信息 是主 file 文件
     # _key_output_attr = _project_step.key_output_attr()
-    # _file_suffix = _key_output_attr["Suffix"].replace(".", "")
+    # _file_suffix = _key_output_attr.suffix().replace(".", "")
 
     # _name = _task.file_code()
     # _index = "%04d" % (_task.last_version_index(0))
@@ -665,8 +663,8 @@ def publish_backup(task_id, infomation={}, fix_version = False):
 
     _project_step = _task.project_step()
     _key_attr = _project_step.key_output_attr()
-    _file_type = _key_attr.get("Format")
-    _file_suffix = _key_attr.get("Suffix").replace(".","")
+    _file_type = _key_attr.format() # get("Format")
+    _file_suffix = _key_attr.suffix().replace(".","")
 
     _backup_file = "%s/%s.%04d.%s" % (_backup_path, _file_code, _file_index, _file_suffix)
 

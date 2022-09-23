@@ -74,7 +74,7 @@ class RelyWidget(QtWidgets.QFrame):
         _attrs = []
         if _input_attrs:
             for _input_attr in _input_attrs:
-                _rely = _input_attr.get("Rely")
+                _rely = _input_attr.rely()
                 if _rely == self._title:
                     _attrs.append(_input_attr)
         if _attrs:

@@ -1860,6 +1860,7 @@ def repet_model():
         info += _n+'\n'
     return False,info
 
+
 def imported_assets():
     """检查被导入的资产
     """
@@ -1875,3 +1876,18 @@ def imported_assets():
         return True, None
     else:
         return False, info
+
+
+def error_rendering():
+    _nodes = renderinggroup.nodes()
+    _error_nodes = []
+    for _node in _nodes:
+        _shape = cmds.listRelatives(_node, shapes=True, type="mesh")
+        if _shape:
+            _error_nodes.append(_node)
+    if _error_nodes:
+        info = u"Rendering属性被添加到了mesh上\n"
+        for _error in _error_nodes:
+            info += "%s\n"%_error
+        return False, info
+    return True, None

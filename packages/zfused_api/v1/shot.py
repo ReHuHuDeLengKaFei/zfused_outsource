@@ -7,6 +7,7 @@ import time
 import shutil
 import datetime
 import logging
+import json
 
 from . import _Entity
 import zfused_api
@@ -740,3 +741,46 @@ class Shot(_Entity):
 
             return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name    
+
+
+    
+    def update_relative_from_property(self, property_file = True):
+        _json_data = {}
+        if property_file:
+            # get json file from path
+            _json_file = "{}/{}.property".format(self.production_path(), self.file_code())
+            if not os.path.isfile(_json_file):
+                return 
+            with open(_json_file, "r") as _handle:
+                data = _handle.read()
+                _json_data = json.loads(data)
+        else:
+            _json_data = self.property()
+        
+        if not _json_data:
+            return 
+        
+        print(_json_data)
+
+        _sequence = self.sequence()
+        _episode = self.episode()
+
+        zfused_api.relative.clear_relatives(self.object(), self.id())
+
+        _assets = _json_data.get("asset")
+        if _assets:
+            for _asset in _assets:
+                zfused_api.relative.create_relatives("asset", _asset.get("id"), self.object(), self.id(), "reference", _asset.get("namespace"))
+                if _sequence:
+                    zfused_api.relative.create_relatives("asset", _asset.get("id"), _sequence.object(), _sequence.id(), "reference", _asset.get("namespace"))
+                if _episode:
+                    zfused_api.relative.create_relatives("asset", _asset.get("id"), _episode.object(), _episode.id(), "reference", _asset.get("namespace"))
+        
+        _assemblys = _json_data.get("assembly")
+        if _assemblys:
+            for _assembly in _assemblys:
+                zfused_api.relative.create_relatives("assembly", _assembly.get("id"), self.object(), self.id(), "reference", _assembly.get("namespace"))
+                if _sequence:
+                    zfused_api.relative.create_relatives("assembly", _assembly.get("id"), _sequence.object(), _sequence.id(), "reference", _assembly.get("namespace"))
+                if _episode:
+                    zfused_api.relative.create_relatives("assembly", _assembly.get("id"), _episode.object(), _episode.id(), "reference", _assembly.get("namespace"))

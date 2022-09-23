@@ -100,6 +100,12 @@ class Report(_Entity):
     def task_id(self):
         return self._data.get("TaskId")
 
+    def software_id(self):
+        return self.task().software_id()
+
+    def software(self):
+        return self.task().software()
+
     def full_code(self):
         """
         get full path code

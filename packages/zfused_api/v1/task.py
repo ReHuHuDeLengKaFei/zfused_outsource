@@ -1006,11 +1006,8 @@ class Task(_Entity):
         # 提交project_entity缩略图
         try:
             _project_entity = self.project_entity()
-            _project_entity.update_thumbnail_path(thumbnail_path)
-            # if not _project_entity.data().get("ThumbnailPath"):
-            #     _project_entity.update_thumbnail_path(thumbnail_path)
-            # if not zfused_api.objects.Objects(_object, _link_id).data().get("ThumbnailPath"):
-            #     zfused_api.objects.Objects(_object, _link_id).update_thumbnail_path(thumbnail_path)
+            if not _project_entity.is_archive():
+                _project_entity.update_thumbnail_path(thumbnail_path)
         except:
             pass
         
@@ -1201,7 +1198,9 @@ class Task(_Entity):
         self.update_thumbnail_path(thumbnail_path)
         # 提交project_entity缩略图
         try:
-            self.project_entity().update_thumbnail_path(thumbnail_path)
+            _project_entity = self.project_entity()
+            if not _project_entity.is_archive():
+                _project_entity.update_thumbnail_path(thumbnail_path)
         except:
             pass
         
@@ -1368,10 +1367,9 @@ class Task(_Entity):
             return tasks
         if _is_new_attribute_solution:
             for _input_attr in _input_attrs:
-                _rule = _input_attr.get("Rule")
-                _rely = _input_attr.get("Rely")
-                _attr_conns = self.get("attr_conn", filter={
-                    "AttrInputId": _input_attr.get("Id")})
+                _rule = _input_attr.rule()
+                _rely = _input_attr.rely()
+                _attr_conns = self.get("attr_conn", filter={"AttrInputId": _input_attr.id()})
                 if not _attr_conns:
                     continue
                 
@@ -1546,7 +1544,6 @@ class Task(_Entity):
                             tasks[_input_attr["Id"]] += task
                         else:
                             _is_next = True
-                        # tasks[_input_attr["Id"]] += task
                     else:
                         _is_next = True
                     if _is_next:
@@ -2302,3 +2299,50 @@ class Task(_Entity):
     
     def sub_task_code(self):
         return self._data.get("SubTaskCode")
+
+    def add_note(self, title, rich_text = ""):
+        _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+
+        # _status_id = zfused_api.status.active_status_ids()[0]
+
+        _note, _status = zfused_api.zFused.post( key = "note", 
+                                                        data = { "EntityType": self._type,
+                                                                 "EntityId": self._id,
+                                                                 "Title": title,
+                                                                 "RichText": rich_text,
+                                                                 "Status": 0,
+                                                                 "CreatedBy": _created_by,
+                                                                 "CreatedTime": _created_time } )
+        if not _status:
+            return u"{} create error".format(title), False
+
+        _count = zfused_api.zFused.get( "note", filter = { "EntityType": self._type,
+                                                           "EntityId": self._id,
+                                                           "Status": 0 } )
+        if _count:
+            _count = len(_count)
+        else:
+            _count = 0
+        self.update_note_count(_count)
+
+        _note_id = _note.get("Id")
+
+        _user_ids = zfused_api.zFused.get("group_user", filter = {"EntityType": self._type,"EntityId": self._id})
+        if _user_ids:
+            _user_ids = [_group_user.get("UserId") for _group_user in _user_ids]
+        else:
+            _user_ids = [zfused_api.zFused.USER_ID]
+
+        zfused_api.im.submit_message( "user",
+                                      _created_by,
+                                      _user_ids,
+                                      { "title": title,
+                                        "rich_text": rich_text },
+                                      "note", 
+                                      "note",
+                                      _note_id,
+                                      self._type,
+                                      self._id )
+
+        return _note_id, True

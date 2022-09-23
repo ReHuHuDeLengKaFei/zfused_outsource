@@ -75,9 +75,9 @@ class AssetStepWidget(QtWidgets.QFrame):
         if _output_attrs:
             for _output_attr in _output_attrs:
                 if _project_step.is_new_attribute_solution():
-                    _output_attr = zfused_api.attr.Output(_output_attr.get("Id"))
+                    _output_attr = zfused_api.attr.Output(_output_attr.id())
                 else:
-                    _output_attr = zfused_api.outputattr.OutputAttr(_output_attr.get("Id"))
+                    _output_attr = zfused_api.outputattr.OutputAttr(_output_attr.id())
                 _suffix =  _output_attr.suffix()
                 _code = dcc.code()
                 # 
@@ -167,8 +167,8 @@ class OperationWidget(QtWidgets.QFrame):
     def load_output_attr(self, output_attr):
         self._output_attr_id = output_attr.id()
         self.title_label.setText(output_attr.name())
-        self.format_label.setText(output_attr.data().get("Format"))
-        self.suffix_label.setText(output_attr.data().get("Suffix"))
+        self.format_label.setText(output_attr.format())
+        self.suffix_label.setText(output_attr.suffix())
 
     def _build(self):
         self.setObjectName("operation_widget")

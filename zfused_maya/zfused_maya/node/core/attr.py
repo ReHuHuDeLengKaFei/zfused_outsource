@@ -154,8 +154,8 @@ def _fix_node(node):
             _output_attrs = _project_step_handle.output_attrs()
             _step_code = os.path.basename(os.path.dirname(_link_file["FilePath"]))
             for _output_attr in _output_attrs:
-                if _step_code == _output_attr["Code"]:
-                    _output_attr_id = _output_attr["Id"]
+                if _step_code == _output_attr.code():
+                    _output_attr_id = _output_attr.id()
             set_node_attr(node, _output_attr_id, _versions[-1]["Id"], is_local = "false")
             
         # else:

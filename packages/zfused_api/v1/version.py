@@ -108,6 +108,12 @@ class Version(_Entity):
     def project_entity_id(self):
         return self._data.get("ProjectEntityId")
 
+    def software_id(self):
+        return self.task().software_id()
+
+    def software(self):
+        return self.task().software()
+
     def full_code(self):
         """
         get full path code
@@ -151,32 +157,10 @@ class Version(_Entity):
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
     def production_path(self):
-        """ get asset production path
+        """ get version task production path
         rtype: str
         """
-        _production_project_path = zfused_api.project.Project(self._data["ProjectId"]).config["Root"]
-
-        project_path = self.get("project_config", filter= {"Id":self._data["ProjectId"]})[0]["Root"]
-
-        #get path
-        version_path = self._data["FilePath"]
-
-        #asset_name = self._data["Code"]
-        step_name = self.Get("type", filter = {"Id":self._data["TypeId"]})[0]["Code"]
-        project_name = self.Get("project_config", filter = {"Id":self._data["ProjectId"]})[0]["Publish"]
-
-        linkHandle = self.Get(self._data["ProjectEntityType"], filter = {"Id":self._data["ProjectEntityId"]})
-        if self._data["ProjectEntityType"] == "asset":
-            linkHandle = asset.Asset(self._data["ProjectEntityId"])
-        elif self._data["ProjectEntityType"] == "shot":
-            linkHandle = shot.Shot(self._data["ProjectEntityId"]) 
-        elif self._data["ProjectEntityType"] == "sequence":
-            linkHandle = sequence.Sequence(self._data["ProjectEntityId"]) 
-        path = linkHandle.GetPath()
-        taskHandle.GetPath()
-
-        return "%s/%s/%s"%(path,step_name,asset_name)
-
+        return self.task().production_path()
 
     def path(self):
         """ get version path

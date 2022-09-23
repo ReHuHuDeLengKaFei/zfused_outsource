@@ -52,12 +52,17 @@ from .v1 import question
 
 from .v1 import production_file
 
+from .v1 import development
+
+from .v1 import login
+
+from .v1 import note
+
 from . import im
 from . import util
 from .v1 import objects
 
 from .env import *
-
 
 # def reset():
 #     """ reset all api data

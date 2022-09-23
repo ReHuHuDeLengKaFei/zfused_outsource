@@ -49,7 +49,7 @@ class AssemblyManageWidget(window._Window):
         _ns = "{}__ns__00".format(_task.project_entity().file_code())
         rf = cmds.file(_production_file, r = True, ns = _ns)
         rfn = cmds.referenceQuery(rf, rfn = True)
-        attr.set_node_attr(rfn, _key_output_attr["Id"], _version.id(), "false")
+        attr.set_node_attr(rfn, _key_output_attr.id(), _version.id(), "false")
         _new_assemblies = cmds.ls(assemblies=True)
         _assembly_tops = list(set(_new_assemblies) - set(_ori_assemblies))
         if _assembly_tops:

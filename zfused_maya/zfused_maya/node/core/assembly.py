@@ -150,10 +150,9 @@ def fix_to_render():
                 cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type = "float3")
                 cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type = "float3")
 
-        _gpu_node = cmds.listRelatives(_name, c = True, type = "gpuCache")[0]
+        _gpu_node = cmds.listRelatives(_name, c = True, type = "gpuCache",fullPath=True)[0]
         
         if cmds.objExists(_ai_node):
-            print(_ai_node)
             print(_gpu_node)
             cmds.setAttr('%s.ai_self_shadows'%_gpu_node, 0)
             cmds.setAttr('%s.ai_vidr'%_gpu_node, 0)

@@ -149,8 +149,8 @@ def receive_version_file(version_id):
 
     _project_step = _task.project_step()
     _key_attr = _project_step.key_output_attr()
-    _format = _key_attr.get("Format")
-    _suffix = _key_attr.get("Suffix")
+    _format = _key_attr.format() # get("Format")
+    _suffix = _key_attr.suffix() # get("Suffix")
     
     print(_version_backup_file)
     if not os.path.isfile(_version_backup_file):
@@ -318,8 +318,8 @@ def assembly_file(task_id, input_tasks = []):
 
     _project_step = _task.project_step()
     _key_attr = _project_step.key_output_attr()
-    _format = _key_attr.get("Format")
-    _suffix = _key_attr.get("Suffix")
+    _format = _key_attr.format() # .get("Format")
+    _suffix = _key_attr.suffix() # get("Suffix")
 
     # 需要修改 改成带 制作人员名字 和 版本
     _user = zfused_api.user.User(zfused_api.zFused.USER_ID)
@@ -363,13 +363,14 @@ def assembly_file(task_id, input_tasks = []):
     # 获取输入属性
     _input_attrs = _project_step.input_attrs()
     _is_new_attribute_solution = _project_step.is_new_attribute_solution()
+    _input_attr_ids = [_input_attr.id() for _input_attr in _input_attrs]
 
     # get input task
     if not input_tasks:
         _input_tasks = _task.input_tasks()
     else:
         _input_tasks = input_tasks # _task.input_tasks()
-    _input_attr_ids = [_input_task["Id"] for _input_task in _input_attrs]
+    
 
     # zfused link sets
     _sets = cmds.sets(name = "zfused_link_sets", em = True)
@@ -469,7 +470,7 @@ def assembly_file(task_id, input_tasks = []):
                         _last_version_id = _input_task.last_version_id()
                         if _last_version_id:
                             _set = cmds.sets(name = _input_task["Name"], em = True)
-                            attr.set_node_attr(_set, _project_step.key_output_attr()["Id"], _last_version_id)
+                            attr.set_node_attr(_set, _project_step.key_output_attr().id(), _last_version_id)
                             cmds.sets(_set, edit = True, fe = _sets)
                             cmds.lockNode(_set, l = True)
                             _child_sets.append(_set)
@@ -481,6 +482,14 @@ def assembly_file(task_id, input_tasks = []):
         pass
     
     cmds.file(rename = _file_name)
+
+    # 设置画面分辨率
+    cmds.setAttr("defaultResolution.width", _project.config.get("ImageWidth"))
+    cmds.setAttr("defaultResolution.height", _project.config.get("ImageHeight"))
+
+    _project_entity = _task.project_entity()
+    _image_path = _project_entity.image_path() + '\image\<Scene>\<RenderLayer>\<Scene>'
+    cmds.setAttr("defaultRenderGlobals.imageFilePrefix",_image_path, type = "string")
 
     # combine 最终组合脚本
     _attr_input_combines = zfused_api.zFused.get("attr_input_combine", filter = {"ProjectStepId": _project_step_id})
@@ -500,14 +509,6 @@ def assembly_file(task_id, input_tasks = []):
     # viewport = cmds.getPanel( withFocus = True)
     # if 'modelPanel' in viewport:
     #     cmds.modelEditor( viewport, edit = True, displayAppearance = "wireframe" )
-
-    # 设置画面分辨率
-    cmds.setAttr("defaultResolution.width", _project.config.get("ImageWidth"))
-    cmds.setAttr("defaultResolution.height", _project.config.get("ImageHeight"))
-
-    _project_entity = _task.project_entity()
-    _image_path = _project_entity.image_path() + '\image\<Scene>\<RenderLayer>\<Scene>'
-    cmds.setAttr("defaultRenderGlobals.imageFilePrefix",_image_path, type = "string")
 
     # cmds.file(save = True, options = "v=0;", f = True, type = _format)
 
