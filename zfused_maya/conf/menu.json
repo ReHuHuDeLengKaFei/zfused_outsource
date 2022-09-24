@@ -8,6 +8,14 @@
             "cmd":"from zfused_maya.core import init;init.clear();init.login()",
             "color":"#81C2D6",
             "category":"刷新"
+        },
+        {   
+            "name":"项目文件夹权限检查",
+            "code":"project path permission",
+            "title":"项目文件夹权限检查\nproject path permission",
+            "cmd":"from zfused_maya.tool.init import permission_widget;window = permission_widget.PermissionWidget();window.show()",
+            "color":"#007acc",
+            "category":"权限"
         }
     ],
     "animation":[
