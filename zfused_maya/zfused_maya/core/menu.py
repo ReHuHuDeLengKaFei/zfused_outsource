@@ -11,7 +11,9 @@ DIRNAME = os.path.dirname(__file__)
 MENU_DIRNAME = os.path.dirname(os.path.dirname(DIRNAME))
 MENU_FILE = "{}/conf/menu.json".format(MENU_DIRNAME)
 
-MENU_KEY = [ "utility", 
+MENU_KEY = [
+            "init", 
+            "utility", 
              "modeling", 
             "shading",
             # "rigging", 

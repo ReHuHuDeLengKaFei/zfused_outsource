@@ -1,4 +1,15 @@
 {
+    "init": 
+    [
+        {   
+            "name":"重载插件",
+            "code":"refresh",
+            "title":"重新登陆\nRefresh And Reload",
+            "cmd":"from zfused_maya.core import init;init.clear();init.login()",
+            "color":"#81C2D6",
+            "category":"刷新"
+        }
+    ],
     "animation":[
             {   "name":"开启/关闭屏显信息",
                 "code":"ON/OFF HUD",
@@ -56,13 +67,6 @@
         ],
     "utility":
         [
-            {   "name":"重载插件",
-                "code":"refresh",
-                "title":"重新登陆\nRefresh And Reload",
-                "cmd":"from zfused_maya.core import init;init.clear();init.login()",
-                "color":"#81C2D6",
-                "category":"通用"
-            },
             {   "name":"资产管理",
                 "code":"assets management",
                 "title":"资产管理\nAsset Manage",
@@ -81,12 +85,6 @@
                 "cmd":"import zfused_maya.tool.utility.taskmanage as taskmanage;ui = taskmanage.taskmanagewidget.TaskManageWidget();ui.show()",
                 "color":"#FFBA7C",
                 "category":"任务管理"},
-            {   "name":"资产库",
-                "code":"library",
-                "title":"资产库\nLibrary",
-                "cmd":"from zfused_maya.tool.utility.librarywidget import librarywidget;ui = librarywidget.LibraryWidget();ui.show()",
-                "color":"#2c168b",
-                "category":"library" },
             {   "name":"项目环节检查",
                 "code":"project step check",
                 "title":"项目环节检查\nproject step check",
@@ -99,7 +97,7 @@
                 "title":"打开无版本资产文件",
                 "cmd": "from zfused_maya.tool.technology .re_version import re_version;reload(re_version);re_version.without_version_open_file()",
                 "color": "#54FF9F",
-                "category": "工具"
+                "category": "文件"
             }
         ],
     "shading":

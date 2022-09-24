@@ -67,7 +67,7 @@ class zFused(object):
     CLOUD_IMAGE_SERVER_ADDR = "http://47.103.77.93:7006"
     INTERNAL_IMAGE_SERVER_ARRD = "http://47.103.77.93:7006"
     
-    MQ_SERVER_ADDR = None
+    MQ_SERVER_ADDR = "47.103.77.93:5672"
 
     # cloud server
     CLOUD_SERVER_ADDR = "http://47.103.77.93:80"
