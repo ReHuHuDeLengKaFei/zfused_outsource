@@ -78,6 +78,7 @@ def receive_file(src, dst, is_cloud = False):
     arg = u'"{}" {} get {} {}'.format(_publish_exe, _ztranser_addr, _src_file, _dst_file)
     print(arg)
     arg = arg.encode(locale.getdefaultlocale()[1])
+    print(arg)
 
     # logger.info(arg)
 

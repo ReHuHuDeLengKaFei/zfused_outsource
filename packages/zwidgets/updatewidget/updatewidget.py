@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import os
 import hashlib
+import shutil
 
 from Qt import QtWidgets,QtCore
 
@@ -99,7 +100,7 @@ class UpdateWidget(QtWidgets.QFrame):
             _script_md5 = _script.get("MD5")
             
             _server_script_path = u"{}{}".format(_server_path, _script_path)
-            _local_script_path = u"{}{}".format( _local_path, _script_path )
+            _local_script_path = u"{}{}".format( _local_path, _script_path ).replace(os.sep, "/")
             
             _is_exist = False
             if os.path.isfile(_local_script_path):
@@ -107,19 +108,38 @@ class UpdateWidget(QtWidgets.QFrame):
                     _is_exist = True
 
             if not _is_exist:
-                try:
-                    if os.path.isfile(_local_script_path):
-                        os.remove(_local_script_path)
-                except:
-                    pass
+                
+                # try:
+                #     if os.path.isfile(_local_script_path):
+                #         os.remove(_local_script_path)
+                # except:
+                #     pass
+
                 # download script file
                 print((_server_script_path, _local_script_path))
                 _script_files[_script.get("Name")] = [_server_script_path, _local_script_path]
+                print(_script_files[_script.get("Name")])
 
                 self._receive_label.setText(u"下载中。。。")
                 QtWidgets.QApplication.processEvents()
-                # 
-                filefunc.receive_file(_server_script_path, _local_script_path, is_cloud = True)
+
+                # rename
+                _local_script_path_temp = u"{}.temp".format(_local_script_path)
+                print(_local_script_path_temp)
+                print(os.path.isfile(_local_script_path))
+                if os.path.isfile(_local_script_path):
+                    shutil.copy(_local_script_path, _local_script_path_temp)
+                try:
+                    _result = filefunc.receive_file(_server_script_path, _local_script_path, is_cloud = True)
+                    if os.path.isfile(_local_script_path_temp):
+                        os.remove(_local_script_path_temp)
+                except Exception as e:
+                    if os.path.isfile(_local_script_path_temp):
+                        shutil.copy(_local_script_path_temp, _local_script_path)
+                finally:
+                    if os.path.isfile(_local_script_path_temp):
+                        os.remove(_local_script_path_temp)
+
             else:
                 self._receive_label.setText(u"无需更新")
 
