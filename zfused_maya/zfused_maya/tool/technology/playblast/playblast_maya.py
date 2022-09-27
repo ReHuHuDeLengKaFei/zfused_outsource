@@ -304,10 +304,10 @@ class Playblast(window._Window):
         _FFMPEG = get_ffmpeg()
         # -b:v 100000k -bufsize 150000k -vcodec h264  -x264opts keyint=1
         #_command = '{} -start_number {} -i {} -framerate {} -r {} -t {} -s {} -vcodec libx264 -crf 12 -pix_fmt yuv420p -y {}'.format(_FFMPEG, start_frame, image_path, fps, fps, time,resolution, outpath )
-        _command = '{} -framerate {} -start_number {} -i {} -r {} -t {} -vcodec copy -acodec copy -y {}'.format(_FFMPEG, fps, start_frame, image_path, fps, time, outpath )
+        _command = '{} -framerate {} -start_number {} -i {} -r {} -t {} -vcodec  h264  -acodec copy -y {}'.format(_FFMPEG, fps, start_frame, image_path, fps, time, outpath )
 
         if os.path.exists(sound):
-            _command = '{} -framerate {} -start_number {} -i {} -i {} -r {} -t {} -shortest -vcodec libx264 -crf 12 -pix_fmt yuv420p -y {}'.format(_FFMPEG, fps, start_frame, image_path, sound, fps, time, outpath)
+            _command = '{} -framerate {} -start_number {} -i {} -i {} -r {} -t {} -shortest -vcodec h264  -crf 12 -pix_fmt yuv420p -y {}'.format(_FFMPEG, fps, start_frame, image_path, sound, fps, time, outpath)
 
         _command=_command.encode(locale.getdefaultlocale()[1])
         print(_command)

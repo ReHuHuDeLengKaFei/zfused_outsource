@@ -32,7 +32,7 @@ class PermissionWidget(window._Window):
         self.set_central_widget(self.permission_widget)
 
     def showEvent(self, event):
+        super(PermissionWidget, self).showEvent(event)
         _project_id = record.current_project_id()
         self.permission_widget.load_project_id(_project_id)
         self.permission_widget.check()
-        super(PermissionWidget, self).showEvent(event)

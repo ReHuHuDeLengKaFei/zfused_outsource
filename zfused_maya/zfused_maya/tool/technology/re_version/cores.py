@@ -160,10 +160,9 @@ class MayaRefParser(object):
                     continue
                 
                 _old_file, _new_file = self._par_ref_header(newLine)
+                print(_new_file)
                 if _new_file:
                     newLine = newLine.replace(_old_file, _new_file)
-                    
-                    print(newLine)
                     
                 new_file.write(newLine + ';\n')
             

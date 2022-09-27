@@ -106,7 +106,16 @@
                 "cmd": "from zfused_maya.tool.technology .re_version import re_version;reload(re_version);re_version.without_version_open_file()",
                 "color": "#54FF9F",
                 "category": "文件"
+            },
+            {
+                "name": "提取property",
+                "code": "extract property",
+                "title":"提取property\n",
+                "cmd": "from zfused_maya.tool.technology .extract_info import extract_property;reload(extract_property);ui = extract_property.ExtractProperty();ui.show()",
+                "color": "#54FF9F",
+                "category": "工具"
             }
+
         ],
     "shading":
         [
