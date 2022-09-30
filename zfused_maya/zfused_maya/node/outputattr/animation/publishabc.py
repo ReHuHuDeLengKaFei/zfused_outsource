@@ -117,6 +117,7 @@ def publish_abc(*args, **kwargs):
     renderdag = []
     if not renderdag:
         renderdag = renderinggroup.nodes()
+        
     # enable norender attributes
     _norenders = displaylayer.norender_info(displaylayer.nodes())
     if _norenders:

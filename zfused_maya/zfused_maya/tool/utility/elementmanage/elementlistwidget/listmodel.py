@@ -65,8 +65,6 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
         return (self._search(_data) and self._filter_status(_data) and self._filter_type(_data) and self._filter_project_step(_data))
 
     def filterAcceptsColumn(self, sourceColumn, sourceParent):
-        # print self.headerData(0)
-
         index0 = self.sourceModel().index(0, sourceColumn, sourceParent)
         return True
 

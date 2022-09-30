@@ -35,9 +35,9 @@ class TaskManageWidget(window._Window):
         self.task_widget.quick_downloaded.connect(self._quick_download)
         self.task_widget.quick_published.connect(self._quick_publish)
 
-        self.task_widget.task_panel_widget.received.connect(self._receive_file)
-        self.task_widget.task_panel_widget.published.connect(self._publish_file)
-        self.task_widget.task_panel_widget.opened.connect(self._open_file)
+        # self.task_widget.task_panel_widget.received.connect(self._receive_file)
+        # self.task_widget.task_panel_widget.published.connect(self._publish_file)
+        # self.task_widget.task_panel_widget.opened.connect(self._open_file)
 
     def _check(self, task_id):
         """检查任务文件规范
@@ -104,8 +104,11 @@ class TaskManageWidget(window._Window):
         self.resize(1600, 900)
         self.set_title_name(u"任务管理(task management)")
 
-        self.task_widget = taskmanagewidget.TaskManageWidget()
+        from zfused_maya.ui.widgets.taskwidget import taskpanelwidget
+        _task_panel_widget = taskpanelwidget.TaskPanelWidget(self)
+        self.task_widget = taskmanagewidget.TaskManageWidget(_task_panel_widget)
         self.set_central_widget(self.task_widget)
+
 
     def showEvent(self, event):
         _project_id = record.current_project_id()

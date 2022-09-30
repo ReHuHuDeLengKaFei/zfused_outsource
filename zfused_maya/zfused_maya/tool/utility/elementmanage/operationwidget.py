@@ -28,13 +28,12 @@ class OperationWidget(QtWidgets.QFrame):
         """
         _layout = QtWidgets.QHBoxLayout(self)
         _layout.setSpacing(2)
-        _layout.setContentsMargins(2,4,2,2)
-
-        _layout.addStretch(True)
+        _layout.setContentsMargins(2,2,2,2)
 
         # update all 
         self.update_all_button = QtWidgets.QPushButton()
         self.update_all_button.setMinimumSize(100, 40)
         self.update_all_button.setText(u"更新至最新")
-
         _layout.addWidget(self.update_all_button)
+
+        _layout.addStretch(True)

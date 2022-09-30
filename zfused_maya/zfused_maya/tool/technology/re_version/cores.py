@@ -68,6 +68,7 @@ class MayaRefParser(object):
                 
                 self.contentsLineNum += 1
                 # print("close file {}".format(ma_file))
+    
     #
     # def _par_ref_header(self, header):
     #     parser = argparse.ArgumentParser()
@@ -106,14 +107,14 @@ class MayaRefParser(object):
         parser.add_argument('-rpr')
         parser.add_argument('-shd', action='append')
         # args = parser.parse_args(header)
-    
-        _space_re = re.compile(r'["](.*?)["]', re.S) #最小匹配
+        
+        _space_re = re.compile(r'["](.*?)["]', re.S)  # 最小匹配
         _spaces = re.findall(_space_re, header)
         if _spaces:
             for _space in _spaces:
                 if " " in _space:
                     header = header.replace(_space, _space.replace(" ", ""))
-    
+        
         args = parser.parse_args(header.split()[1:])
         # args.file = args.file.replace("'","")
         _old_file, _new_file = self.get_no_version(args.file)
@@ -123,6 +124,7 @@ class MayaRefParser(object):
         #     else:
         #         self._need_update_files.append(_old_file)
         return _old_file, _new_file
+    
     def get_latest(self, file_path):
         """
         根据文件获取当前文件的最新版文件
@@ -137,12 +139,21 @@ class MayaRefParser(object):
         return file_path, _latest_file
     
     def get_no_version(self, file_path):
+        """
+        获取无版本文件
+        :param file_path:
+        :return:
+        """
         file_path = file_path.replace('"', '')
-        file_path_abs = file_path.replace('//','/')
+        file_path_abs = file_path.replace('//', '/')
         _task_id = record_task_id(file_path_abs)
-        _no_version_file = task_no_version_file(_task_id)
-        if file_path == _no_version_file:
-            return file_path, None
+        if _task_id:
+            _no_version_file = task_no_version_file(_task_id)
+        else:
+            _no_version_file = no_version_file(file_path_abs)
+        #
+        # if file_path == _no_version_file:
+        #     return file_path, None
         return file_path, _no_version_file
     
     def update_file(self, new_file=None):
@@ -163,7 +174,7 @@ class MayaRefParser(object):
                 print(_new_file)
                 if _new_file:
                     newLine = newLine.replace(_old_file, _new_file)
-                    
+                
                 new_file.write(newLine + ';\n')
             
             new_file.write(self.otherHeader)
@@ -173,6 +184,30 @@ class MayaRefParser(object):
                     old_file.readline()
                 for old_line in old_file:
                     new_file.write(old_line)
+    
+    def par_ref_assets(self, new_file=None):
+        """
+        分析当前文件中的资产
+        :return:
+        """
+        if not self.refHeader:
+            # 如果不需要修改则退出
+            # shutil.copy(self.ma_file, new_file)
+            return
+        _nodes = []
+        _statue = True
+        with open(new_file, 'r') as new_file:
+            for line in self.refHeader.split(';\n')[:-1]:
+                newLine = line
+                if not newLine.endswith('.mb"'):
+                    continue
+                _old_file, _new_file = self._par_ref_header(newLine)
+                # if _old_file == _new_file:
+                #     _statue = False
+                if not os.path.exists(_new_file):
+                    _statue = False
+                _nodes.append([_old_file, _new_file])
+        return _statue, _nodes
 
 
 def record_task_id(file_path):
@@ -267,9 +302,24 @@ def task_no_version_file(task_id):
     _no_version_file = '{}.{}'.format(_name, _suffix)
     _no_version_file_path = '{}/file/{}'.format(_task_path, _no_version_file)
     
-    if not os.path.exists(_no_version_file_path):
-        return None
+    # if not os.path.exists(_no_version_file_path):
+    #     return None
     return _no_version_file_path
+
+
+def no_version_file(file_path):
+    """
+    根据文件路径直接查找不带版本号文件，如果文件不存在则直接返回当前文件
+    
+    :param file_path:
+    :return:
+    """
+    _file_name, _file_suffix = os.path.splitext(file_path)
+    _file = _file_name.split('.')[0]
+    _no_version_file = '{}{}'.format(_file, _file_suffix)
+    # if not os.path.exists(_no_version_file):
+    #     return file_path
+    return _no_version_file
 
 
 def update_file(ma_file):
@@ -282,5 +332,10 @@ def update_file(ma_file):
     _backup_file = backup_file(ma_file)
     # 分析并修改文件
     _maya_reference_parser = MayaRefParser(_backup_file)
+    # 分析文件当前内的资产是否存在，如果不存在直接返回
+    _statue, _pars_assets = _maya_reference_parser.par_ref_assets(ma_file)
+    if not _statue:
+        return False, _pars_assets
+    # 修改文件
     _maya_reference_parser.update_file(ma_file)
-    return True
+    return True, None

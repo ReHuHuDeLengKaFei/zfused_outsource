@@ -23,7 +23,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._base_build()
 
-        self._help_url = "#/outsource/maya"
+        self._help_url = "outsource/maya/"
         self._is_press = False
         self._drag_position = QtCore.QPoint(0, 0)
 
@@ -66,7 +66,7 @@ class Window(QtWidgets.QMainWindow):
         self._help_url = "{}/{}".format(self._help_url, url)
 
     def _help_browser(self):
-        webbrowser.open("http://{}:3000/{}".format(zfused_api.zFused.HOST, self._help_url))
+        webbrowser.open("http://www.zfused.cn/{}".format(self._help_url))
 
     def _infomation_show(self):
         webbrowser.open("http://www.unitcg.com/")

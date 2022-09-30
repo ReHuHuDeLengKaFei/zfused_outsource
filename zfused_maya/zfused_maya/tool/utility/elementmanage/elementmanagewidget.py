@@ -29,7 +29,10 @@ class ElementManageWidget(window._Window):
         self._build()
         self.operation_widget.update_all_button.clicked.connect(self._update_all)
         self.filter_widget._step_changed.connect(self._filter_step)
+        self.filter_widget.switch_step.connect(self._switch_step)
 
+    def _switch_step(self, step_id):
+        self.scene_listwidget.batch_switch_project_step_id(step_id)
 
     def _filter_step(self, project_step_id):
         # interface
@@ -52,7 +55,7 @@ class ElementManageWidget(window._Window):
         """ update all elements
         """
         # 测试
-        _elements = element.scene_elements()
+        _elements = element.reference_elements()
         if not _elements:
             return
         for _element in _elements:
@@ -77,11 +80,16 @@ class ElementManageWidget(window._Window):
 
         self.splitter = QtWidgets.QSplitter()
         self.content_layout.addWidget(self.splitter)
+
+        self.scene_widget = QtWidgets.QFrame(self.splitter)
+        self.sceen_layout = QtWidgets.QVBoxLayout(self.scene_widget)
+        # scene listwidget
+        self.scene_listwidget = elementlistwidget.ElementListWidget()
+        self.sceen_layout.addWidget(self.scene_listwidget)
+        
         # filter widget
         self.filter_widget = filterwidget.FilterWidget(self.splitter)
-        # scene listwidget
-        self.scene_listwidget = elementlistwidget.ElementListWidget(self.splitter)
-        
+
         # operation widget
         self.operation_widget = operationwidget.OperationWidget() 
-        self.set_tail_widget(self.operation_widget)
+        self.sceen_layout.addWidget(self.operation_widget)

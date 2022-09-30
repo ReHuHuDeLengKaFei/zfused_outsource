@@ -40,6 +40,14 @@ class ElementListWidget(QtWidgets.QFrame):
         super(ElementListWidget, self).showEvent(event)
         self._script_job()
 
+    def batch_switch_project_step_id(self, project_step_id):
+        _scene_elements = element.reference_elements()
+        if _scene_elements:
+            for _scene_element in _scene_elements:
+                _element = element.ReferenceElement(_scene_element)
+                _element.replace_by_project_step(project_step_id, True)
+                #　self._replace_by_project_step(_element, project_step_id)
+
     def _script_job(self):
         import maya.cmds as cmds
         #if exists 
@@ -70,14 +78,14 @@ class ElementListWidget(QtWidgets.QFrame):
         
         """
         _element_handle = element_handle
-        _element_handle.replace_by_project_step(project_step_id)
+        _element_handle.replace_by_project_step(project_step_id, True)
 
         # # relatives
         # relatives.create_relatives()
 
     def _replace_by_derivative(self, element_handle, link_object, link_id):
         _element_handle = element_handle
-        _element_handle.replace_by_derivative(link_object, link_id)
+        _element_handle.replace_by_derivative(link_object, link_id, True)
 
     def _select_element(self):
         import maya.cmds as cmds
@@ -125,7 +133,7 @@ class ElementListWidget(QtWidgets.QFrame):
 
     def refresh_scene(self):
         # get scene elements
-        _scene_elements = element.scene_elements()
+        _scene_elements = element.reference_elements() # + element.gpu_elements()
         self.model = listmodel.ListModel(_scene_elements)
         self.proxy_model.setSourceModel(self.model)
         self.list_view.setModel(self.proxy_model)        

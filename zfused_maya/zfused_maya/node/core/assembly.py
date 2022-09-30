@@ -17,7 +17,7 @@ import zfused_maya.node as node
 logger = logging.getLogger(__name__)
 
 # load gpu plugin
-_is_load = cmds.pluginInfo("sceneAssembly", query=True, loaded = True)
+_is_load = cmds.pluginInfo("sceneAssembly", query=True, loaded=True)
 if not _is_load:
     try:
         logger.info("load scene assembly plugin")
@@ -36,16 +36,16 @@ class Assembly(object):
         return self._assembly_name
 
     def create_representation(self, name, retype, infile):
-        _ad = cmds.assembly(self._assembly_name, edit = True, 
-                                                repName = name,
-                                                repLabel = name,
-                                                createRepresentation = retype,
-                                                input = infile)
-        _lr = cmds.assembly(self._assembly_name, q = True, lr = True)
-        cmds.setAttr("{}.representations[{}].repLabel".format(self._assembly_name, _lr.index(_ad)), name, type = "string")
-        
+        _ad = cmds.assembly(self._assembly_name, edit=True,
+                            repName=name,
+                            repLabel=name,
+                            createRepresentation=retype,
+                            input=infile)
+        _lr = cmds.assembly(self._assembly_name, q=True, lr=True)
+        cmds.setAttr("{}.representations[{}].repLabel".format(self._assembly_name, _lr.index(_ad)), name, type="string")
+
     def set_active(self, active_string):
-        cmds.assembly(self._assembly_name, e = True, active = active_string)
+        cmds.assembly(self._assembly_name, e=True, active=active_string)
 
 
 def create_assembly_definition(name):
@@ -57,20 +57,20 @@ def create_assembly_definition(name):
     return Assembly(_name)
 
 
-def create_assembly_reference(name, reference_file = None):
+def create_assembly_reference(name, reference_file=None):
     """ 创建资产集合节点
 
     :type: zfused_maya.node.core.assembly.Assembly
     """
-    _name = cmds.assembly(name='{}_assemblyReference_0001'.format(name), type = "assemblyReference")
-    #return AssemblyDefinition(_name)
+    _name = cmds.assembly(name='{}_assemblyReference_0001'.format(name), type="assemblyReference")
+    # return AssemblyDefinition(_name)
     if reference_file:
-        cmds.setAttr('{}.definition'.format(_name), reference_file, type = "string" )
+        cmds.setAttr('{}.definition'.format(_name), reference_file, type="string")
 
     return Assembly(_name)
 
 
-def scene_assemblys():        
+def scene_assemblys():
     def _get_data(_node):
         _py_node = pm.PyNode(_node._node)
         _node_data = {}
@@ -79,7 +79,7 @@ def scene_assemblys():
         _node_data["namespace"] = _py_node.namespace()
         _node_type = _py_node.type()
         if _node_type == "assemblyReference":
-            _lrs = cmds.assembly(_node._node, q = True, lr = True)
+            _lrs = cmds.assembly(_node._node, q=True, lr=True)
             if len(_lrs) == 1:
                 _node_type = "transform"
             _definition_file = cmds.getAttr('{}.definition'.format(_node._node))
@@ -90,7 +90,7 @@ def scene_assemblys():
         _node_data["xform"] = _node.get_xform()
         _node_data["matrix"] = _node.get_matrix()
         _node_data["child"] = []
-        _childs = cmds.listRelatives(_node._node, c = True, typ = ["assemblyReference", "transform"], f = True)
+        _childs = cmds.listRelatives(_node._node, c=True, typ=["assemblyReference", "transform"], f=True)
         # get child
         if _childs:
             for _child in _childs:
@@ -98,9 +98,10 @@ def scene_assemblys():
                 _child_data = _get_data(_child_node)
                 _node_data["child"].append(_child_data)
         return _node_data
+
     # get root name
     _assembly_root = []
-    _assemblys = pm.ls(type = "assembly", ap = True, )
+    _assemblys = pm.ls(type="assembly", ap=True, )
     for _assembly in _assemblys:
         _root = _assembly.root()
         if _root not in _assembly_root:
@@ -115,13 +116,34 @@ def scene_assemblys():
 
 
 def fix_to_render():
-
     def is_reference(node):
-        _is_reference = cmds.referenceQuery(node, isNodeReferenced = True)
+        _is_reference = cmds.referenceQuery(node, isNodeReferenced=True)
         return _is_reference
 
+    def fix_instance_aistandin():
+        _gpu_caches = cmds.ls(type="gpuCache")
+        _fix_dict = {}
+        for _gpu in _gpu_caches:
+            _gpu_dict = {}
+            _parents = cmds.listRelatives(_gpu, ap=True, f=True)
+            _gpu_dict['parent'] = _parents
+            for _parent in _parents:
+                _ai_standIn = cmds.listRelatives(_parent, c=True, type="aiStandIn")
+                if _ai_standIn:
+                    _gpu_dict['aiStandIn'] = _ai_standIn[0]
+                    break  # 此处循环的parent都是实例，所以ass Shape应该只用一个
+                else:
+                    _gpu_dict['aiStandIn'] = ""
+            _fix_dict[_gpu] = _gpu_dict
+        for _gpu, _dict_info in _fix_dict.items():
+            _ai_standIn = _dict_info['aiStandIn']
+            if _ai_standIn == "":
+                continue
+            for _parent in _dict_info['parent']:
+                if not cmds.listRelatives(_parent, c=True, type="aiStandIn"):
+                    cmds.parent(_ai_standIn, _parent, add=True, shape=True)
 
-    _gpu_caches = cmds.ls(type = "gpuCache")
+    _gpu_caches = cmds.ls(type="gpuCache")
 
     _caches = {}
     for _cache in _gpu_caches:
@@ -130,59 +152,61 @@ def fix_to_render():
             continue
         if is_reference(_cache):
             continue
-        _caches[cmds.listRelatives(_cache, parent = True)[0]] = _file
+        _caches[cmds.listRelatives(_cache, parent=True)[0]] = _file
 
     for _name, _file in _caches.items():
         # remove unuse aiStandIn node
         _ai_node = "{}_aiStandin".format(_name)
 
-        if cmds.listRelatives(_name, c = True, type = "aiStandIn"):
-            _ai_nodes = cmds.listRelatives(_name, c = True, type = "aiStandIn")
+        if cmds.listRelatives(_name, c=True, type="aiStandIn"):
+            _ai_nodes = cmds.listRelatives(_name, c=True, type="aiStandIn")
             for _node in _ai_nodes:
                 if _node != _ai_node:
                     cmds.delete(_node)
-        
+
         if not cmds.objExists(_ai_node):
             _ass_file = _file.replace(".abc", ".ass").replace("/gpu/", "/ass/")
             if os.path.isfile(_ass_file):
-                _ai_node = cmds.createNode("aiStandIn", parent = _name, n = "{}_aiStandin".format(_name))
-                cmds.setAttr("{}.dso".format(_ai_node), _ass_file, type = "string")
-                cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type = "float3")
-                cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type = "float3")
+                _ai_node = cmds.createNode("aiStandIn", parent=_name, n="{}_aiStandin".format(_name))
+                cmds.setAttr("{}.dso".format(_ai_node), _ass_file, type="string")
+                cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type="float3")
+                cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type="float3")
 
-        _gpu_node = cmds.listRelatives(_name, c = True, type = "gpuCache",fullPath=True)[0]
-        
+        _gpu_node = cmds.listRelatives(_name, c=True, type="gpuCache", fullPath=True)[0]
+
         if cmds.objExists(_ai_node):
+            print(_ai_node)
             print(_gpu_node)
-            cmds.setAttr('%s.ai_self_shadows'%_gpu_node, 0)
-            cmds.setAttr('%s.ai_vidr'%_gpu_node, 0)
-            cmds.setAttr('%s.ai_visr'%_gpu_node, 0)
-            cmds.setAttr('%s.ai_vidt'%_gpu_node, 0)
-            cmds.setAttr('%s.ai_vist'%_gpu_node, 0)
-            cmds.setAttr('%s.ai_viv'%_gpu_node, 0)
-            cmds.setAttr('%s.primaryVisibility'%_gpu_node, 0)
-            cmds.setAttr('%s.castsShadows'%_gpu_node, 0)
-            cmds.setAttr('%s.aiOpaque'%_gpu_node, 0)
-        
-            cmds.setAttr("{}.v".format(_ai_node), k = False)
+            cmds.setAttr('%s.ai_self_shadows' % _gpu_node, 0)
+            cmds.setAttr('%s.ai_vidr' % _gpu_node, 0)
+            cmds.setAttr('%s.ai_visr' % _gpu_node, 0)
+            cmds.setAttr('%s.ai_vidt' % _gpu_node, 0)
+            cmds.setAttr('%s.ai_vist' % _gpu_node, 0)
+            cmds.setAttr('%s.ai_viv' % _gpu_node, 0)
+            cmds.setAttr('%s.primaryVisibility' % _gpu_node, 0)
+            cmds.setAttr('%s.castsShadows' % _gpu_node, 0)
+            cmds.setAttr('%s.aiOpaque' % _gpu_node, 0)
+
+            cmds.setAttr("{}.v".format(_ai_node), k=False)
             cmds.setAttr("{}.standin_draw_override".format(_ai_node), 3)
             cmds.setAttr("{}.covm[0]".format(_ai_node), 0, 1, 1)
             cmds.setAttr("{}.cdvm[0]".format(_ai_node), 0, 1, 1)
             cmds.setAttr("{}.standin_draw_override".format(_ai_node), 3)
 
+    fix_instance_aistandin()
 
-def gpu_to_model(is_sel = True, is_hide_gpu = True):
 
+def gpu_to_model(is_sel=True, is_hide_gpu=True):
     if is_sel:
-        _sels = cmds.ls(sl = True)
+        _sels = cmds.ls(sl=True)
     else:
-        _sels = cmds.ls(type = "gpuCache")
+        _sels = cmds.ls(type="gpuCache")
 
     for _sel in _sels:
         # print(_sel)
         if not cmds.objExists("{}.cacheFileName".format(_sel)):
             continue
-            
+
         # get gpu file
         _gpu_file = cmds.getAttr("{}.cacheFileName".format(_sel))
         print(_gpu_file)
@@ -193,33 +217,33 @@ def gpu_to_model(is_sel = True, is_hide_gpu = True):
             continue
 
         print(_maya_file)
-        
+
         _init_scene_node = "init_instance_grp"
         _shot_scene_node = "shotscene_instance_grp"
         for _node in ["init_instance_grp", "shotscene_instance_grp"]:
             if not cmds.objExists(_node):
-                cmds.createNode("transform", name = _node)
+                cmds.createNode("transform", name=_node)
 
         _name = os.path.basename(_gpu_file).split(".")[0]
         _parent_node = "{}_instance_grp".format(_name)
         if not cmds.objExists(_parent_node):
-            cmds.createNode("transform", name = _parent_node)
+            cmds.createNode("transform", name=_parent_node)
             cmds.parent(_parent_node, _shot_scene_node)
-            
+
         _instance_node = "{}_instance_00".format(_name)
-        
-        #if not cmds.objExists(_instance_node):
+
+        # if not cmds.objExists(_instance_node):
         #    cmds.createNode("transform", name = _instance_node)
         #    cmds.parent(_instance_node, _parent_node)
-            
+
         if not cmds.objExists(_instance_node):
-            cmds.createNode("transform", name = _instance_node)
+            cmds.createNode("transform", name=_instance_node)
             cmds.parent(_instance_node, _init_scene_node)
             # refernce file
             _ori_assemblies = cmds.ls(assemblies=True)
-            rf = cmds.file(_maya_file, r = True, ns = "{}_instance".format(_name))
-            rfn = cmds.referenceQuery(rf, rfn = True)
-            #attr.set_node_attr(rfn, _key_output_attr["Id"], _version_handle.id(), "false")
+            rf = cmds.file(_maya_file, r=True, ns="{}_instance".format(_name))
+            rfn = cmds.referenceQuery(rf, rfn=True)
+            # attr.set_node_attr(rfn, _key_output_attr["Id"], _version_handle.id(), "false")
             _new_assemblies = cmds.ls(assemblies=True)
             _asset_tops = list(set(_new_assemblies) - set(_ori_assemblies))
             if _asset_tops:
@@ -230,17 +254,17 @@ def gpu_to_model(is_sel = True, is_hide_gpu = True):
                         pass
         print(_sel)
         if cmds.nodeType(_sel) == "gpuCache":
-            _sel = cmds.listRelatives(_sel, p = True)[0]
-        _mt = cmds.xform(_sel, q = True, m = True, ws = True)
+            _sel = cmds.listRelatives(_sel, p=True)[0]
+        _mt = cmds.xform(_sel, q=True, m=True, ws=True)
         _instance = cmds.instance(_instance_node)[0]
         cmds.parent(_instance, _parent_node)
-        cmds.xform(_instance, m = _mt, ws = True)
+        cmds.xform(_instance, m=_mt, ws=True)
         # cmds.parent(_instance, _parent_node)
 
         if is_hide_gpu:
             cmds.setAttr("{}.visibility".format(_sel), 0)
 
-    _trans = cmds.ls(type = "transform")
+    _trans = cmds.ls(type="transform")
     for _tran in _trans:
         if _tran.endswith("_instance_00"):
             cmds.hide(_tran)
@@ -250,88 +274,111 @@ def import_gpu(name, path):
     # import gpu
     # _name = os.path.basename(os.path.splitext(path)[0])
     _name = "__{}__".format(name)
-    _gpu_node = cmds.createNode('gpuCache', n = "{}_gpu".format(_name))
-    cmds.setAttr('%s.cacheFileName'%_gpu_node, path, type = 'string')
+    _gpu_node = cmds.createNode('gpuCache', n="{}_gpu".format(_name))
+    cmds.setAttr('%s.cacheFileName' % _gpu_node, path, type='string')
 
-    cmds.setAttr('%s.cmp'%_gpu_node, "|", type = 'string')
-    cmds.setAttr('%s.vis'%_gpu_node, 0)
-    cmds.setAttr('%s.csh'%_gpu_node, 0)
-    cmds.setAttr('%s.rcsh'%_gpu_node, 0)
-    cmds.setAttr('%s.mb'%_gpu_node, 0)
+    cmds.setAttr('%s.cmp' % _gpu_node, "|", type='string')
+    cmds.setAttr('%s.vis' % _gpu_node, 0)
+    cmds.setAttr('%s.csh' % _gpu_node, 0)
+    cmds.setAttr('%s.rcsh' % _gpu_node, 0)
+    cmds.setAttr('%s.mb' % _gpu_node, 0)
 
-    _parent_name = cmds.listRelatives(_gpu_node, parent = True)[0]
+    _parent_name = cmds.listRelatives(_gpu_node, parent=True)[0]
     cmds.rename(_parent_name, _name)
-    
+
     # import ass file
     # if ass file is exists
     _ass_file = path.replace(".abc", ".ass").replace("/gpu/", "/ass/")
     if os.path.isfile(_ass_file):
-        _is_load = cmds.pluginInfo("mtoa", query=True, loaded = True)
+        _is_load = cmds.pluginInfo("mtoa", query=True, loaded=True)
         if not _is_load:
             cmds.loadPlugin("mtoa")
         # arnold ass file is exists
-        cmds.setAttr('%s.ai_self_shadows'%_gpu_node, 0)
-        cmds.setAttr('%s.ai_vidr'%_gpu_node, 0)
-        cmds.setAttr('%s.ai_visr'%_gpu_node, 0)
-        cmds.setAttr('%s.ai_vidt'%_gpu_node, 0)
-        cmds.setAttr('%s.ai_vist'%_gpu_node, 0)
-        cmds.setAttr('%s.ai_viv'%_gpu_node, 0)
-        cmds.setAttr('%s.primaryVisibility'%_gpu_node, 0)
-        cmds.setAttr('%s.castsShadows'%_gpu_node, 0)
-        cmds.setAttr('%s.aiOpaque'%_gpu_node, 0)
+        cmds.setAttr('%s.ai_self_shadows' % _gpu_node, 0)
+        cmds.setAttr('%s.ai_vidr' % _gpu_node, 0)
+        cmds.setAttr('%s.ai_visr' % _gpu_node, 0)
+        cmds.setAttr('%s.ai_vidt' % _gpu_node, 0)
+        cmds.setAttr('%s.ai_vist' % _gpu_node, 0)
+        cmds.setAttr('%s.ai_viv' % _gpu_node, 0)
+        cmds.setAttr('%s.primaryVisibility' % _gpu_node, 0)
+        cmds.setAttr('%s.castsShadows' % _gpu_node, 0)
+        cmds.setAttr('%s.aiOpaque' % _gpu_node, 0)
 
-        _ai_node = cmds.createNode("aiStandIn", parent = _name, n = "{}_aiStandin".format(_name))
-        cmds.setAttr("{}.v".format(_ai_node), k = False)
+        _ai_node = cmds.createNode("aiStandIn", parent=_name, n="{}_aiStandin".format(_name))
+        cmds.setAttr("{}.v".format(_ai_node), k=False)
         cmds.setAttr("{}.standin_draw_override".format(_ai_node), 3)
         cmds.setAttr("{}.covm[0]".format(_ai_node), 0, 1, 1)
         cmds.setAttr("{}.cdvm[0]".format(_ai_node), 0, 1, 1)
         cmds.setAttr("{}.standin_draw_override".format(_ai_node), 3)
-        cmds.setAttr("{}.dso".format(_ai_node), _ass_file, type = "string")
-        cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type = "float3")
-        cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type = "float3")
+        cmds.setAttr("{}.dso".format(_ai_node), _ass_file, type="string")
+        cmds.setAttr("{}.min".format(_ai_node), -1.0000002, -1, -1.0000005, type="float3")
+        cmds.setAttr("{}.max".format(_ai_node), 1, 1, 1.0000001, type="float3")
 
     return _name
 
+
 def is_instanced_xform(xform):
     _shapes = cmds.listRelatives(xform, s=True)
-    if not _shapes: 
-       return False
+    if not _shapes:
+        return False
     for _shape in _shapes:
-        if len (cmds.listRelatives(_shape, ap=True) or []) > 1:
+        if len(cmds.listRelatives(_shape, ap=True) or []) > 1:
             return True
     return False
 
+
 def optimize_instance():
-    
-    _gpu_caches = cmds.ls(type = "gpuCache", ap = True)
-    
+    def jump_mash():
+        """返回与maya的MASH节点有链接的节点"""
+        _connect_objs = []
+        _mash_instance = cmds.ls(type="instancer")
+        if not _mash_instance:
+            return _connect_objs
+        _connects = cmds.listConnections(_mash_instance, s=True, c=True, p=True)
+        if not _connects:
+            return _connect_objs
+        for _connect in _connects:
+            _obj = _connect.split(".")[-2]
+            _connect_attr = _connect.split(".")[-1]
+            if _connect_attr == "matrix":
+                _connect_objs.append(_obj)
+        _connect_objs = list(set(_connect_objs))
+        _connect_objs_long = cmds.ls(_connect_objs, l=True)
+        return _connect_objs_long
+
+    _gpu_caches = cmds.ls(type="gpuCache", ap=True)
     if not _gpu_caches:
-        return 
-    # 
+        return
+
     _instance_group = "__instance_group__"
     if not cmds.objExists(_instance_group):
-        cmds.createNode("transform", name = _instance_group)
+        cmds.createNode("transform", name=_instance_group)
     cmds.setAttr("__instance_group__.visibility", False)
-    
+
     _will_instance = {}
     for _gpu_cache in _gpu_caches:
         _gpu_file = cmds.getAttr("{}.cacheFileName".format(_gpu_cache))
         if _gpu_file not in _will_instance:
             _will_instance[_gpu_file] = []
-        _transform = cmds.listRelatives(_gpu_cache, p = True)[0]    
+        _transform = cmds.listRelatives(_gpu_cache, p=True, f=True)[0]
         _will_instance[_gpu_file].append(_transform)
-    
+
+    print(len(_will_instance))
+
     for _gpu_file, _transforms in _will_instance.items():
         if not _transforms:
             continue
+        if len(_transforms) == 1:
+            continue
         # get asset
-        _production_files = zfused_api.zFused.get("production_file_record", filter = {"Path": _gpu_file})
+        _production_files = zfused_api.zFused.get("production_file_record", filter={"Path": _gpu_file})
         if not _production_files:
             continue
         _production_file = _production_files[-1]
-        _project_entity = zfused_api.objects.Objects( _production_file.get("ProjectEntityType"), _production_file.get("ProjectEntityId") )
+        _project_entity = zfused_api.objects.Objects(_production_file.get("ProjectEntityType"),
+                                                     _production_file.get("ProjectEntityId"))
         _code = _project_entity.code()
-        
+
         _is_has = 0
         # new instance ?
         _ori_instance = "__{}__".format(_code)
@@ -339,14 +386,13 @@ def optimize_instance():
             _ori_instance = import_gpu(_code, _gpu_file)
             cmds.parent(_ori_instance, _instance_group)
         else:
-            _gpu_node = cmds.listRelatives(_ori_instance, c = True, type = "gpuCache")[0]
-            _is_has = len(cmds.ls(_gpu_node, ap = True))
+            _gpu_node = cmds.listRelatives(_ori_instance, c=True, type="gpuCache")[0]
+            _is_has = len(cmds.ls(_gpu_node, ap=True))
 
-        print(_is_has)
-        print(_transforms)
-
-    
+        mash_transform = jump_mash()  # 列出与maya的MASH节点有链接的节点
         for _index, _transform in enumerate(_transforms):
+            if _transform in mash_transform:
+                continue
             if _transform == _ori_instance:
                 continue
             if is_instanced_xform(_transform):
@@ -355,42 +401,30 @@ def optimize_instance():
             _instance = cmds.instance(_ori_instance)[0]
             cmds.rename(_instance, "zfused_test")
             _name = cmds.rename("zfused_test", _name)
-            print(_name)
 
             _parent = None
-            if cmds.listRelatives(_transform, p = True):
-                _parent = cmds.listRelatives(_transform, p = True)[0]
-            _mt = cmds.xform(_transform, q = True, m = True, ws = True)
-            print(_parent)
+            if cmds.listRelatives(_transform, p=True):
+                _parent = cmds.listRelatives(_transform, p=True)[0]
+
+            # 先对instance物体匹配位置（如果目的组里有和instance相同命名的节点，parent后instance的名字会变）
+            _mt = cmds.xform(_transform, q=True, m=True, ws=True)
+            _vis = cmds.getAttr("%s.visibility" % _transform)
+            cmds.xform(_name, m=_mt, ws=True)
+            cmds.setAttr("%s.visibility" % _name, _vis)
             if _parent:
                 cmds.parent(_name, _parent)
             else:
-                cmds.parent(_name, w = True)
-            cmds.xform(_name, m = _mt, ws = True)
-
+                cmds.parent(_name, w=True)
             cmds.delete(_transform)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    cmds.delete(_instance_group)
 
 
 def _test():
     import os
     import maya.api.OpenMaya as OpenMaya
 
-
-    _assembly_references = cmds.ls(type = "assemblyReference", ap = True)
+    _assembly_references = cmds.ls(type="assemblyReference", ap=True)
 
     _copys = []
     _num_dict = {}
@@ -403,7 +437,7 @@ def _test():
         selectionList.add(_assembly_reference)
         nodeDagPath = selectionList.getDagPath(0)
         if not nodeDagPath.isInstanced():
-            _file_name = cmds.getAttr("{}.definition".format( _assembly_reference ))
+            _file_name = cmds.getAttr("{}.definition".format(_assembly_reference))
             if _file_name not in _num_dict.keys():
                 _num_dict[_file_name] = []
             _num_dict[_file_name].append(_assembly_reference)
@@ -414,44 +448,44 @@ def _test():
 
     # instance group
     _instance_group = "_instance_grp"
-    if not cmds.objExists( _instance_group ):
-        cmds.createNode("transform", name = _instance_group)
+    if not cmds.objExists(_instance_group):
+        cmds.createNode("transform", name=_instance_group)
 
     _will_instances = []
     for _copy in _copys:
-        if cmds.listRelatives(_copy, p = True):
-            _p_name = cmds.parent(_copy, w = True)
-            _new_names = cmds.parent( _p_name, _instance_group )
+        if cmds.listRelatives(_copy, p=True):
+            _p_name = cmds.parent(_copy, w=True)
+            _new_names = cmds.parent(_p_name, _instance_group)
         else:
-            _new_names = cmds.parent( _copy, _instance_group )
+            _new_names = cmds.parent(_copy, _instance_group)
         _will_instances += _new_names
 
     _instances = {}
     for _will_instance in _will_instances:
-        _file_name = cmds.getAttr("{}.definition".format( _will_instance ))
+        _file_name = cmds.getAttr("{}.definition".format(_will_instance))
         _base_name = os.path.basename(_file_name)
-        _code = os.path.splitext( _base_name )[0]
+        _code = os.path.splitext(_base_name)[0]
         if _code not in _instances.keys():
-            _ins_grp = cmds.createNode("transform", name = "{}_instance".format(_code))
+            _ins_grp = cmds.createNode("transform", name="{}_instance".format(_code))
             # create assembly node
-            _name = cmds.assembly(name='{}_assemblyReference_0001'.format(_code), type = "assemblyReference")
-            cmds.setAttr('{}.definition'.format(_name), _file_name, type = "string" )
-            _lrs = cmds.assembly(_name, q = True, lr = True)
-            cmds.assembly(_name, e = True, active = _lrs[0])
+            _name = cmds.assembly(name='{}_assemblyReference_0001'.format(_code), type="assemblyReference")
+            cmds.setAttr('{}.definition'.format(_name), _file_name, type="string")
+            _lrs = cmds.assembly(_name, q=True, lr=True)
+            cmds.assembly(_name, e=True, active=_lrs[0])
             cmds.parent(_name, _ins_grp)
             _instances[_code] = _ins_grp
         _ins_name = _instances[_code]
         # instance copy
         _new_ins_name = cmds.instance(_ins_name)[0]
-        
-        # get parent rotate scale and vis 
-        _tanslate = cmds.getAttr("{}.translate".format(_will_instance) )
+
+        # get parent rotate scale and vis
+        _tanslate = cmds.getAttr("{}.translate".format(_will_instance))
         cmds.setAttr("{}.translate".format(_new_ins_name), _tanslate[0][0], _tanslate[0][1], _tanslate[0][2])
-        _rotate = cmds.getAttr("{}.rotate".format(_will_instance) )
+        _rotate = cmds.getAttr("{}.rotate".format(_will_instance))
         cmds.setAttr("{}.rotate".format(_new_ins_name), _rotate[0][0], _rotate[0][1], _rotate[0][2])
-        _scale = cmds.getAttr("{}.scale".format(_will_instance) )
+        _scale = cmds.getAttr("{}.scale".format(_will_instance))
         cmds.setAttr("{}.scale".format(_new_ins_name), _scale[0][0], _scale[0][1], _scale[0][2])
-        _vis = cmds.getAttr("{}.visibility".format(_will_instance) )
+        _vis = cmds.getAttr("{}.visibility".format(_will_instance))
         cmds.setAttr("{}.visibility".format(_new_ins_name), _vis)
 
     # remove instance

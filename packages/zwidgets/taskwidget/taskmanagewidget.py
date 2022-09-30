@@ -8,7 +8,7 @@ from Qt import QtWidgets, QtGui, QtCore
 
 from zwidgets.widgets import panel
 
-from . import taskpanelwidget
+# from . import taskpanelwidget
 
 from . import tasklistwidget
 from . import filterwidget
@@ -25,12 +25,13 @@ class TaskManageWidget(panel.ShowPanelWidget):
     quick_downloaded = QtCore.Signal(int)
     quick_published = QtCore.Signal(int)
 
-    def __init__(self, parent = None):
+    def __init__(self, panel_widget, parent = None):
         super(TaskManageWidget, self).__init__(parent)
         self._build()
         self.build_panel()
         
-        self.task_panel_widget = taskpanelwidget.TaskPanelWidget(self)
+        # self.task_panel_widget = taskpanelwidget.TaskPanelWidget(self)
+        self.task_panel_widget = panel_widget
         self.load_panel_widget("task panel", self.task_panel_widget)
 
         self.task_listwidget.listwidget.doubleClicked.connect(self._show_panel)

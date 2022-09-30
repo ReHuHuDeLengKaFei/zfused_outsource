@@ -11,8 +11,10 @@ import os
 import maya.api.OpenMaya as om
 import maya.cmds as cmds
 import pymel.core as pm
+import maya.mel as mel
 import xgenm as xg
 
+import collections
 import zfused_api
 
 from zfused_maya.core import record
@@ -603,6 +605,20 @@ def animation_layer():
     _lays = cmds.ls(type="animLayer")
     if _lays:
         _lays.remove('BaseAnimation')
+    if len(_lays) > 0:
+        info = u"场景存在多余动画层\n"
+        for _layer in _lays:
+            info += "{}\n".format(_layer)
+        return False, info
+    return True, None
+def animation_layer2():
+    """
+    
+    :return: check animation layer
+    """
+    """ check animation layer
+    """
+    _lays = cmds.ls(type="animLayer")
     if len(_lays) > 0:
         info = u"场景存在多余动画层\n"
         for _layer in _lays:
@@ -1891,3 +1907,58 @@ def error_rendering():
             info += "%s\n"%_error
         return False, info
     return True, None
+
+
+def lock_cam():
+    '''
+    检查相机是否有锁或k帧，包括动画层内
+    '''
+    
+    attrilist = ['translateX','translateY','translateZ','rotateX','rotateY','rotateZ']
+    cameras = cmds.ls(type="camera")
+    used_cameras = list(set(cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
+    def getAllLayers():
+        layerlist=[]
+        rootLayer = cmds.animLayer(q=True, r=True)
+        if rootLayer:
+            layerlist.append(rootLayer)
+            def search(layer):           
+                children = cmds.animLayer(layer, q=True, c=True)
+                if children:
+                    for child in children:
+                        if child not in layerlist:
+                            layerlist.append(child)
+                            search(child)
+            search(rootLayer)
+        return layerlist
+    preinfo = u'相机未锁或k帧\n'
+    info = ''
+    layers = getAllLayers()
+    for cam in used_cameras:
+        camtrans = cmds.listRelatives(cam,p = True)[0]
+        caminfo = u"{}\n".format(camtrans)
+        for attr in attrilist:
+            if_lock = cmds.getAttr(camtrans+'.'+attr, lock = True)
+            if_key = cmds.keyframe( camtrans, attribute=attr, query=True)
+            if not if_lock and not if_key:
+                #如果没k帧也没有锁
+                #print if_lock,if_key
+                if layers:
+                    for layer in layers: 
+                        mel.eval('animLayerEditorOnSelect "{}" 1'.format(layer))
+                        if_key_layer = cmds.keyframe(camtrans, attribute=attr, query = True)
+                        if not if_key_layer:
+                            if caminfo not in info:
+                                info += caminfo 
+                        else:
+                            break
+                else:
+                    if caminfo not in info:
+                        info += caminfo
+            else:
+                continue
+    if not info:
+        return True, None
+    else:
+        info = preinfo + info
+        return False,info

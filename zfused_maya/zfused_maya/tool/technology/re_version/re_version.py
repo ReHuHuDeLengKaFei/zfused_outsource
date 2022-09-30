@@ -10,7 +10,10 @@ from __future__ import print_function
 import os
 
 from . import cores
+reload(cores)
 
+from . import error_window
+reload(error_window)
 import maya.cmds as cmds
 from PySide2 import QtWidgets
 def without_version_open_file():
@@ -18,9 +21,10 @@ def without_version_open_file():
     
     if not os.path.exists(_file_path):
         return
-    try:
-        _result = cores.update_file(_file_path)
-        if _result:
-            cmds.file(_file_path,o=True,type='mayaAscii',options ="v=0;p=17;f=0",f=True,ignoreVersion =True)
-    except Exception as e:
-        print(e)
+    _result,_nodes = cores.update_file(_file_path)
+    if _result:
+        cmds.file(_file_path,o=True,type='mayaAscii',options ="v=0;p=17;f=0",f=True,ignoreVersion =True)
+    else:
+        app = error_window.ErrorWindow(_nodes)
+        app.show()
+        pass

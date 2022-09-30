@@ -56,9 +56,9 @@ class zFused(object):
     COMPANY_ID = 0
 
     HOST = "47.103.77.93"
-    PORT = 80
+    PORT = 8888
     
-    INTERNAL_API_SERVER_ADDR = "http://47.103.77.93:80"
+    INTERNAL_API_SERVER_ADDR = "http://47.103.77.93:8888"
     INTERNAL_API_SERVER_PATH = "{}/{}".format(INTERNAL_API_SERVER_ADDR, __version__)
 
     CLOUD_TRANS_SERVER_ADDR = "47.103.77.93:7005"
@@ -70,7 +70,7 @@ class zFused(object):
     MQ_SERVER_ADDR = "47.103.77.93:5672"
 
     # cloud server
-    CLOUD_SERVER_ADDR = "http://47.103.77.93:80"
+    CLOUD_SERVER_ADDR = "http://47.103.77.93:8888"
     CLOUD_SERVER_PATH = "{}/{}".format(CLOUD_SERVER_ADDR, __version__)
 
     def __init__(self, name, password ):

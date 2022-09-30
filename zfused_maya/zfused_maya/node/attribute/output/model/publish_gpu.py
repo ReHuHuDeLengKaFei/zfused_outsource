@@ -12,7 +12,7 @@ import zfused_api
 
 from zcore import zfile,transfer,filefunc
 
-from zfused_maya.node.core import shadingengine,reducemesh,renderinggroup
+from zfused_maya.node.core import shadingengine,reducemesh,renderinggroup,proxygroup
 
 __all__ = ["publish_gpu"]
 
@@ -76,9 +76,15 @@ def publish_gpu(*args, **kwargs):
                     shadingengine.set_node_shading_color(_engine, _color)
             shadingengine.switch_color_shader(_engines)
         
-        # get rendering group
-        _is_rendering = renderinggroup.nodes()
-        _rendering_groups = " ".join(_is_rendering)   
+        # get rendering group 
+        # 如果有proxy组就输出代理组 没有就输出渲染组
+
+        _is_proxy = proxygroup.if_member()
+        if _is_proxy:
+            _is_rendering = proxygroup.nodes()
+        else:
+            _is_rendering = renderinggroup.nodes()
+        _rendering_groups = " ".join(_is_rendering)
 
         _alembic_nodes = cmds.ls(type = "AlembicNode")
         if _alembic_nodes:

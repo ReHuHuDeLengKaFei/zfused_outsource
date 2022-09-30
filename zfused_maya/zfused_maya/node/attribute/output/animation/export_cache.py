@@ -10,8 +10,7 @@ from zcore import filefunc,zfile
 
 from zfused_maya.node.core import improve
 
-from zfused_maya.node.core import renderinggroup,alembiccache,property,fixmeshname
-
+from zfused_maya.node.core import renderinggroup,alembiccache,property,fixmeshname,displaylayer
 
 logger = logging.getLogger(__name__)
 _is_load = cmds.pluginInfo("AbcExport", query=True, loaded = True)
@@ -51,7 +50,18 @@ def export_cache(*args, **kwargs):
 
     _start_frame = int(cmds.playbackOptions(q = True,min = True))-PREPFRAME
     _end_frame = int(cmds.playbackOptions(q = True,max = True))+PREPFRAME
-    
+
+    # enable norender attributes
+    _norenders = displaylayer.norender_info(displaylayer.nodes())
+    if _norenders:
+        for i in _norenders:
+            _attr = "{}.v".format(i)
+            if cmds.objExists(_attr) and cmds.getAttr(_attr) != 0:
+                try:
+                    cmds.setAttr(_attr,0)
+                except:
+                    pass
+
     _publish_path = _task.temp_path()
     _cache_path = _task.cache_path()
     

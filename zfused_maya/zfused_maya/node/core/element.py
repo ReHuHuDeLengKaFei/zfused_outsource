@@ -320,7 +320,7 @@ class ReferenceElement(object):
         _version_handle = zfused_api.version.Version(_version_id)
         return _version_handle.production_file()
 
-    def replace_by_project_step(self, project_step_id):
+    def replace_by_project_step(self, project_step_id, work_with_no_version = False):
         """ 
         """
         if project_step_id == self._data["project_step_id"]:
@@ -338,15 +338,20 @@ class ReferenceElement(object):
         if not _version:
             return 
         _version_handle = zfused_api.version.Version(_version[-1]["Id"])
-        _file = _version_handle.production_file()
+        _file_name = _version_handle.production_file()
         _reference_node = self.reference_node()
         
         attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
         # relatives.create_relatives()
 
-        cmds.file(_file, loadReference = _reference_node)
+        if work_with_no_version:
+            _file_name = _file_name.split(".")
+            _file_name.pop(-2)
+            _file_name = ".".join(_file_name)
 
-    def replace_by_derivative(self, link_object, link_id):
+        cmds.file(_file_name, loadReference = _reference_node)
+
+    def replace_by_derivative(self, link_object, link_id, work_with_no_version = False):
         """ replace by derivative
         """ 
         _project_step_handle = zfused_api.step.ProjectStep(self._data["project_step_id"])
@@ -358,15 +363,21 @@ class ReferenceElement(object):
         if not _version:
             return 
         _version_handle = zfused_api.version.Version(_version[-1]["Id"])
-        _production_file = _version_handle.production_file()
+        _file_name = _version_handle.production_file()
 
         # # 测试
         # _project_handle = zfused_api.project.Project(_version_handle.data().get("ProjectId"))
-        # _production_file = _production_file.replace(_project_handle.production_path(),"$PRODUCTION_PATH")
+        # _file_name = _file_name.replace(_project_handle.production_path(),"$PRODUCTION_PATH")
 
         _reference_node = self.reference_node()
         attr.set_node_attr(_reference_node, _key_output_attr.id(), _version_handle.id(), "true")
-        cmds.file(_production_file, loadReference = _reference_node)
+
+        if work_with_no_version:
+            _file_name = _file_name.split(".")
+            _file_name.pop(-2)
+            _file_name = ".".join(_file_name)
+
+        cmds.file(_file_name, loadReference = _reference_node)
 
     def update(self):
         """ update version

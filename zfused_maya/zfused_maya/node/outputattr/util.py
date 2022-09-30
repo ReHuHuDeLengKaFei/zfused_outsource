@@ -398,6 +398,7 @@ def batch_alone_publish_file(task_id, infomation={}, is_auto=False):
     _image_data["file_name"] = _zfile.file_name()
     _image_data["file_md5"] = _zfile.file_md5()
     _introduction["image"].append(_image_data)
+    
     # 修复提交审批为version
     _v, _info = _task.submit_approval("{}.{}".format(_name, _index),
                                              _file_name,
@@ -746,8 +747,7 @@ def publish_backup(task_id, infomation={}, fix_version = False):
             if _video_file:
                 _video_suffix = os.path.splitext(_video_file)[-1]
                 _video_backup_file = "%s/%s.%04d%s" % (_backup_path, _file_code, _file_index, _video_suffix)
-                _video_production_file = "%s/thumbnail/%s.%04d%s" % (
-                _production_path, _file_code, _file_index, _video_suffix)
+                _video_production_file = "%s/thumbnail/%s.%04d%s" % (_production_path, _file_code, _file_index, _video_suffix)
                 _result = filefunc.publish_file(_video_file, _video_backup_file)
                 _result = filefunc.publish_file(_video_file, _video_production_file)
 

@@ -128,15 +128,20 @@ class UpdateWidget(QtWidgets.QFrame):
                 print(_local_script_path_temp)
                 print(os.path.isfile(_local_script_path))
                 if os.path.isfile(_local_script_path):
+                    print("copy to temp")
                     shutil.copy(_local_script_path, _local_script_path_temp)
                 try:
+                    print("download new")
                     _result = filefunc.receive_file(_server_script_path, _local_script_path, is_cloud = True)
                     if os.path.isfile(_local_script_path_temp):
+                        print("remove temp")
                         os.remove(_local_script_path_temp)
                 except Exception as e:
+                    print("if error resource temp")
                     if os.path.isfile(_local_script_path_temp):
                         shutil.copy(_local_script_path_temp, _local_script_path)
                 finally:
+                    print("remove temp")
                     if os.path.isfile(_local_script_path_temp):
                         os.remove(_local_script_path_temp)
 
