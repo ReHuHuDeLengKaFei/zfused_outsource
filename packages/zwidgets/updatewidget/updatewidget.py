@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import hashlib
 import shutil
+import logging
 
 from Qt import QtWidgets,QtCore
 
@@ -14,9 +15,15 @@ from zcore import filefunc
 
 from zwidgets.widgets import dialog
 
+_logger = logging.getLogger(__name__)
 
 _server_path = r"pipeline/zfused_outsource"
-_local_path = r"P:/zfused/pipeline/zfused_outsource"
+
+_api_file = os.path.realpath(zfused_api.__file__)
+_local_path = os.path.dirname(os.path.dirname(os.path.dirname(_api_file)))
+# _local_path = r"P:/zfused/pipeline/zfused_outsource"
+
+_logger.info("local pipeline path ----> {}".format(_local_path))
 
 if not os.path.isdir(_local_path):
     os.makedirs(_local_path)
@@ -169,6 +176,7 @@ class UpdateWidget(QtWidgets.QFrame):
 
         self._progress_widget = QtWidgets.QProgressBar(self)
         _layout.addWidget(self._progress_widget)
+
 
 
         self.operation_widget = QtWidgets.QFrame()

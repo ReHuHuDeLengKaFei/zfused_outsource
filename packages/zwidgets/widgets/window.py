@@ -69,7 +69,7 @@ class Window(QtWidgets.QMainWindow):
         webbrowser.open("http://www.zfused.cn/{}".format(self._help_url))
 
     def _infomation_show(self):
-        webbrowser.open("http://www.unitcg.com/")
+        webbrowser.open("http://www.zfused.cn/")
 
     def mousePressEvent(self, event):
         self.__is_press = True
@@ -306,9 +306,9 @@ class Window(QtWidgets.QMainWindow):
         self.infomation_layout = QtWidgets.QHBoxLayout(self.infomation_widget)
         self.infomation_layout.setSpacing(0)
         self.infomation_layout.setContentsMargins(10,2,10,2)
-        self.infomation_button = QtWidgets.QPushButton(u"苏州优尼提传媒有限公司(www.unitcg.com) · 2022")
+        self.infomation_button = QtWidgets.QPushButton(u"www.zfused.cn")
         self.infomation_button.setObjectName("title_button")
-        self.infomation_button.setIcon(QtGui.QIcon(resource.get("software", "unit-logo-horizontal.png")))
+        # self.infomation_button.setIcon(QtGui.QIcon(resource.get("software", "unit-logo-horizontal.png")))
         self.infomation_layout.addWidget(self.infomation_button)
         self.infomation_layout.addStretch(True)
 
