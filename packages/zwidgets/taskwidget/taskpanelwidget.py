@@ -17,7 +17,7 @@ from zcore import resource
 
 from zwidgets.widgets import button
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class TaskPanelWidget(QtWidgets.QFrame):

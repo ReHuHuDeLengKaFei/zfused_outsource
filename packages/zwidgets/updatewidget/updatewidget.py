@@ -15,7 +15,7 @@ from zcore import filefunc
 
 from zwidgets.widgets import dialog
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 _server_path = r"pipeline/zfused_outsource"
 
@@ -23,7 +23,7 @@ _api_file = os.path.realpath(zfused_api.__file__)
 _local_path = os.path.dirname(os.path.dirname(os.path.dirname(_api_file)))
 # _local_path = r"P:/zfused/pipeline/zfused_outsource"
 
-_logger.info("local pipeline path ----> {}".format(_local_path))
+logger.info("local pipeline path ----> {}".format(_local_path))
 
 if not os.path.isdir(_local_path):
     os.makedirs(_local_path)
@@ -148,7 +148,7 @@ class UpdateWidget(QtWidgets.QFrame):
                     if os.path.isfile(_local_script_path_temp):
                         shutil.copy(_local_script_path_temp, _local_script_path)
                 finally:
-                    print("remove temp")
+                    ("remove temp")
                     if os.path.isfile(_local_script_path_temp):
                         os.remove(_local_script_path_temp)
 

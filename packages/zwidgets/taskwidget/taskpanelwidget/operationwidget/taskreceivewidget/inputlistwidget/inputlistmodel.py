@@ -11,7 +11,7 @@ import zfused_api
 
 __all__ = ["InputFilterProxyModel", "InputListModel"]
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class InputFilterProxyModel(QtCore.QSortFilterProxyModel):

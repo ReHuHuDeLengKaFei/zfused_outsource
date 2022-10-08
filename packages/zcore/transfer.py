@@ -11,7 +11,7 @@ import logging
 
 from Qt import QtCore
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 BUFFER_SIZE = 1024*1024
 

@@ -9,7 +9,7 @@ from Qt import QtGui, QtCore
 
 __all__ = ["VersionListFilterProxyModel", "VersionListModel"]
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class VersionListFilterProxyModel(QtCore.QSortFilterProxyModel):

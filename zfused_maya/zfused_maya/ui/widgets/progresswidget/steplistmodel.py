@@ -9,7 +9,7 @@ from Qt import QtGui, QtCore
 
 __all__ = ["StepListModel"]
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class StepListModel(QtCore.QAbstractListModel):

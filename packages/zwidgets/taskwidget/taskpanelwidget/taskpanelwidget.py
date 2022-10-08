@@ -20,7 +20,7 @@ from zwidgets.widgets import button
 from . import previewwidget
 from . import operationwidget
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 class TaskPanelWidget(QtWidgets.QFrame):
     received = QtCore.Signal(str, int, list)

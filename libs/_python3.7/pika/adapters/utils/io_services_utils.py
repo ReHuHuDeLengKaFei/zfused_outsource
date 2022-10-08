@@ -35,7 +35,7 @@ _CONNECTION_IN_PROGRESS_SOCK_ERROR_CODES = (
     errno.EWOULDBLOCK,
 )
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # Decorator that logs exceptions escaping from the decorated function
 _log_exceptions = pika.diagnostic_utils.create_log_exception_decorator(_LOGGER)  # pylint: disable=C0103

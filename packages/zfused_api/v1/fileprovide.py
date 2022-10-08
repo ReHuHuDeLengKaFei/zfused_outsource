@@ -10,7 +10,7 @@ from . import _Entity
 import zfused_api
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def new_record(name, company_id, project_id, project_step_id, project_entity_type, project_entity_id, task_id, index = 1, thumbnail_path = ""):

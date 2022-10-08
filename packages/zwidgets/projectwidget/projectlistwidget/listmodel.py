@@ -9,7 +9,7 @@ from Qt import QtGui, QtCore
 
 __all__ = ["ListModel"]
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ListModel(QtCore.QAbstractListModel):

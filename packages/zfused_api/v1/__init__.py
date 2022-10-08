@@ -25,7 +25,7 @@ __version__ = "v1"
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 def reset( func ):
     @wraps(func)

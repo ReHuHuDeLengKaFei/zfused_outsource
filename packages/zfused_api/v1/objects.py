@@ -103,7 +103,7 @@ ENTITY_MAP = {
     "note": zfused_api.note.Note
 }
 
-logger = logging.getLogger(__file__) 
+logger = logging.getLogger(__name__) 
 
 def reset():
     for _, _api in OBJECT.items():

@@ -17,7 +17,7 @@ from zcore import resource,language
 
 from zwidgets.widgets import button
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class IndexWidget(QtWidgets.QFrame):

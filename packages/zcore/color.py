@@ -7,7 +7,7 @@ import logging
 
 __all__ = ["component_color", "LetterColor"]
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 CATEGORY_COLOR = {
