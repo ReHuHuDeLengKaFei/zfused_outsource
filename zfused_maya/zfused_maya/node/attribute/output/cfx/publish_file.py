@@ -14,8 +14,6 @@ from zcore import zfile,transfer,filefunc
 
 from zfused_maya.node.core import texture, xgen, alembiccache, renderinggroup, fixmeshname
 
-__all__ = ["publish_file"]
-
 logger = logging.getLogger(__name__)
 
 

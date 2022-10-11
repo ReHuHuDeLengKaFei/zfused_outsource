@@ -7,6 +7,8 @@ from __future__ import print_function
 
 import copy
 import os
+import logging
+import collections
 
 import maya.api.OpenMaya as om
 import maya.cmds as cmds
@@ -14,12 +16,14 @@ import pymel.core as pm
 import maya.mel as mel
 import xgenm as xg
 
-import collections
 import zfused_api
 
 from zfused_maya.core import record
 
 from . import property, renderinggroup, shadingengine, texture, xgen
+
+
+logger = logging.getLogger(__name__)
 
 
 class Check(object):
@@ -32,7 +36,9 @@ def texture_is_chinese():
     """
     检查贴图路径是否有中文
     """
-    
+
+    logger.info(u"检查贴图是否含有中文")
+
     _nodes = texture.nodes()
     if not _nodes:
         return True, None
@@ -73,23 +79,6 @@ def texture_is_chinese():
         return False, info
     return True, None
     
-    # if not _files:
-    #     return True, None
-    # _error_path = []
-    # info = u"以下路径含有中文，请检查\n"
-    # for _file in _files:
-    #     for ch in _file:
-    #         if u'\u4e00' <= ch <= u'\u9fff':
-    #             _error_path.append(_file)
-    #         else:
-    #             continue
-    # if _error_path:
-    #     _error_path = list(set(_error_path))
-    #     for _path in _error_path:
-    #         info += u"{}\n".format(_path)
-    #     return False, info
-    # return True, None
-
 
 # =======================================================================================================
 # 检查贴图等不在制作路径下
@@ -165,6 +154,9 @@ def grow_caching():
 def useless_camera():
     """ check camera
     """
+    
+    logger.info(u"检查多余摄像机")
+
     _extra_camera = ["facial_cam"]
     _cameras = cmds.ls(type="camera")
     _left_cameras = list(set(_cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
@@ -339,6 +331,9 @@ def lost_material():
 # =======================================================================================================
 # 检查模型按面赋材质球
 def multi_material():
+    
+    logger.info(u"检查模型按面赋材质球")
+
     _polygons = cmds.ls(type="mesh", ni=True)
     _is_error = False
     info = u"场景存在单mesh多材质球(multi material)\n"
@@ -1962,3 +1957,27 @@ def lock_cam():
     else:
         info = preinfo + info
         return False,info
+
+
+def unused_reference_file():
+    """
+    检查未使用的reference
+    :return:
+    """
+    _all_ref = cmds.ls(rf=True)
+    unused_nodes = []
+    for __rfn in _all_ref:
+        try:
+            if not cmds.referenceQuery(__rfn,isLoaded=True):
+                unused_nodes.append(__rfn)
+        except Exception as e:
+            unused_nodes.append(__rfn)
+    if not unused_nodes:
+        return True,None
+    else:
+        info = u'下列参考没有引用，拒绝上传\n'
+        for _node in unused_nodes:
+            info += u'{}\n'.format(_node)
+
+        return False,info
+

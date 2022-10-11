@@ -6,7 +6,7 @@ import sys
 
 import maya.cmds as cmds
 
-__version__ = "0.2.2.2"
+__version__ = "0.2.2.3"
 
 _resource = None
 

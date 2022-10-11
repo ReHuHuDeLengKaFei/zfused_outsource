@@ -17,6 +17,7 @@ from zcore import filefunc,zfile
 from zfused_maya.core import progress,record
 
 from zfused_maya.node.core import yeti, check, alembiccache, texture, referencefile, relatives, element, xgen
+from zfused_maya.node.core import snapshot
 
 from zfused_maya.ui.widgets import checkwidget
 
@@ -45,16 +46,23 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
     """ publish file
     :rtype: bool
     """
-    # 
+    # 记录发布起始时间
+    _start_time = time.time()
+
+    # 记录当前任务id
+    record.write_task_id(task_id)
+
+    # 获取是否为外包公司
+    _is_outsource = record.current_company_id()
+
+    # 自动更新描述
     if not infomation:
         infomation = {}
         _user = zfused_api.user.User(zfused_api.zFused.USER_ID)
-        # infomation["description"] = u"{} - 自动更新发布".format(_user.name())
         infomation["description"] = u"自动更新发布"
     
-    # 
+    # 自动输入缩略图或者视频 
     if not infomation.get("thumbnail"):
-        # 如果没有缩略图传入 先判定文件是否有同名mov或者jpg
         _current_file = cmds.file(q=True, sn=True)
         _movs = get_mov(_current_file)
         if _movs:
@@ -63,26 +71,17 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
         if _jpgs:
             infomation["thumbnail"] = max(_jpgs)
         else:
-            # auto playblast
             _temp_thumbnail_file = "{}/{}.jpg".format( tempfile.gettempdir(), time.time() )
-            from zfused_maya.node.core import snapshot
             _snapshot = snapshot.Snapshot()
             _snapshot.Snapshot(_temp_thumbnail_file)
             infomation["thumbnail"] = _temp_thumbnail_file
 
-    print(infomation["thumbnail"])
-
-    _start_time = time.time()
-
     # 进度条设置区间
     progress.set_range(0, 4)
 
-    # 写入当前任务
-    record.write_task_id(task_id)
-
     cmds.file(lf = 0)
 
-    # 取消二次保存
+    # 保存下当前文件
     cmds.file(save = True, f = True, options = "v=0;")
     _current_file = cmds.file(q=True, sn=True)
 
@@ -92,8 +91,8 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
     _output_scripts = _project_step.output_attrs()
     _is_new_attribute_solution = _project_step.is_new_attribute_solution()
 
+    # 手动上传需文件检查
     if not is_auto:
-        # 查看文件是否为领取上传
         if not _task.data().get("IsOutsource"):
             _versions = _task.versions()
             if _versions:
@@ -127,8 +126,6 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
             else:
                 return False
         else:
-            # 逐渐省略。。。
-            # 检查
             _check_script = _project_step.check_script()
             if _check_script and len(_check_script) != 1:
                 if not check.Check.value:
@@ -141,50 +138,33 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
     # 获取场景信息
     _scene_elements = element.scene_elements()
 
-    # 更新propertry
+    # 更新 propertry script
     _property_script = _project_step.property_script()
     if _property_script:
-       # global project_entity,task_id
+        logger.info("exec project step property script --> {}".format(_property_script))
+       # 全局变量设置 global project_entity,task_id
         project_entity = _task.project_entity()
         exec(_property_script)
+        logger.info("End exec project step property script")
 
-    # 运算脚本
+    # 更新 compute sript
     compute_result = {}
     _compute_script = _project_step.data().get("ComputeScript")
+    logger.info("Start exec project step compute script --> {}".format(_compute_script))
     exec(_compute_script)
-    _record = compute_result
-
-    # # 提交关联信息
-    # relatives.create_relatives()
-
-    # 提交预览信息
-    _thumbnail_path = None
-    _approval_file = None
-    _zfile = None
-
-    if infomation.get("video"):
-        _approval_file = infomation.get("video")
-    else:
-        _approval_file = infomation.get("thumbnail")
-    if _approval_file:
-        _zfile = zfile.LocalFile(_approval_file, "approval")
-        _res = _zfile.upload()
-        if _res:
-            _thumbnail_path = _zfile._cloud_thumbnail_path
-            _task.update_thumbnail_path(_thumbnail_path)
-        # _thumbnail_path = _zfile._cloud_thumbnail_path
-
+    _compute_record = compute_result
+    logger.info("End exec project step compute script --> {}".format(_compute_record))
 
     # 上传备份文件
     progress.set_label_text(u"2/4 - 上传备份文件")
     progress.set_value(2)
 
-    _value = publish_backup(task_id, infomation)
-    if not _value:
-        cmds.confirmDialog(message=u"上传备份文件失败")
-        return False
+    if not _is_outsource:
+        _value = publish_backup(task_id, infomation)
+        if not _value:
+            cmds.confirmDialog(message=u"上传备份文件失败")
+            return False
 
-    
     progress.set_label_text(u"3/4 - 上传自定义数据文件")
     progress.set_value(3)
 
@@ -196,7 +176,8 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
             _output_entity_id = _task.project_entity_id()
             _output_attr_id = _output_script.id()
             # 为了兼容新旧attribute 需要设定 _is_new_attribute_solution
-            kwargs = {"is_new_attribute_solution": _is_new_attribute_solution}
+            kwargs = { "is_new_attribute_solution": _is_new_attribute_solution,
+                       "video": infomation.get("video") }
             if extend_attr:
                 kwargs.update(extend_attr)
             if _is_new_attribute_solution:
@@ -205,9 +186,9 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                 args = (_output_entity_type, _output_entity_id, _output_attr_id)
             # run scrpt
             zfused_api.zFused.RESET = True
-            print(args)
-            print(kwargs)
-            print(_output_script.script())
+            logger.info(args)
+            logger.info(kwargs)
+            logger.info(_output_script.script())
             exec(_output_script.script())
             zfused_api.zFused.RESET = False
             if not publish_result:
@@ -215,83 +196,84 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                 cmds.file(_current_file, o=True, f=True, pmt=False)
                 return False
 
-    # 此处获取信息 是主 file 文件
-    _key_output_attr = _project_step.key_output_attr()
-    _file_suffix = _key_output_attr.suffix().replace(".", "")
-
-    _name = _task.file_code()
-    
-    _index = "%04d" % (_task.last_version_index() + 1)
-    _file_name = "/{}.{}.{}".format(_name, _index, _file_suffix)
-    _video_file = infomation.get("video")
-    _video_name = None
-    if _video_file:
-        _video_suffix = os.path.splitext(_video_file)[-1]
-        _video_name = "/%s.%s%s" % (_name, _index, _video_suffix)
-    _thumbnail_file = infomation.get("thumbnail")
-    _thumbnail_name = None
-    if _thumbnail_file:
-        _thumbnail_suffix = os.path.splitext(_thumbnail_file)[-1]
-        _thumbnail_name = "/%s.%s%s" % (_name, _index, _thumbnail_suffix)
-
     # 提交审批数据
     progress.set_label_text(u"4/4 - 提交数据库")
     progress.set_value(4)
 
-    _introduction = {}
-    _introduction["msgtype"] = "rich-text"
-    _introduction["text"] = infomation["description"]
-    _introduction["image"] = []
-    if _zfile:
-        _image_data = {}
-        _image_data["path"] = _zfile._cloud_thumbnail_path
-        _size = _zfile.get_local_thumbnail_size()
-        _image_data["width"] = _size[0]
-        _image_data["height"] = _size[1]
-        _image_data["file_type"] = _zfile.file_type()
-        _image_data["file_format"] = _zfile.file_format()
-        _image_data["file_name"] = _zfile.file_name()
-        _image_data["file_md5"] = _zfile.file_md5()
-        _introduction["image"].append(_image_data)
-    _publish_time = int(time.time() - _start_time)
-    _record["publish_time"] = _publish_time    
-    _v, _info = _task.submit_approval( "{}.{}".format(_name, _index),
-                                       _file_name,
-                                       zfused_api.zFused.USER_ID,
-                                       _project_step.approvalto_user_ids(),
-                                       _project_step.cc_user_ids(),
-                                       _video_name,
-                                       _thumbnail_name,
-                                       _thumbnail_path,
-                                       infomation["description"],
-                                       str(_introduction),
-                                       str(_record) )
-    if not _v:
-        cmds.confirmDialog(message=u"上传数据库信息失败 {}".format(_info))
-        return False
+    if not _is_outsource:
+        # 提交预览信息
+        _thumbnail_path = ""
+        _approval_file = ""
+        _zfile = ""
 
-    # 提交关联信息
-    _version_id = _v
-    relatives.create_relatives(_scene_elements, task_id, _version_id)
+        if infomation.get("video"):
+            _approval_file = infomation.get("video")
+        else:
+            _approval_file = infomation.get("thumbnail")
+        if _approval_file:
+            _zfile = zfile.LocalFile(_approval_file, "approval")
+            _res = _zfile.upload()
+            if _res:
+                _thumbnail_path = _zfile._cloud_thumbnail_path
+                _task.update_thumbnail_path(_thumbnail_path)
 
-    # 更新关联任务 产品级 测试
-    # 特别占资源 再取得好的解决方案之前 先取消
-    # _tasks = zfused_api.zFused.get("relative", filter = {"SourceObject":"task", "SourceId":task_id, "TargetObject":"task"})
-    # if _tasks:
-    #     for _task in _tasks:
-    #         _relative_task = zfused_api.task.Task(_task["TargetId"])
-    #         _relative_task.update_is_production(-1)
+        # 此处获取信息 是主 file 文件
+        _key_output_attr = _project_step.key_output_attr()
+        _file_suffix = _key_output_attr.suffix().replace(".", "")
+        _name = _task.file_code()
+        _index = "%04d" % (_task.last_version_index() + 1)
+        _file_name = "/{}.{}.{}".format(_name, _index, _file_suffix)
+        _video_file = infomation.get("video")
+        _video_name = None
+        if _video_file:
+            _video_suffix = os.path.splitext(_video_file)[-1]
+            _video_name = "/%s.%s%s" % (_name, _index, _video_suffix)
+        _thumbnail_file = infomation.get("thumbnail")
+        _thumbnail_name = None
+        if _thumbnail_file:
+            _thumbnail_suffix = os.path.splitext(_thumbnail_file)[-1]
+            _thumbnail_name = "/%s.%s%s" % (_name, _index, _thumbnail_suffix)
+        _introduction = {}
+        _introduction["msgtype"] = "rich-text"
+        _introduction["text"] = infomation["description"]
+        _introduction["image"] = []
+        if _zfile:
+            _image_data = {}
+            _image_data["path"] = _zfile._cloud_thumbnail_path
+            _size = _zfile.get_local_thumbnail_size()
+            _image_data["width"] = _size[0]
+            _image_data["height"] = _size[1]
+            _image_data["file_type"] = _zfile.file_type()
+            _image_data["file_format"] = _zfile.file_format()
+            _image_data["file_name"] = _zfile.file_name()
+            _image_data["file_md5"] = _zfile.file_md5()
+            _introduction["image"].append(_image_data)
+        _publish_time = int(time.time() - _start_time)
+        _compute_record["publish_time"] = _publish_time
+        _v, _info = _task.submit_approval( "{}.{}".format(_name, _index),
+                                        _file_name,
+                                        zfused_api.zFused.USER_ID,
+                                        _project_step.approvalto_user_ids(),
+                                        _project_step.cc_user_ids(),
+                                        _video_name,
+                                        _thumbnail_name,
+                                        _thumbnail_path,
+                                        infomation["description"],
+                                        str(_introduction),
+                                        str(_compute_record) )
+        if not _v:
+            cmds.confirmDialog(message=u"上传数据库信息失败 {}".format(_info))
+            return False
 
-    _task.analy_is_production()
-    _task.update_is_production(_task.is_production())
+        # 提交关联信息
+        _version_id = _v
+        relatives.create_relatives(_scene_elements, task_id, _version_id)
 
-    # # 修改任务状态为审查中
-    # _review_ids = zfused_api.status.review_status_ids()
-    # if _review_ids:
-    #     _task.update_status(_review_ids[0])
+        _task.analy_is_production()
+        _task.update_is_production(_task.is_production())
 
-    # 打开空文件
-    cmds.file(new=True, f=True)
+        # 打开空文件
+        cmds.file(new=True, f=True)
 
     if not is_auto:
         # 上传结果ui
@@ -523,8 +505,11 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
     """ publish file
     :rtype: bool
     """
-    print(u"fix publish")
+    # 获取是否为外包公司
+    _is_outsource = record.current_company_id()
+
     _current_file = cmds.file(q=True, sn=True)
+
     _task = zfused_api.task.Task(task_id)
     _project_entity = zfused_api.objects.Objects(_task.data()["ProjectEntityType"],
                                               _task.data()["ProjectEntityId"])
@@ -532,6 +517,7 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
     _output_scripts = _project_step.output_attrs()
     _is_new_attribute_solution = _project_step.is_new_attribute_solution()
 
+    
     # # 检查
     # _check_script = _project_step.check_script()
     # if not check.Check.value:
@@ -545,11 +531,12 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
     # 暂时不提交关联信息
     # relatives.create_relatives()
 
-    # 上传备份文件
-    _value = publish_backup(task_id, infomation, True)
-    if not _value:
-        cmds.confirmDialog(message=u"上传备份文件失败")
-        return
+    if not _is_outsource:
+        # 上传备份文件
+        _value = publish_backup(task_id, infomation, True)
+        if not _value:
+            cmds.confirmDialog(message=u"上传备份文件失败")
+            return
 
     # 运行自定义脚本
     attrs = extend_attr.get("attrs")
@@ -579,49 +566,25 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
             zfused_api.zFused.RESET = False
             if not publish_result:
                 cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
-                # cmds.file(_current_file, o=True, f=True, pmt=False)
                 return False
 
-    # # 此处获取信息 是主 file 文件
-    # _key_output_attr = _project_step.key_output_attr()
-    # _file_suffix = _key_output_attr.suffix().replace(".", "")
-
-    # _name = _task.file_code()
-    # _index = "%04d" % (_task.last_version_index(0))
-    # _file_name = "/{}.{}.{}".format(_name, _index, _file_suffix)
-    # _video_file = infomation["video"]
-    # _video_name = None
-    # if _video_file:
-    #     _video_suffix = os.path.splitext(_video_file)[-1]
-    #     _video_name = "/%s.%s%s" % (_name, _index, _video_suffix)
-    # _thumbnail_file = infomation["thumbnail"]
-    # _thumbnail_suffix = os.path.splitext(_thumbnail_file)[-1]
-    # _thumbnail_name = "/%s.%s%s" % (_name, _index, _thumbnail_suffix)
-
     #  发送通知信息
-    _user_id = zfused_api.zFused.USER_ID
-    zfused_api.im.submit_message('user',
-                                 _user_id,
-                                 list(set(_project_step.approvalto_user_ids() + _project_step.cc_user_ids())),
-                                 str({
-                                    'msgtype': 'rich-text',
-                                    'rich-text': {
-                                        'text': infomation.get("description"),
-                                        'msgtype': 'rich-text'}
-                                    }),
-                                 'rich-text',
-                                 'task',
-                                 task_id,
-                                 'task',
-                                 task_id)
-
-    # # 修改任务状态为审查中
-    # _review_ids = zfused_api.status.review_status_ids()
-    # if _review_ids:
-    #     _task.update_status(_review_ids[0])
-
-    # # 打开空文件
-    # cmds.file(new=True, f=True)
+    if not _is_outsource:
+        _user_id = zfused_api.zFused.USER_ID
+        zfused_api.im.submit_message('user',
+                                    _user_id,
+                                    list(set(_project_step.approvalto_user_ids() + _project_step.cc_user_ids())),
+                                    str({
+                                        'msgtype': 'rich-text',
+                                        'rich-text': {
+                                            'text': infomation.get("description"),
+                                            'msgtype': 'rich-text'}
+                                        }),
+                                    'rich-text',
+                                    'task',
+                                    task_id,
+                                    'task',
+                                    task_id)
 
     # 上传结果ui
     cmds.confirmDialog(message=u"单独上传成功")
@@ -632,12 +595,6 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
 def publish_backup(task_id, infomation={}, fix_version = False):
     """ 上传备份文件
     """
-    # try:
-    #     _format_type = cmds.file(q=True, typ=True)[0]
-    #     cmds.file(save = True, type=_format_type, f=True, options="v=0;")
-    # except:
-    #     pass
-
     _infomation = infomation
     _current_file = cmds.file(q=True, sn=True)
 
@@ -655,25 +612,18 @@ def publish_backup(task_id, infomation={}, fix_version = False):
     else:
         _file_index = _task.last_version_index() + 1
 
-    # if _task.project_entity_type() == "asset":
-    #     _file_suffix = "mb"
-    #     _file_type = "mayaBinary"
-    # else:
-    #     _file_suffix = "ma"
-    #     _file_type = "mayaAscii"
-
     _project_step = _task.project_step()
     _key_attr = _project_step.key_output_attr()
-    _file_type = _key_attr.format() # get("Format")
+    _file_type = _key_attr.format()
     _file_suffix = _key_attr.suffix().replace(".","")
 
-    _backup_file = "%s/%s.%04d.%s" % (_backup_path, _file_code, _file_index, _file_suffix)
+    # 文件后缀版本 需修改
+    _backup_file = "{}/{}.{:>04d}.{}".format(_backup_path, _file_code, _file_index, _file_suffix)
 
     # get publish file path
     _temp_path = _task.temp_path()
-    _publish_file = "%s/%s.%04d.%s" % (_temp_path, _file_code, _file_index, _file_suffix)
+    _publish_file = "{}/{}.{:>04d}.{}".format(_temp_path, _file_code, _file_index, _file_suffix)
     _publish_file_dir = os.path.dirname(_publish_file)
-    #print("publish_path:{}".format(_production_path))
 
     _is_sync_backup_external_files = _project.variables("is_sync_backup_external_files", 1)
 
@@ -720,7 +670,7 @@ def publish_backup(task_id, infomation={}, fix_version = False):
                 _file_nodes = referencefile.nodes()
                 if _file_nodes:
                     referencefile.change_node_path(_file_nodes, _intersection_path, _backup_path + "/reference")
-            # publish yetinode texture
+            # publish yeti node texture
             _yeti_texture_file = yeti.tex_files()
             if _yeti_texture_file:
                 _path_set = yeti.paths(_yeti_texture_file)[0]
@@ -733,32 +683,23 @@ def publish_backup(task_id, infomation={}, fix_version = False):
             cmds.file(save = True, type=_file_type, f=True, options="v=0;")
 
         # publish file
-        _result = filefunc.publish_file(_publish_file, _backup_file)
+        filefunc.publish_file(_publish_file, _backup_file)
 
         if _infomation:
-            _project_handle = zfused_api.project.Project(_task.data()["ProjectId"])
-            _project_step = zfused_api.step.ProjectStep(_task.data()["ProjectStepId"])
-            _approval_ftp = "/storage/approval/{}/{}/{}/{}".format( _project_handle.code(),
-                                                                    _task.data()["ProjectEntityType"],
-                                                                    _project_step.code(),
-                                                                    _project_entity.code() )
-            # publish thumbnail and video
             _video_file = _infomation.get("video")
             if _video_file:
                 _video_suffix = os.path.splitext(_video_file)[-1]
-                _video_backup_file = "%s/%s.%04d%s" % (_backup_path, _file_code, _file_index, _video_suffix)
-                _video_production_file = "%s/thumbnail/%s.%04d%s" % (_production_path, _file_code, _file_index, _video_suffix)
-                _result = filefunc.publish_file(_video_file, _video_backup_file)
-                _result = filefunc.publish_file(_video_file, _video_production_file)
-
+                filefunc.publish_file(_video_file, "{}/{}.{:>04d}{}".format(_backup_path, _file_code, _file_index, _video_suffix))
+                filefunc.publish_file(_video_file, "{}/{}{}".format(_backup_path, _file_code, _video_suffix))
+                filefunc.publish_file(_video_file, "{}/thumbnail/{}.{:>04d}{}".format(_production_path, _file_code, _file_index, _video_suffix))
+                filefunc.publish_file(_video_file, "{}/thumbnail/{}{}".format(_production_path, _file_code, _video_suffix))
             _thumbnail_file = _infomation.get("thumbnail")
             if _thumbnail_file:
                 _thumbnail_suffix = os.path.splitext(_thumbnail_file)[-1]
-                _thumbnail_backup_file = "%s/%s.%04d%s" % (_backup_path, _file_code, _file_index, _thumbnail_suffix)
-                _thumbnail_production_file = "%s/thumbnail/%s.%04d%s" % (
-                _production_path, _file_code, _file_index, _thumbnail_suffix)
-                _result = filefunc.publish_file(_thumbnail_file, _thumbnail_backup_file)
-                _result = filefunc.publish_file(_thumbnail_file, _thumbnail_production_file)
+                filefunc.publish_file(_thumbnail_file, "{}/{}.{:>04d}{}".format(_backup_path, _file_code, _file_index, _thumbnail_suffix))
+                filefunc.publish_file(_thumbnail_file, "{}/{}{}".format(_backup_path, _file_code, _thumbnail_suffix))
+                filefunc.publish_file(_thumbnail_file, "{}/thumbnail/{}.{:>04d}{}".format(_production_path, _file_code, _file_index, _thumbnail_suffix))
+                filefunc.publish_file(_thumbnail_file, "{}/thumbnail/{}{}".format(_production_path, _file_code, _thumbnail_suffix))
 
     except Exception as e:
         logger.error(e)

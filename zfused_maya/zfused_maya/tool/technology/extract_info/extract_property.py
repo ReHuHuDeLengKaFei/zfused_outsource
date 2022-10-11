@@ -22,7 +22,7 @@ class ExtractProperty(window.Window):
         self._build()
     
     def _build(self):
-        
+        self.set_help_url("maya/tool/utility/extract_property")
         self.ground_widget = QtWidgets.QFrame()
         self.ground_layout = QtWidgets.QVBoxLayout(self.ground_widget)
         self.set_central_widget(self.ground_widget)

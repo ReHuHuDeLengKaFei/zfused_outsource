@@ -23,7 +23,7 @@ class Window(QtWidgets.QMainWindow):
 
         self._base_build()
 
-        self._help_url = "outsource/maya/"
+        self._help_url = "outsource/"
         self._is_press = False
         self._drag_position = QtCore.QPoint(0, 0)
 
