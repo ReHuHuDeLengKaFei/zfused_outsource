@@ -212,7 +212,11 @@ def reference_file(*args, **kwargs):
     if _namespace:
         rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.file_code(), _input_task_attr_output.code()))
     else:
-        rf = cmds.file(_production_file, r = True, ns = "{}__ns__00".format(_input_task.file_code()))
+        _project = _input_task.project()
+        _default_namespace = _project.variables("default_namespace", "__ns__00") 
+        # _ns = "{}{}".format(_task.project_entity().file_code(), _default_namespace)
+        rf = cmds.file(_production_file, r = True, ns = "{}{}".format(_input_task.file_code(), _default_namespace))
+        # rf = cmds.file(_production_file, r = True, ns = "{}__ns__00".format(_input_task.file_code()))
     rfn = cmds.referenceQuery(rf, rfn = True)
     _version_id = _input_task.last_version_id()
     attr.set_node_attr(rfn, _input_task_attr_output_id, _version_id, "false")
