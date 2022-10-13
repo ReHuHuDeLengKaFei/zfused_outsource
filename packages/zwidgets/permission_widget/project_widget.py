@@ -44,7 +44,7 @@ class ProjectWidget(QtWidgets.QFrame):
 
         # cache_path
         _cache_path = _project.cache_path()
-        self.path_layout.addWidget( path_widget.PathWidget(_image_path) )
+        self.path_layout.addWidget( path_widget.PathWidget(_cache_path) )
 
     def check(self):
         for i in range(self.path_layout.count()):
