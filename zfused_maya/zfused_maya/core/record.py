@@ -56,9 +56,9 @@ def write_company_id(task_id):
 def _cache_dir():
     USER_CACHE_DIR = None
     if platform.system() == "Darwin":
-        USER_CACHE_DIR = "%s/Applications/zfused/pipeline/maya/ui_conf" % os.environ["HOME"]
+        USER_CACHE_DIR = "%s/Applications/zfused/outsource/maya/ui_conf" % os.environ["HOME"]
     if platform.system() == "Windows":
-        USER_CACHE_DIR = "%s/zfused/pipeline/maya/ui_conf" % os.environ["APPDATA"]
+        USER_CACHE_DIR = "%s/zfused/outsource/maya/ui_conf" % os.environ["APPDATA"]
     if not os.path.isdir(USER_CACHE_DIR):
         os.makedirs(USER_CACHE_DIR)
     return USER_CACHE_DIR
