@@ -134,4 +134,4 @@ def fix_deformed_mesh_name(post_fix_name, group_list = []):
                 try:
                     cmds.rename(_shape,_name)
                 except Exception as e:
-                    print(e)
+                    logger.warning(e)

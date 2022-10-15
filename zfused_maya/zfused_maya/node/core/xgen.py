@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import logging
 
 import maya.cmds as cmds
 import xgenm as xg
@@ -21,6 +22,8 @@ from zfused_maya.node.core import alembiccache
 
 ATTR = ['uvWrite', 'worldSpace', 'stripNamespaces']
 ATTrPREFIX = ['xgen']
+
+logger = logging.getLogger(__name__)
 
 
 def files():
@@ -257,7 +260,7 @@ def transform_xgenfile(src, dst):
         new_dst = dst.replace("\\", "/")
         shutil.copy(new_src, new_dst)
     except Exception as e:
-        print(e)
+        logger.warning(e)
 
 
 def _getallxgennode():

@@ -69,8 +69,6 @@ def open_file(*args, **kwargs):
     else:
         _production_file = "{}/{}/{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(), _file_suffix)
     
-    print(_production_file)
-
     # do somthing
     cmds.file(_production_file, o = True, f = True, options = "v=0;")
     # rfn = cmds.referenceQuery(rf, rfn = True)
@@ -120,8 +118,6 @@ def import_file(*args, **kwargs):
     else:
         _production_file = "{}/{}/{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(), _file_suffix)
     
-    print(_production_file)
-
     # do somthing
     cmds.file(_production_file, i = True, options = "v=0;")
     # rfn = cmds.referenceQuery(rf, rfn = True)
@@ -195,7 +191,6 @@ def reference_file(*args, **kwargs):
     _reference_nodes = cmds.ls(references = True)
     if _reference_nodes:
         for _reference_node in _reference_nodes:
-            print(_reference_node)
             _reference_name_space = cmds.referenceQuery(_reference_node, namespace=True, shn = True)
             if _reference_name_space.startswith("{}__in__".format(_namespace)) or (not _namespace and not _reference_name_space) or (not _namespace and _reference_name_space.startswith(_input_task.file_code())):
                 _file_name = cmds.referenceQuery(_reference_node, filename=True, withoutCopyNumber=True)
@@ -282,7 +277,6 @@ def reference_abc_(*args, **kwargs):
         #for _step in steps_list:
         #_output_attr_handle = zfused_api.attr.Output(_step)
         #_attr_code = _output_attr_handle.code()
-        #print(_output_attr_code)
         _mat_ns =_namespace+_out_put_attr_code
         _geo_ns =_namespace
         _production_file = zfused_api.version.Version(_last_vresion_id).production_file(_out_put_attr_code)
@@ -309,9 +303,8 @@ def reference_abc_(*args, **kwargs):
                         cmds.select(new_trans)
                     _sl =cmds.ls(sl=True)
                     s=cmds.sets(_sl,e=True,forceElement=new_shader_engine)
-                    print(s)
         except Exception as e:
-            print(e)
+            logger.error(e)
         # # _versions  =_task.versions()
         # # for _v in _versions:
         # #     _pr =_v.get('FilePath')

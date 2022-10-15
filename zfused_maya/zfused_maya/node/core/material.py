@@ -107,7 +107,6 @@ class trans_renderinfo(object):
         _srcns = self.get_namespace(self.src)
         _dstns = self.get_namespace(self.dst)
         mats = self.get_shader(_srcns)
-        #print(mats)
         if mats:
             for mat in mats:
                 _meshattr = "{}.model".format(mat)
@@ -154,7 +153,6 @@ def transform_material(src, dst):
     # remove dst original material connect
     _cons = cmds.listConnections("{}".format(dst), p = 1, c = True)
     if _cons:
-        #print(_cons)
         for i in range(0, len(_cons), 2):
             _out = _cons[i + 1]
             if cmds.nodeType(_out) == "shadingEngine":
@@ -181,7 +179,6 @@ def transform_material(src, dst):
         for _mesh in _meshs:
             if _mesh.startswith(src):
                 _dst_mesh = _mesh.replace(src, dst)
-                #print(_dst_mesh)
 
                 if cmds.objExists(_dst_mesh):
                     _fix_dst_mesh = _dst_mesh
@@ -209,5 +206,4 @@ if __name__ == "__main__":
             _rendering_shape = "{}_rendering".format(_transform)
             if not cmds.objExists(_rendering_shape):
                 continue
-            #print(_rendering_shape)        
             _mat = material.transform_material(_rendering_shape, _mesh)     

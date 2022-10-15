@@ -3,7 +3,11 @@
 
 import os
 import re
+import logging
+
 import maya.cmds as cmds
+
+logger = logging.getLogger(__name__)
 
 # load gpu plugin
 _is_load = cmds.pluginInfo("gpuCache", query=True, loaded = True)
@@ -11,8 +15,7 @@ if not _is_load:
     try:
         cmds.loadPlugin("gpuCache")
     except Exception as e:
-        print(e)
-        # sys.exit()
+        logger.error(e)
 
 def create_rs_container(proxypath, gpupath, lock_attr = True):
     def getname(name):

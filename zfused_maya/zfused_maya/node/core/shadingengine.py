@@ -93,7 +93,6 @@ def set_node_shading_color(node, shading_color):
 
     :rtype: bool
     """
-    #print("set node color")
     if not cmds.objExists("{}.shadingcolor".format(node)):
         cmds.addAttr(node, ln="shadingcolor", dt="string")
     cmds.setAttr("{}.shadingcolor".format(node), shading_color, type="string")
@@ -105,7 +104,6 @@ def set_node_shading_color(node, shading_color):
         if not _ori_material.startswith("zfused_shading_color_"):
             cmds.setAttr("{}.surfacematerial".format(node), _ori_material, type="string")
             _mat = cmds.getAttr("{}.surfacematerial".format(node))
-            #print(_mat, _ori_material)
             if _ori_material != _mat:
                 cmds.setAttr("{}.surfacematerial".format(node), _ori_material, type="string")
     return True
@@ -129,7 +127,6 @@ def get_connect_color(node):
     if not _shader_list:
         return None
     _shader = _shader_list[0]
-    print(_shader)
     # get shader color or file node
     _node_type = cmds.nodeType(_shader)
     try:
@@ -148,7 +145,6 @@ def get_connect_color(node):
             _connect = cmds.listConnections("{}.color".format(_shader), type = "file")
     except:
         _connect = None
-    print(_connect)
     if not _connect:
         # get color
         _color = None
@@ -160,18 +156,12 @@ def get_connect_color(node):
         if cmds.objExists("{}.diffuse_color".format(_shader)):
             _color = cmds.getAttr("{}.diffuse_color".format(_shader))
 
-        print(_color)
         if _color:
-
             _c = list(_color[0])
-
             _r = max(1, int(_c[0]*255))
             _g = max(1, int(_c[1]*255))
             _b = max(1, int(_c[2]*255))
-
-            print(_r,_g,_b)
             _color = color.convert((_r, _g, _b))
-            print(_color)
         return _color
 
         # try:
@@ -206,7 +196,6 @@ def get_connect_color(node):
     if not os.path.isfile(_file):
         return None
     _color = image.get_dominant_color(_file)
-    #print(_color,node)
     return color.convert(_color)
 
 
@@ -215,7 +204,6 @@ def set_node_shading_transparency(node, shading_transparency):
 
     :rtype: bool
     """
-    #print("set node transparency")
     if not cmds.objExists("{}.shadingtransparency".format(node)):
         cmds.addAttr(node, ln="shadingtransparency", dt="string")
     cmds.setAttr("{}.shadingtransparency".format(node), shading_transparency, type="string")
@@ -227,7 +215,6 @@ def set_node_shading_transparency(node, shading_transparency):
         if not _ori_material.startswith("zfused_shading_color_"):
             cmds.setAttr("{}.surfacematerial".format(node), _ori_material, type="string")
             _mat = cmds.getAttr("{}.surfacematerial".format(node))
-            #print(_mat, _ori_material)
             if _ori_material != _mat:
                 cmds.setAttr("{}.surfacematerial".format(node), _ori_material, type="string")
     return True
@@ -318,18 +305,15 @@ def get_connect_ambientColor(node):
     #         _connect = cmds.listConnections("{}.color".format(_shader), type = "file")
     # except:
     #     _connect = None
-    # ##print(_connect)
     # if not _connect:
     #     # get color
     #     try:
     #         _color = cmds.getAttr("{}.color".format(_shader))
-    #         ##print(_color)
     #         if _color:
     #             _c = _color[0]
     #             _r = int(_c[0]*255)
     #             _g = int(_c[1]*255)
     #             _b = int(_c[2]*255)
-    #             ##print(_r,_g,_b)
     #             _color = color.convert((_r, _g, _b))
     #             return _color
     #         else:

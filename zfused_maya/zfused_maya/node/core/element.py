@@ -63,7 +63,6 @@ def gpu_elements(ignore_reference = True):
     # _production_files = zfused_api.zFused.get("production_file", filter = {"Path__in": "|".join(_files)})
     _production_file_dict = {}    
     for _production_file in _production_files:
-        # print(_production_file)
         _production_file_dict[_production_file.get("Path")] = _production_file
 
     for _index, _file in enumerate(_files):
@@ -444,7 +443,6 @@ class GPUElement(object):
         if project_step_id == self._data["project_step_id"]:
             return
 
-        print(self._data)
         # get project
         _project_step_handle = zfused_api.step.ProjectStep(project_step_id)
 
@@ -571,7 +569,6 @@ def get_asset(elements, title, _dict = {}):
         _assetname = _link_handle.code()
         _step_handle = zfused_api.step.ProjectStep(_element["project_step_id"])
         _step_code = _step_handle.code()
-        #print(_step_code)
         if title.split("/")[0] in _step_code:
         # if _step_code.startswith("shader"):
             _task_handle = zfused_api.task.Task(_element["task_id"])

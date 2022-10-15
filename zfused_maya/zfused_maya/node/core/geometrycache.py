@@ -131,8 +131,6 @@ def paths(text_files):
             _set(_left_list, value)
 
     _set_list = _get_file_set_list(text_files)
-    for _set_ in _set_list:
-        print(_set_)
     if not _set_list:
         return []
     _value = []

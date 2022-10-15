@@ -367,9 +367,7 @@ def material_assign_faces():
             if len(_sgs) == 1:
                 _faces = cmds.sets(_sgs[0], q=True)
                 _faces = [_face for _face in _faces if "{}.f[".format(_trans) in _face]
-                # print(_faces)
                 if len(_faces):
-                    # print(_faces)
                     _is_error = True
                     info += "{}\n".format(_polygon)
     if _is_error:
@@ -544,7 +542,7 @@ def camera_name():
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity()
     _name = _project_entity.file_code()
-    info = u"当前摄像机名称与任务名{}不匹配\n".format(_name)
+    info = u"当前摄像机名称与任务名{}_cam不匹配\n".format(_name)
     if not cmds.ls("*%s*" % _name, type="camera"):
         return False, info
     return True, None
@@ -859,11 +857,9 @@ def repeat(node_type="mesh"):
     _uuid_info = get_uuid_info()
     for _name in _lists:
         _trans = cmds.listRelatives(_name, p = True, pa = True)[0]
-        print(_trans)
         if len(_name.split('|')) != 1 or len(_trans.split('|')) != 1:
         # if len(_name.split('|')) != 1:
             _uuid = cmds.ls(_name, uuid=1)[0]
-            print(_uuid)
             # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
@@ -954,10 +950,8 @@ def trans_in_mesh():
                 wrongtrans
                 if wrongtrans:
                     _list.extend(wrongtrans)
-    # print(_list)
     if _list:
         info = "场景存在嵌套模型\n{}".format("\n".join(_list))
-        # print(info)
         return False, info
     else:
         return True, None
@@ -1047,7 +1041,6 @@ def polygon_edge5():
         cmds.polySelectConstraint(disable=True)
         edge5 = cmds.filterExpand(ex=True, sm=34) or []
         if edge5 != []:
-            print(_mesh)
             edge5_list.append(_mesh)
     if edge5_list:
         info = u"有5边或者更多边的多边形，请修改\n"
@@ -1906,11 +1899,15 @@ def error_rendering():
 
 def lock_cam():
     '''
-    检查相机是否有锁或k帧，包括动画层内
+    检查相机是否有锁或k帧，此检查包括含动画层的情况
     '''
-    
     attrilist = ['translateX','translateY','translateZ','rotateX','rotateY','rotateZ']
     cameras = cmds.ls(type="camera")
+    for cam in cameras:
+        #忽略引用的相机
+        _is_reference = cmds.referenceQuery(cam, isNodeReferenced=True)
+        if _is_reference:
+            cameras.remove(cam)
     used_cameras = list(set(cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
     def getAllLayers():
         layerlist=[]
@@ -1936,7 +1933,7 @@ def lock_cam():
             if_lock = cmds.getAttr(camtrans+'.'+attr, lock = True)
             if_key = cmds.keyframe( camtrans, attribute=attr, query=True)
             if not if_lock and not if_key:
-                #如果没k帧也没有锁
+                #如果没k帧也没锁
                 #print if_lock,if_key
                 if layers:
                     for layer in layers: 

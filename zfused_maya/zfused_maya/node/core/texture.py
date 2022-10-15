@@ -294,7 +294,6 @@ def __change_node_path(nodes, src, dst):
             _extend_file = _extend_file[1:]
         _new_file_text_path = "%s/%s"%( dst, _extend_file )
         # 锁定节点色彩空间，防止替换贴图时色彩空间设置丢失
-        # print(_new_file_text_path)
         if _type == "file" and not cmds.getAttr("{}.ignoreColorSpaceFileRules".format(_file_node)):
             cmds.setAttr("{}.ignoreColorSpaceFileRules".format(_file_node), 1)
         while True:
@@ -330,12 +329,9 @@ def error_nodes():
         _is_reference = cmds.referenceQuery(_file_node, isNodeReferenced = True)
         if _is_reference:
             continue
-
-        # print(_file_node)
         _files = get_file_node_files(_file_node)
         if not _files:
             _error_nodes.append(_file_node)
-        # print(_files)
         for _file in _files:
             if not os.path.isfile(_file):
                 _error_nodes.append(_file_node)
@@ -468,8 +464,6 @@ def paths(text_files):
             _set(_left_list, value)
 
     _set_list = _get_file_set_list(text_files)
-    # for _set_ in _set_list:
-    #     print(_set_)
     if not _set_list:
         return []
     _value = []

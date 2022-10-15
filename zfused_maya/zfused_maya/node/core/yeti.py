@@ -29,7 +29,6 @@ def publish_file(files, src, dst):
         _backup_texture_file = os.path.join(dst, _extend_file)
         #  upload texture file
         logger.info("upload file {} to {}".format(_texture_file, _backup_texture_file))
-        # print(_texture_file,_backup_texture_file)
         _result = filefunc.publish_file(_texture_file, _backup_texture_file)
 
 
@@ -67,7 +66,6 @@ def change_node_path(ori_dict, src, dst):
         while _extend_file.startswith("/"):
             _extend_file = _extend_file[1:]
         _new_file_text_path = "{}/{}".format(dst,_extend_file)
-        # print(_v,_extend_file,_new_file_text_path)
         _node,_tex_node = _k.split("/")
         while True:
             cmds.pgYetiGraph(_node,node = _tex_node,param = "file_name",setParamValueString = _new_file_text_path)

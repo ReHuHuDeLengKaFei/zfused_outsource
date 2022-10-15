@@ -130,7 +130,6 @@ def create_relatives_(task_id = 0):
             _link_dict[_link_object_id][_element["output_attr_id"]].append(_element["task_id"])
     if _link_dict:
         for _object_key, _object_value in _link_dict.items():
-            #print(_object_value)
             _max = []
             for _project_step_key, _project_step_value in _object_value.items():
                 _max = _project_step_value
@@ -154,7 +153,6 @@ def create_relatives_(task_id = 0):
     # 上一级version版本
     _version_id = _task.last_version_id()
     if _version_id:
-        #print(_version_id)
         _version_relatives = zfused_api.zFused.get("relative", filter = {"TargetObject": "version", "TargetId": _version_id})
         if not _version_relatives:
             _task_relatives = zfused_api.zFused.get("relative", filter = {"TargetObject": "task", "TargetId": _task_id, "SourceObject": "version"})
@@ -184,7 +182,6 @@ def create_relatives_(task_id = 0):
     _attrs = []
     _sets = cmds.ls(type = "objectSet")
     for _set in _sets:
-        #print(_set)
         _attr = attr.get_node_attr(_set)
         if _attr:
             zfused_api.relative.create_relatives("version", _attr["version_id"], "task", _task_id)

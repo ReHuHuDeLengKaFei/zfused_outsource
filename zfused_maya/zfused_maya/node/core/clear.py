@@ -211,9 +211,9 @@ def reference():
                 cmds.lockNode(_reference_node, l=0)
                 cmds.delete(_reference_node)
         except Exception as e:
+            logger.warning(e)
             cmds.lockNode(_reference_node, l=0)
             cmds.delete(_reference_node)
-            #print(e)
 
 
 def color_set():
