@@ -6,7 +6,8 @@ import os
 from Qt import QtGui
 import maya.cmds as cmds
 
-import zfused_maya.core.color as color
+from zcore import color
+
 import zfused_maya.core.image as image
 
 def nodes():
