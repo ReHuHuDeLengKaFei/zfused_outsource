@@ -1,0 +1,7 @@
+[
+  {
+    "code": "publish_file",
+    "cmd": "from zfused_maya.tool.batchchange.tool import publish_file;publish_file.publish_file(*args,**kwargs)",
+    "name": "批量发布本地文件"
+  }
+]

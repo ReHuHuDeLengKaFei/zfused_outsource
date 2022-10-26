@@ -11,8 +11,6 @@ from zwidgets.widgets import dialog
 
 from zfused_maya.core import record
 
-from zfused_maya.ui.widgets import window
-
 
 def set_company():
     """设置对应的公司
@@ -31,7 +29,6 @@ class SetCompanyWidget(dialog.Dialog):
         self._build()
 
         self._company_dict = {}
-        # self._company_name = []
         self._company_completer = None
 
     @staticmethod
@@ -40,9 +37,7 @@ class SetCompanyWidget(dialog.Dialog):
         rtype: zfused_api.user.User
         """
         dialog = SetCompanyWidget(parent)
-        # dialog.user_list_widget.load(group_type, group_id)
         result = dialog.exec_()
-        print(result)
         return (dialog.company(), result)
 
     def accept(self):
@@ -67,8 +62,6 @@ class SetCompanyWidget(dialog.Dialog):
             self._company_dict[_company.get("Name")] = _company.get("Id")
             _company_names.append(_company.get("Name"))
         self._company_completer = QtWidgets.QCompleter(_company_names)
-        print(self._company_completer)
-        # self._company_completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self._company_completer.setFilterMode(QtCore.Qt.MatchContains)
         self._company_completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         self.company_lineedit.setCompleter(self._company_completer)
@@ -94,7 +87,3 @@ class SetCompanyWidget(dialog.Dialog):
         self.company_lineedit.setFixedHeight(40)
 
         self.company_layout.addStretch(True)
-    
-
-if __name__ == '__main__':
-    ui = SetCompanyWidget.set_company(window._Window())

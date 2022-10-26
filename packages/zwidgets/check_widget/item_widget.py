@@ -41,10 +41,10 @@ class ItemWidget(QtWidgets.QWidget):
         self.check()
 
     def check(self):
-        # print(self.ignoreCheckBox.isChecked())
-        if self.ignoreCheckBox.isChecked():
+        # print(self.ignore_checkBox.isChecked())
+        if self.ignore_checkBox.isChecked():
             self.infoWidget.setStyleSheet("QWidget%s"%self.RIGHT)
-            self.showButton.setStyleSheet("QPushButton%s"%self.RIGHT)
+            self.show_button.setStyleSheet("QPushButton%s"%self.RIGHT)
             return True
         print(self.check_command)
         global _check_status,_check_info # = False,""
@@ -52,7 +52,7 @@ class ItemWidget(QtWidgets.QWidget):
         print(_check_status,_check_info)
         if not _check_status:
             self.infoWidget.setStyleSheet("QWidget%s"%self.ERROR)
-            self.showButton.setStyleSheet("QPushButton%s"%self.ERROR)
+            self.show_button.setStyleSheet("QPushButton%s"%self.ERROR)
             items = _check_info.split("\n")[:]
             self.listWidget.clear()
             if len(items) == 1:
@@ -63,7 +63,7 @@ class ItemWidget(QtWidgets.QWidget):
             return False
         else:
             self.infoWidget.setStyleSheet("QWidget%s"%self.RIGHT)
-            self.showButton.setStyleSheet("QPushButton%s"%self.RIGHT)
+            self.show_button.setStyleSheet("QPushButton%s"%self.RIGHT)
             return True
 
     def _select_item(self):
@@ -85,63 +85,68 @@ class ItemWidget(QtWidgets.QWidget):
         _layout.setContentsMargins(3,3,3,3)
 
         self.infoWidget = QtWidgets.QFrame()
+        _layout.addWidget(self.infoWidget)
         self.infoWidget.setMaximumHeight(1)
         self.infoWidget.setMinimumHeight(1)
         self.infoWidget.setStyleSheet("QFrame%s"%self.DEFAULT)
 
-        headWidget = QtWidgets.QWidget()
-        headWidget.setMaximumHeight(25)
-        headWidget.setMaximumHeight(25)
-        headLayout = QtWidgets.QHBoxLayout(headWidget)
-        headLayout.setContentsMargins(0,0,0,0)
+        self.head_widget = QtWidgets.QWidget()
+        _layout.addWidget(self.head_widget)
+        self.head_widget.setMaximumHeight(25)
+        self.head_widget.setMaximumHeight(25)
+        self.head_layout = QtWidgets.QHBoxLayout(self.head_widget)
+        self.head_layout.setContentsMargins(0,0,0,0)
 
-        ignoreLayout = QtWidgets.QVBoxLayout()
-        self.ignoreCheckBox = QtWidgets.QCheckBox()
-        self.ignoreCheckBox.setMaximumSize(100, 25)
-        self.ignoreCheckBox.setMinimumSize(100, 25)
-        #self.ignoreCheckBox.setStyleSheet("QCheckBox{background-color: rgb(60, 60, 60, 0);}")
-        self.ignoreCheckBox.setText(u"忽略")
-        ignoreLayout.addWidget(self.ignoreCheckBox)
+        self.ignore_layout = QtWidgets.QVBoxLayout()
+        self.head_layout.addLayout(self.ignore_layout)
+        self.ignore_checkBox = QtWidgets.QCheckBox()
+        self.ignore_checkBox.setMaximumSize(100, 25)
+        self.ignore_checkBox.setMinimumSize(100, 25)
+        #self.ignore_checkBox.setStyleSheet("QCheckBox{background-color: rgb(60, 60, 60, 0);}")
+        self.ignore_checkBox.setText(u"忽略")
+        self.ignore_layout.addWidget(self.ignore_checkBox)
         #if is_ignore
         if self.is_ignore:
-            self.ignoreCheckBox.setEnabled(True)
+            self.ignore_checkBox.setEnabled(True)
         else:
             print("is ignore %s"%self.is_ignore)
-            self.ignoreCheckBox.setEnabled(False)
-        self.ignoreCheckBox.update()
+            self.ignore_checkBox.setEnabled(False)
+        self.ignore_checkBox.update()
 
-        titleLabel = QtWidgets.QLabel()
-        titleLabel.setStyleSheet("QLabel{background-color: rgb(60, 60, 60, 0);}")
-        titleLabel.setText(self.name)
+        self.title_label = QtWidgets.QLabel()
+        self.head_layout.addWidget(self.title_label)
+        self.title_label.setStyleSheet("QLabel{background-color: rgb(60, 60, 60, 0);}")
+        self.title_label.setText(self.name)
 
-        self.showButton = QtWidgets.QPushButton()
-        self.showButton.setStyleSheet("QPushButton%s"%self.DEFAULT)
-        self.showButton.setMinimumSize(10,10)
-        self.showButton.setMaximumSize(10,10)
+        self.show_button = QtWidgets.QPushButton()
+        self.head_layout.addWidget(self.show_button)
+        self.show_button.setStyleSheet("QPushButton%s"%self.DEFAULT)
+        self.show_button.setMinimumSize(10,10)
+        self.show_button.setMaximumSize(10,10)
 
         self.info_button = QtWidgets.QPushButton()
+        self.head_layout.addWidget(self.info_button)
         self.info_button.setMaximumSize(80, 25)
         self.info_button.setMinimumSize(80, 25)
         self.info_button.setText(u"显示信息")
 
         self.clear_button = QtWidgets.QPushButton()
+        self.head_layout.addWidget(self.clear_button)
         self.clear_button.setMaximumSize(50, 25)
         self.clear_button.setMinimumSize(50, 25)
         self.clear_button.setText(u"修复")
-        if self.clear_command == None:
+        if not self.clear_command:
             self.clear_button.setEnabled(False)
-
-        headLayout.addWidget(self.showButton)
-        headLayout.addLayout(ignoreLayout)
-        headLayout.addWidget(titleLabel)
-        headLayout.addWidget(self.info_button)
-        headLayout.addWidget(self.clear_button)
+            self.clear_button.hide()
+        else:
+            self.clear_button.showNormal()
 
         self.listWidget = QtWidgets.QListWidget()
+        _layout.addWidget(self.listWidget)
         self.listWidget.setFrameShape(QtWidgets.QListWidget.NoFrame)
         self.listWidget.setStyleSheet("background:rgb(0,0,0)")
         self.listWidget.setHidden(True)
 
-        _layout.addWidget(self.infoWidget)
-        _layout.addWidget(headWidget)
-        _layout.addWidget(self.listWidget)
+        
+        
+        

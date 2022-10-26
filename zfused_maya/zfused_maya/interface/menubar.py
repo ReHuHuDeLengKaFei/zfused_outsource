@@ -11,13 +11,7 @@ import maya.cmds as cmds
 
 import zfused_api
 
-from zfused_maya.core import record
-
-from zfused_maya.core import tomaya
-
-import zfused_maya.core.menu as menu
-
-__all__ = ["build", "delete", "rebuild"]
+from zfused_maya.core import record,menu
 
 logger = logging.getLogger(__name__)
 

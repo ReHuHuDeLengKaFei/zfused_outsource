@@ -6,7 +6,7 @@ import sys
 
 import maya.cmds as cmds
 
-__version__ = "0.2.2.3"
+__version__ = "0.2.2.4"
 
 _resource = None
 
@@ -18,21 +18,18 @@ sys.path.insert(0,os.path.dirname(DIRNAME))
 sys.path.insert(0,"{}/packages".format(DIRNAME))
 
 
-from .interface import menubar,company
-from zfused_maya.ui.widgets import window
-from zfused_maya.core import record
+
+# from zfused_maya.ui.widgets import window
+# from zfused_maya.core import record
 
 # 
 def login():
-    # 
-    # _company_id = record.current_company_id()
-    # if _company_id:
-    #     _res = True
-    # else:
-    #     _,_res = company.SetCompanyWidget.set_company(window._Window())
-    # # if _res:
-    # print(_res)
+    from .interface import menubar,setting
     menubar.rebuild()
+    # start setting
+    start = setting.StartupSetting()
+    start.run()
+
 
 def _get_maya_version():
     version = cmds.about(q=True, version=True)
@@ -40,12 +37,12 @@ def _get_maya_version():
     return "maya-%s-%s" % (version, os)
 
 # plugins path
-PLUGIN_PATH = "{}/plug-ins/{}".format(os.path.dirname(DIRNAME), _get_maya_version())
+# PLUGIN_PATH = "{}/plug-ins/{}".format(os.path.dirname(DIRNAME), _get_maya_version())
 
 #RESOURCE_PATH = os.path.join(DIRNAME, "resources")
-RESOURCE_PATH = DIRNAME
+# RESOURCE_PATH = DIRNAME
 #RESOURCE_PATH = os.path.join(DIRNAME, "resources")
-SETUP_PATH = os.path.join(DIRNAME, "setup")
+# SETUP_PATH = os.path.join(DIRNAME, "setup")
 
 
 def version():

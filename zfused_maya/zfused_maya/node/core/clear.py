@@ -6,10 +6,12 @@
 from __future__ import print_function
 
 import logging
+import os.path
 
 import pymel.core as pm
 import maya.cmds as cmds
-
+import zfused_api
+from zfused_maya.core import record
 logger = logging.getLogger(__name__)
 
 def is_show(node):
@@ -362,8 +364,9 @@ def delete_type_node():
         for node in node_list:
             _inr = cmds.referenceQuery(node, inr = True)
             if not _inr:
-                print ('{} is deep reference node , cannot be deleted'.format(node))
-            cmds.delete(node)
+                logger.warning('{} is deep reference node , cannot be deleted'.format(node))
+            else:
+                cmds.delete(node)
 
 def cancle_rendering_attr():
     from . import renderinggroup
@@ -375,3 +378,25 @@ def cancle_rendering_attr():
             imported_assets.append(asset)
     for _node in imported_assets:
         cmds.setAttr("%s.rendering"%_node, 0)
+
+
+def rename_file():
+    _task_id  = record.current_task_id()
+    if not _task_id:
+        return False
+    _task = zfused_api.task.Task(_task_id)
+    #_project_entity = _task.project_entity()
+    _name = _task.full_code()
+    _file_name = cmds.file(q=True, sn=True)
+    _short_file_name = cmds.file(q=True,sn=True,shn=True)
+    _file_path = os.path.dirname(_file_name)
+    _suffix = os.path.splitext(_file_name)[-1]
+    _new_file_name = _name +_suffix
+    _new_file_path = os.path.join(_file_path,_new_file_name)
+    if os.path.exists(_new_file_path):
+        _new_file_path = '{}/temp_{}'.format(_file_path,_new_file_name)
+    _file_format = 'mayaAscii'
+    if _suffix =='mb':
+        _file_format = 'mayaBinary'
+    cmds.file(rename = _new_file_path)
+    cmds.file(save=True, type=_file_format, f=True, options="v=0;")

@@ -6,7 +6,7 @@
 '''
 from __future__ import print_function
 
-from qtpy import QtWidgets, QtGui, QtCore
+from Qt import QtWidgets, QtGui, QtCore
 
 import zfused_api
 
