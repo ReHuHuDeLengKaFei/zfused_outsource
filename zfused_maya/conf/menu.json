@@ -130,6 +130,15 @@
                 "cmd":"from zfused_maya.tool.cfx import export_cache;reload(export_cache);win = export_cache.main.Window();win.show()",
                 "color":"#DD2222",
                 "category":"测试"
+            },
+            {
+                "name":"批量处理文件",
+                "code":"batch processing files",
+                "title":"批量处理文件\nbatch processing files",
+                "cmd":"from zfused_maya.tool.technology.batchchange import batch;from zcore import reload;reload(batch);ui = batch.Batch();ui.show()",
+                "color":"54FF9F",
+                "category":"工具"
+
             }
 
         ],

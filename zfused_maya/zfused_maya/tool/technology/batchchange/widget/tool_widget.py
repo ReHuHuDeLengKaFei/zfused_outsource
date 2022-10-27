@@ -24,7 +24,7 @@ class ToolWidget(QtWidgets.QFrame):
         _publish_file_radio_btn.setText('批量发布外包文件')
         _publish_file_radio_btn.toggled.connect(self._publish_file)
         self.ground_layout.addWidget(_publish_file_radio_btn,1,1)
-        self.setStyleSheet('QFrame{background:red}')
+        self.setStyleSheet('QFrame{background:LightYellow}')
 
     def _publish_file(self):
         scripts = "from zfused_maya.tool.batchchange.tool import publish_file;reload(publish_file);publish_file.publish_file(*args,**kwargs)"

@@ -55,8 +55,9 @@ class LocalPathWidget(QtWidgets.QFrame):
         self.local_path_edit = QtWidgets.QLineEdit()
         self.local_path_btn = QtWidgets.QPushButton()
         self.ground_layout.addWidget(self.local_path_label)
-        self.ground_layout.addWidget(self.local_path_edit)
         self.ground_layout.addWidget(self.local_path_btn)
+        self.ground_layout.addWidget(self.local_path_edit)
+
         self.local_path_btn.clicked.connect(self.set_path)
         _search_image = os.path.join(_image_path, 'search1.png')
         _search_icon = QtGui.QIcon(_search_image)

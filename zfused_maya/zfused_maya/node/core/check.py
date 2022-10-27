@@ -1174,6 +1174,7 @@ def unrecord_reference_file():
     for _node in _reference_nodes:
         try:
             _file_path = cmds.referenceQuery(_node, f=True, wcn=True)
+            print(_file_path)
             _production_files = zfused_api.zFused.get("production_file_record", filter={
                 "Path": _file_path})
             if not _production_files:
@@ -1977,4 +1978,29 @@ def unused_reference_file():
             info += u'{}\n'.format(_node)
 
         return False,info
+
+
+def horizon():
+    """
+    检查模型是否在地平面上
+    :return:
+    """
+    info = u'下列节点低于平面\n'
+    geo_groups = [i for i in cmds.ls(type = 'transform', l=True) if cmds.objExists("{}.Name".format(i)) and cmds.getAttr('{}.Name'.format(i))=='geometry']
+    _rending_node = renderinggroup.nodes()
+    check_node =list(set(geo_groups+_rending_node) )
+    error_node = False
+    for group in check_node:
+        miny = cmds.getAttr('{}.boundingBoxMinY'.format(group))
+        if miny <0:
+            info += '{}\n'.format(group)
+            error_node =True
+
+    if error_node  is False:
+        return True,None
+    return False,info
+
+
+
+
 

@@ -10,15 +10,11 @@ from __future__ import print_function
 from PySide2 import QtWidgets
 
 from cores import cores
-reload(cores)
 from zfused_maya.core import record
 from .widget import filtratewidget, project_step_widget, task_list,tool_widget
 from zfused_maya.ui.widgets import window
-reload(task_list)
-reload(project_step_widget)
-
+reload(tool_widget)
 reload(filtratewidget)
-
 
 class Batch(window._Window):
     def __init__(self):

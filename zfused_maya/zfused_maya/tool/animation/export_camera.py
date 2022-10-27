@@ -2,20 +2,90 @@
 # --author-- lanhua.zhou
 
 """ shading color widget """
+from __future__ import print_function
 
 import os
 
-from qtpy import QtWidgets, QtCore
+from Qt import QtWidgets, QtCore
 
+from pymel.core import *
 import maya.cmds as cmds
-import maya.mel as mm
+import maya.mel as mel
 
 from zfused_maya.ui.widgets import window
-import zfused_maya.node.attribute.output.animation.publish_cam as cam
-reload(cam)
+
+CAM_KEYWORD_LIST =  ['_cam']
+
+def get_cam_list(*args):
+    cam_list = []
+    cam_list_all = ls(type = 'camera')
+    for cam in cam_list_all:
+        for cam_keyword in CAM_KEYWORD_LIST:
+            if cam_keyword in str(cam):
+                cam_list.append(listRelatives(cam, parent = True)[0])
+    return cam_list
 
 
-class ExportCamera(window.Window):
+def export_cam(export_dir,outtype):
+    filepath = cmds.file(q=True, sn=True)
+    filename = os.path.basename(filepath).split('.')[0]
+    export_name = filename+'_cam'
+    export_path = os.path.join(export_dir,export_name +'.'+ outtype).replace('\\','/')
+
+    cam = get_cam_list()[0]
+    outcam = cmds.listRelatives(str(cam), fullPath=True)[0].split('|{}Shape'.format(cam))[0]
+    select(cam, r = True)
+
+    startframe = cmds.playbackOptions(q = True, min = True)
+    endframe = cmds.playbackOptions(q = True, max = True)
+
+    if outtype == 'ma':
+        exportSelected(export_path, type = 'mayaAscii')
+    elif outtype == 'mb':
+        exportSelected(export_path, type = 'mayaBinary')    
+    if outtype == 'abc':
+        mel_cmd = 'AbcExport -j "-frameRange {} {} -worldSpace -dataFormat ogawa -root {} -file {}"'.format(startframe,endframe,outcam,export_path)
+        mel.eval(mel_cmd)
+    if outtype == 'fbx':
+        export_path = export_path.replace('\\', '/')
+        mel.eval('FBXExport -f "{0}" -s;'.format(export_path))
+    if os.path.isfile(export_path):
+        return True
+
+def export_cam_dir(rootpath,export_dir,outtype):
+    cam_list =[]
+    num = 0
+    for root, dir, filenames in os.walk(rootpath):
+        #print ('root:',root)
+        #print ('dir',dir)
+        #print ('filenames:',filenames)
+        for filename in filenames:
+            if filename.endswith('.ma'):
+                num += 1
+                mapath = os.path.join(root,filename).replace('\\','/')
+                cmds.file( mapath, open = True, force = True)
+                try:
+                    export_cam(export_dir,outtype)
+                    if filename not in cam_list:
+                        cam_list.append(filename)
+                except Exception as e:
+                    print(e)
+                    pass
+    
+    file_list = os.listdir(rootpath)
+    if cam_list:
+        if len(cam_list)== num:
+            return 0
+        else:
+            return 1
+    else:
+        return 2
+
+
+
+
+
+class ExportCamera(window._Window):
     def __init__(self, parent = None):
         super(ExportCamera, self).__init__(parent)
         self._build()
@@ -42,16 +112,29 @@ class ExportCamera(window.Window):
 
     def _export_line(self):
         _path = self.export_lineedit.text()
-        _state = cam.export_cam_ma(_path)
+        _format = self.select.currentText()
+        
+        _state = export_cam(_path,_format)
+        '''
+        if _format == 'ma' or _format == 'mb':
+            _state = export_cam_mab(_path,_format)
+        elif _format == 'abc':
+            _state = export_cam_abc(_path)
+        elif _format == 'fbx':
+            _state = export_cam_fbx(_path)
+        '''
         if _state:
             QtWidgets.QMessageBox.information(self,u"提示",u"相机导出成功！！！！！！！！！")
         else:
             QtWidgets.QMessageBox.critical(self,u"警告",u"相机未导出成功")
-    
+        
     def _seq_line(self):
         _inpath = self.seq_lineedit.text()
         _outpath = self.export_lineedit.text()
-        _state = cam.export_cam_dir(_inpath,_outpath)
+        _format = self.select.currentText()
+        
+        _state = export_cam_dir(_inpath,_outpath,_format)
+
         if _state == 0:
             QtWidgets.QMessageBox.information(self,u"提示",u"相机导出成功！！！！！！！！！")
         elif _state == 1:
@@ -117,7 +200,7 @@ class ExportCamera(window.Window):
         # 导出标签
         self.export_label = QtWidgets.QLabel(self)
         self.input_layout.addWidget(self.export_label)
-        self.export_label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.export_label.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.export_label.setText(u"导出文件夹路径:")
         # 导出路径输入    
         self.export_lineedit = QtWidgets.QLineEdit(self)
@@ -126,6 +209,27 @@ class ExportCamera(window.Window):
         self.chose_Button2 = QtWidgets.QPushButton(">>")
         self.input_layout.addWidget(self.chose_Button2)
         self.chose_Button2.setFixedSize(40,24)
+        
+        
+        # 选择导出格式面板
+        self.form_widget = QtWidgets.QFrame()
+        _layout.addWidget(self.form_widget)
+        self.form_layout = QtWidgets.QHBoxLayout(self.form_widget)
+        self.form_layout.setSpacing(6)
+        self.form_layout.setContentsMargins(4,4,4,4)
+        # 选择标签
+        self.form_label = QtWidgets.QLabel(self)
+        self.form_layout.addWidget(self.form_label)
+        #self.form_label.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.form_label.setText(u"导出格式:")
+        # 导出路径输入   
+        self.select = QtWidgets.QComboBox()
+        self.form_layout.addWidget(self.select)
+        self.formitem = ['ma','mb','abc','fbx']
+        self.select.addItems(self.formitem)
+        self.select.setFixedWidth(100)
+        self.form_layout.insertSpacing(3,400)
+
 
         # 操作界面
         self.operation_widget = QtWidgets.QFrame()
@@ -133,7 +237,7 @@ class ExportCamera(window.Window):
         self.operation_layout = QtWidgets.QHBoxLayout(self.operation_widget)
         self.operation_layout.setSpacing(4)
         self.operation_layout.setContentsMargins(4,4,4,4)
-        # 单按钮
+        # 导出ma按钮
         self.ma_Button = QtWidgets.QPushButton()
         self.operation_layout.addWidget(self.ma_Button)
         self.ma_Button.setMinimumSize(QtCore.QSize(100, 40))
@@ -141,14 +245,34 @@ class ExportCamera(window.Window):
         self.ma_Button.setFixedWidth(200)
         self.ma_Button.setStyleSheet("QPushButton{background-color:#252526}")
         self.operation_layout.addStretch(True)
-        # 批量按钮
+        # 批量导出ma按钮
         self.dir_Button = QtWidgets.QPushButton()
         self.operation_layout.addWidget(self.dir_Button)
-        self.dir_Button.setMinimumSize(QtCore.QSize(10, 40))
+        self.dir_Button.setMinimumSize(QtCore.QSize(100, 40))
         self.dir_Button.setText(u"批量导出文件夹下摄像机")
         self.dir_Button.setFixedWidth(200)
-        self.dir_Button.setStyleSheet("QPushButton{background-color:#1e1e1e}")
+        self.dir_Button.setStyleSheet("QPushButton{background-color:#252526}")
 
+        '''
+        self.operation_layout.insertSpacing(3,20)
+
+        
+        # 导出abc按钮
+        self.abc_Button = QtWidgets.QPushButton()
+        self.operation_layout.addWidget(self.abc_Button)
+        self.abc_Button.setMinimumSize(QtCore.QSize(100, 40))
+        self.abc_Button.setText(u"导出当前场景摄像机.abc")
+        self.abc_Button.setFixedWidth(150)
+        self.abc_Button.setStyleSheet("QPushButton{background-color:#252526}")
+        self.operation_layout.addStretch(True)
+        # 批量导出abc按钮
+        self.abc_dir_Button = QtWidgets.QPushButton()
+        self.operation_layout.addWidget(self.abc_dir_Button)
+        self.abc_dir_Button.setMinimumSize(QtCore.QSize(10, 40))
+        self.abc_dir_Button.setText(u"批量导出文件夹下摄像机.abc")
+        self.abc_dir_Button.setFixedWidth(200)
+        self.abc_dir_Button.setStyleSheet("QPushButton{background-color:#1e1e1e}")
+        '''
     def btn_fun(self, line):
         _path = QtWidgets.QFileDialog.getExistingDirectory()+"/"
         line.setText(_path)

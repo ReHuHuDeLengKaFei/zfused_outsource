@@ -136,7 +136,8 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                     return False
 
     # 获取场景信息
-    _scene_elements = element.scene_elements()
+    if not _is_outsource:
+        _scene_elements = element.scene_elements()
 
     # 更新 propertry script
     _property_script = _project_step.property_script()

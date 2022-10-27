@@ -319,6 +319,7 @@ class ReferenceElement(object):
         _version_handle = zfused_api.version.Version(_version_id)
         return _version_handle.production_file()
 
+    @zfused_api.reset
     def replace_by_project_step(self, project_step_id, work_with_no_version = False):
         """ 
         """
@@ -350,6 +351,7 @@ class ReferenceElement(object):
 
         cmds.file(_file_name, loadReference = _reference_node)
 
+    @zfused_api.reset
     def replace_by_derivative(self, link_object, link_id, work_with_no_version = False):
         """ replace by derivative
         """ 
@@ -378,9 +380,11 @@ class ReferenceElement(object):
 
         cmds.file(_file_name, loadReference = _reference_node)
 
+    @zfused_api.reset
     def update(self):
         """ update version
         """
+        print(self._data)
         # get last version
         # 
         _task_handle = zfused_api.task.Task(self._data["task_id"])
@@ -401,6 +405,7 @@ class ReferenceElement(object):
         cmds.setAttr("%s.version_id" % _reference_node, str(_last_version_id), type="string")
         self._data["version"] = _version_handle.data()["Index"]
         self._data["version_id"] = _last_version_id
+
         # relatives.create_relatives()
         cmds.file(_production_file, loadReference = _reference_node, f = True)
 

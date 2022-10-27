@@ -12,6 +12,8 @@ import pymel.core as pm
 import maya.cmds as cmds
 import zfused_api
 from zfused_maya.core import record
+from zfused_maya.node.core import renderinggroup
+
 logger = logging.getLogger(__name__)
 
 def is_show(node):
@@ -400,3 +402,22 @@ def rename_file():
         _file_format = 'mayaBinary'
     cmds.file(rename = _new_file_path)
     cmds.file(save=True, type=_file_format, f=True, options="v=0;")
+
+
+def horizon():
+    """
+    修复最低点低于水平面
+    :return:
+    """
+
+    geo_groups = [i for i in cmds.ls(type='transform', l=True) if
+                  cmds.objExists("{}.Name".format(i)) and cmds.getAttr('{}.Name'.format(i)) == 'geometry']
+    _rending_node = renderinggroup.nodes()
+    check_node = list(set(geo_groups + _rending_node))
+
+    for _node in check_node:
+        miny = cmds.getAttr('{}.boundingBoxMinY'.format(_node))
+        ty = cmds.getAttr('{}.ty'.format(_node))
+        m_y = ty +abs(miny)
+        cmds.setAttr('{}.ty'.format(_node),m_y)
+        cmds.makeIdentity(_node,t=True,a=True)
