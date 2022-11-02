@@ -109,6 +109,7 @@ def texture_work_path():
     _error_path = []
     info = u"以下路径的贴图未在项目work路径下\n"
     for _file in _files:
+        _file = _file.replace("\\","/")
         if _work_path in _file or _production_path in _file or _backup_path in _file:
             continue
         else:
@@ -2000,6 +2001,41 @@ def horizon():
         return True,None
     return False,info
 
+
+def repeat_color_space():
+    """
+    检查相同路径下同样的贴图使用了不同的色彩空间
+    :return:
+    """
+    import os
+    _color_space_info = {}
+    _files = cmds.ls(type='file')
+    for _file in _files:
+        _file_path = cmds.getAttr('%s.fileTextureName' % _file)
+        color_space = cmds.getAttr('%s.colorSpace' % _file)
+        _color_space_info.setdefault(_file_path, []).append(color_space)
+
+    error_file = []
+    for k, v in _color_space_info.items():
+        v = list(set(v))
+        if len(v) > 1:
+            error_file.append(k)
+    if not error_file:
+        return True, None
+
+    info = u'【相同路径下的贴图使用了不同的色彩空间：第一行为贴图的file节点，可选择；第二行是第一行的注释】\n'
+    _status = False
+    _files = cmds.ls(type='file')
+    for _file in _files:
+        _file_path = cmds.getAttr('%s.fileTextureName' % _file)
+        _base_name = os.path.basename(_file_path)
+        color_space = cmds.getAttr('%s.colorSpace' % _file)
+        if _file_path in error_file:
+            info += '{}\n'.format(_file)
+            info += u'【贴图名字：{}】  【色彩空间：{}】\n'.format(_base_name, color_space)
+            _status = True
+    if _status:
+        return False, info
 
 
 
