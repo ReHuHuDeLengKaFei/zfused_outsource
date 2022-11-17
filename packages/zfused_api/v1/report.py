@@ -81,6 +81,10 @@ class Report(_Entity):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
     def project_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         return self._data.get("ProjectId")
 
     def project_step(self):
@@ -273,6 +277,13 @@ class Report(_Entity):
         return zfused_api.zFused.get("file", filter = {"MD5__in":"|".join(_file_keys)})
 
     def update_approval(self, is_approval):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
+        if self._data.get("IsApproval") == is_approval:
+            return 
+
         self.global_dict[self._id]["IsApproval"] = is_approval
         self._data["IsApproval"] = is_approval
         v = self.put("report", self._data["Id"], self._data)

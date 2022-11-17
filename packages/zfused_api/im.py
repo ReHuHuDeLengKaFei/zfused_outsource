@@ -94,7 +94,7 @@ def message_notification(message_id, submitter_object, submitter_id, receiver_id
         logger.info(" [x] Sent {}:{}".format(severity, _message))
     _connection.close()
 
-def submit_message(submitter_object, submitter_id, receiver_ids, msg_data, msgtype, link_object = "", link_id = 0, group_type = "", group_id = 0):
+def submit_message(submitter_object, submitter_id, receiver_ids, msg_data, msgtype, link_object = "", link_id = 0, group_type = "", group_id = 0, at_user_ids = []):
     """ submit message 
         0 代表全部
     """
@@ -107,7 +107,8 @@ def submit_message(submitter_object, submitter_id, receiver_ids, msg_data, msgty
                                            link_object,
                                            link_id,
                                            group_type,
-                                           group_id )
+                                           group_id,
+                                           at_user_ids )
     
     # _s_t = time.time()
     # 发送消息

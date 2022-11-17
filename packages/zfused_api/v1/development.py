@@ -141,6 +141,7 @@ class Development(_Entity):
     def name_code(self):
         return self.name()
 
+    @_Entity._recheck
     def project_id(self):
         return self._data.get("ProjectId")    
 

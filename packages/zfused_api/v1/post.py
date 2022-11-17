@@ -118,29 +118,37 @@ class Post(_Entity):
 
     def full_code(self):
         """ get full path code
-
         rtype: str
         """
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data["Code"]
 
     def full_name(self):
         """ get full path name
-
         rtype: str
         """
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data["Name"]
 
 
     def full_name_code(self):
         """ get full path name and code
-
         rtype: str
         """
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return u"{}({})".format(self.full_name(), self.full_code())
 
     def users_count(self):
         """ get users count
-
         rtyle: list
         """
         _users = self.get("post_user", filter={"PostId": self._id})
@@ -174,7 +182,6 @@ class Post(_Entity):
 
     def remove_user(self, user_id):
         """ remove post user
-        
         """
         _current_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         # get post user key id

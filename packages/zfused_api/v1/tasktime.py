@@ -76,6 +76,7 @@ class TaskTime(_Entity):
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
+    @_Entity._recheck
     def project_id(self):
         return self._data.get("ProjectId")
 
@@ -103,6 +104,11 @@ class TaskTime(_Entity):
 
     def user_id(self):
         return self._data.get("UserId")
+
+    def thumbnail_path(self):
+        _task_id = self._data.get("TaskId")
+        _task_handle = zfused_api.task.Task(_task_id)
+        return _task_handle.thumbnail_path()
 
     def get_thumbnail(self, is_version = True):
         _task_id = self._data.get("TaskId")

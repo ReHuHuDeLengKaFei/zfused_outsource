@@ -53,7 +53,9 @@ OBJECT = {
     "attr_output": zfused_api.attr.Output,
     "development": zfused_api.development.Development,
     "login": zfused_api.login.Login,
-    "note": zfused_api.note.Note
+    "note": zfused_api.note.Note,
+    "chat_single": zfused_api.chat.Single,
+    "chat_group": zfused_api.chat.Group
 }
 
 
@@ -100,7 +102,9 @@ ENTITY_MAP = {
     "attr_output": zfused_api.attr.Output,
     "development": zfused_api.development.Development,
     "login": zfused_api.login.Login,
-    "note": zfused_api.note.Note
+    "note": zfused_api.note.Note,
+    "chat_single": zfused_api.chat.Single,
+    "chat_group": zfused_api.chat.Group
 }
 
 logger = logging.getLogger(__name__) 

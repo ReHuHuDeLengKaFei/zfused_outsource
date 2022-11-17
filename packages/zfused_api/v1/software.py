@@ -43,12 +43,13 @@ class Software(_Entity):
                 self.global_dict[self._id] = self._data
             else:
                 self._data = self.global_dict[self._id]
-
+    
+    @_Entity._recheck
     def code(self):
         """ get software code
         rtype: str
         """
-        return u"{}{}".format(self._data["Code"], self._data["Version"])
+        return u"{}{}".format(self._data.get("Code"), self._data.get("Version"))
 
         # _update = self._data.get("Update")
         # if _update:
@@ -62,26 +63,31 @@ class Software(_Entity):
     #     """
     #     return u"{}{}".format(self._data["Name"], self._data["Version"])
 
+    @_Entity._recheck
     def update(self):
         return self._data.get("Update")
 
+    @_Entity._recheck
     def version(self):
         return self._data.get("Version")
 
+    @_Entity._recheck
     def dcc_code(self):
         return self._data.get("Code")
 
+    @_Entity._recheck
     def full_code(self):
-        # 完整代号 包含update版本
         _update = self._data.get("Update")
         if _update:
             return u"{}{}{}".format(self._data["Code"], self._data["Version"], _update)
         else:
             return u"{}{}".format(self._data["Code"], self._data["Version"])
 
+    @_Entity._recheck
     def file_path(self):
         return self.code()
 
+    @_Entity._recheck
     def init_script(self):
         return self._data.get("InitScript")
 
@@ -96,6 +102,7 @@ class Software(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def python_init_script(self):
         return self._data.get("PythonInitScript")
 
@@ -183,4 +190,8 @@ class ProjectSoftware(_Entity):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
     def project_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         return self._data.get("ProjectId")

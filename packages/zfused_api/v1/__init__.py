@@ -38,9 +38,25 @@ def reset( func ):
         finally:
             zFused.RESET = False
     return wrap
-
-LOCAL_DATABASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "database"))
+LOCAL_DATABASE_PATH =  os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", "..", "database"))
+LOCAL_KEY_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", "..", ".."))
 # print(LOCAL_DATABASE_PATH)
+
+key_licence = ""
+
+key_lic = "{}/key.lic".format(LOCAL_KEY_PATH)
+if not os.path.isfile(key_lic):
+    key_lic = "{}/key.lic".format(os.path.dirname(os.path.abspath(__file__)))
+if not os.path.isfile(key_lic):
+    _dir = os.path.dirname(sys.argv[0])
+    key_lic = "{}/key.lic".format(_dir)
+if not os.path.isfile(key_lic):
+    key_lic = "C:/key.lic".format(_dir)
+
+if os.path.isfile(key_lic):
+    with open(key_lic, "r") as key_file:
+        key_licence = key_file.read()
+
 
 
 class zFused(object):
@@ -130,7 +146,8 @@ class zFused(object):
             params["limit"] = limit
         if distinct:
             params["distinct"] = distinct
-        headers = {'content-type': 'application/json'}
+        headers = { 'content-type': 'application/json', 
+                    "key": key_licence }
         try:
             r = httpsession.get(server, params=params,
                              verify=True, headers=headers)
@@ -158,7 +175,8 @@ class zFused(object):
                 return {}
 
         server = "{}/{}/{}".format(zFused.INTERNAL_API_SERVER_PATH, key, id)
-        headers = {'content-type': 'application/json'}
+        headers = { 'content-type': 'application/json', 
+                    "key": key_licence }
         try:
             r = httpsession.get(server, verify=True, headers=headers)
             if r.status_code == 200:
@@ -271,8 +289,31 @@ class _Entity(zFused):
 
         self._extra_attrs = {}
 
+    def _recheck(func):
+        # def magic( self ) :
+        #     print("start magic")
+        #     if not isinstance(self._data, dict):
+        #         self._data = self.get_one(self._type, self._id)
+        #         self.global_dict[self._id] = self._data
+        #     func( self )
+        #     print("end magic")
+        # return magic
+        @wraps(func)
+        def wrap( self, *args, **kwargs ):
+            if not isinstance(self._data, dict):
+                self._data = self.get_one(self._type, self._id)
+                self.global_dict[self._id] = self._data
+            return func( self, *args, **kwargs )
+        return wrap
+
     def __eq__(self, other):
         return self._id == other._id and self._type == other._type
+
+    def __key(self):
+        return (self._type, self._id)
+
+    def __hash__(self):
+        return hash(self.__key())
 
     def id(self):
         return self._id
@@ -280,51 +321,53 @@ class _Entity(zFused):
     def object(self):
         return self._type
 
+    @_recheck
     def entity_type(self):
         return self._type
 
+    @_recheck
     def entity_id(self):
         return self._id
 
+    @_recheck
     def entity_data(self):
         return self._data
-
+    
+    @_recheck
     def data(self):
         return self._data
-
+    
+    @_recheck
     def code(self):
-        """
-        get code if has
- 
-        rtype: str
-        """
         return self._data.get("Code")
 
+    @_recheck
     def name(self):
-        """
-        get name
-
-        rtype: str
-        """
         return self._data.get("Name")
 
+    @_recheck
     def name_code(self):
-        """
-        get name code
-
-        rtype: str
-        """
         return u"{}({})".format(self.name(), self.code())
+
+    @_recheck
+    def is_archive(self):
+        return self._data.get("IsArchive")
+
+    @_recheck
+    def archive_id(self):
+        return self._data.get("ArchiveId")
 
     def match(self, text):
         pass
 
+    @_recheck
     def sort(self):
         if "Sort" in self._data:
             return self._data.get("Sort")
         else:
             return 0
 
+    @_recheck
     def update_sort(self, value):
         if "Sort" not in self._data:
             return
@@ -337,20 +380,30 @@ class _Entity(zFused):
             return True
         else:
             return False
-
+    @_recheck
     def created_by(self):
-        return self._data["CreatedBy"]
+        return self._data.get("CreatedBy")
 
+    @_recheck
     def created_time(self):
-        """ get created time
-        rtype: datetime.datetime
-        """
         _time_text = self._data["CreatedTime"]
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
+    
+    @_recheck
+    def update_created_time(self):
+        _current_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        self.global_dict[self._id]["CreatedTime"] = _current_time
+        self._data["CreatedTime"] = _current_time
+        v = self.put(self._type, self._data["Id"], self._data)
+        if v:
+            return True
+        else:
+            return False
 
+    @_recheck
     def thumbnail_path(self):
         return self._data["ThumbnailPath"]
 
@@ -376,7 +429,7 @@ class _Entity(zFused):
 
     def variables(self):
         pass
-
+    
     def get_attr(self, name, type = "int"):
         _defualt = None
         if type == "float":
@@ -396,6 +449,7 @@ class _Entity(zFused):
     def set_attr(self, name, value):
         self._extra_attrs[name] = value
 
+    @_recheck
     def property(self, key = ""):
         _property =  self._data.get("Property")
         if not _property:
@@ -404,19 +458,19 @@ class _Entity(zFused):
             return eval(_property).get(key)
         return eval(_property)
 
+    @_recheck
     def update_property(self, key, value):
         _property = self.property()
         _property[key] = value
         self._data["Property"] = str(_property)
-        v = self.put(self._type, self._id, self._data, "property")
+        v = self.put(self._type, self._id, self._data, "property", False)
         if v:
             return True
         else:
             return False
 
+    @_recheck
     def update_name(self, name):
-        """
-        """
         self.global_dict[self._id]["Name"] = name
         self._data["Name"] = name
         v = self.put(self._type, self._data["Id"], self._data, "name")
@@ -425,9 +479,8 @@ class _Entity(zFused):
         else:
             return False
 
+    @_recheck
     def update_code(self, code):
-        """
-        """
         self.global_dict[self._id]["Code"] = code
         self._data["Code"] = code
         v = self.put(self._type, self._data["Id"], self._data, "code")
@@ -435,3 +488,57 @@ class _Entity(zFused):
             return True
         else:
             return False
+
+    # def add_note(self, title, rich_text = ""):
+    #     _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    #     _created_by = zfused_api.zFused.USER_ID
+
+    #     _status_id = zfused_api.status.active_status_ids()[0]
+
+    #     _note, _status = zfused_api.zFused.post( key = "note", 
+    #                                                     data = { "EntityType": self._type,
+    #                                                              "EntityId": self._id,
+    #                                                              "Title": title,
+    #                                                              "RichText": rich_text,
+    #                                                              "Status": 0,
+    #                                                              "CreatedBy": _created_by,
+    #                                                              "CreatedTime": _created_time } )
+    #     if not _status:
+    #         return u"{} create error".format(title), False
+
+    #     _note_id = _note.get("Id")
+
+    #     _user_ids = zfused_api.zFused.get("group_user", filter = {"EntityType": self._type,"EntityId": self._id})
+    #     if _user_ids:
+    #         _user_ids = [_group_user.get("UserId") for _group_user in _user_ids]
+    #     else:
+    #         _user_ids = [zfused_api.zFused.USER_ID]
+
+    #     zfused_api.im.submit_message( "user",
+    #                                   _created_by,
+    #                                   _user_ids,
+    #                                   { "entity_type": self._type,
+    #                                     "entity_id": self._id },
+    #                                   "note", 
+    #                                   self._type,
+    #                                   self._id,
+    #                                   self._type,
+    #                                   self._id )
+
+    #     return _note_id, True
+
+    @_recheck
+    def note_count(self):
+        return self._data.get("NoteCount")
+
+    @_recheck
+    def update_note_count(self, count):
+        self.global_dict[self._id]["NoteCount"] = count
+        self._data["NoteCount"] = count
+        v = self.put(self._type, self._data["Id"], self._data, "note_count", False)
+        if v:
+            return True
+        else:
+            return False
+        
+    _recheck = staticmethod( _recheck )

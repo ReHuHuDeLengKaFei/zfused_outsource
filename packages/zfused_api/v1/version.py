@@ -62,46 +62,57 @@ class Version(_Entity):
     def code(self):
         return self.name()
 
+    @_Entity._recheck
     def description(self):
-        return self._data["Description"]
-
+        return self._data.get("Description")
+    
+    @_Entity._recheck
     def link_object(self):
-        return self._data["ProjectEntityType"]
+        return self._data.get("ProjectEntityType")
 
+    @_Entity._recheck
     def link_id(self):
-        return self._data["ProjectEntityId"]
+        return self._data.get("ProjectEntityId")
 
+    @_Entity._recheck
     def user_id(self):
-        return self._data["UserId"]
+        return self._data.get("UserId")
 
+    @_Entity._recheck
     def assigned_to(self):
-        """
-        """
         return self.global_dict[self._id]["UserId"]
 
+    @_Entity._recheck
     def project_step(self):
         return zfused_api.step.ProjectStep(self._data.get("ProjectStepId"))
-
+    
+    @_Entity._recheck
     def project_step_id(self):
         """ 
         """
-        return self.global_dict[self._id]["ProjectStepId"]
+        return self.global_dict[self._id].get("ProjectStepId")
 
+    @_Entity._recheck
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
+    @_Entity._recheck
     def project_id(self):
         return self._data.get("ProjectId")
 
+    @_Entity._recheck
     def project_entity(self):
         return zfused_api.objects.Objects(self._data.get("ProjectEntityType"), self._data.get("ProjectEntityId"))
 
+    @_Entity._recheck
     def task(self):
         return zfused_api.task.Task(self._data.get("TaskId"))
 
+    @_Entity._recheck
     def task_id(self):
         return self._data.get("TaskId")
 
+    @_Entity._recheck
     def project_entity_type(self):
         return self._data.get("ProjectEntityType")
 
@@ -291,20 +302,11 @@ class Version(_Entity):
             _is_production = -1
         self.global_dict[self._id]["IsProduction"] = _is_production
 
-        # _is_production = 1
-        # for _version in _versions:
-        #     _version = self.get("version", filter = {"Id": _version["SourceId"]})[0]
-        #     _task = self.get("task", filter = {"Id": _version["TaskId"]})[0]
-        #     _versions = self.get("version", filter = {"TaskId":_task["Id"]})
-        #     if _versions[-1]["Id"] != _version["Id"]:
-        #         _is_production = -1
-        #         _message += "version {} is not last version for task {} \n".format(_version["Id"], _task["Id"])
-        #     else:
-        #         _message += "version {} is last version for task {} \n".format(_version["Id"], _task["Id"])
-        # self.global_production[self._id] = _is_production, _message
-
-
+    @_Entity._recheck
     def update_approval(self, is_approval):
+        if self._data.get("IsApproval") == is_approval:
+            return 
+
         self.global_dict[self._id]["IsApproval"] = is_approval
         self._data["IsApproval"] = is_approval
         v = self.put("version", self._data["Id"], self._data)
@@ -313,7 +315,11 @@ class Version(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def update_negligible(self, is_negligible):
+        if self._data.get("IsNegligible") == is_negligible:
+            return 
+
         self.global_dict[self._id]["IsNegligible"] = is_negligible
         self._data["IsNegligible"] = is_negligible
         v = self.put("version", self._data["Id"], self._data)
@@ -327,3 +333,91 @@ class Version(_Entity):
 
     def is_external(self):
         return self._data.get("IsExternal")
+
+    def set_pass(self):
+        _approval_index = 1
+
+        if _approval_index == 1:
+            _reply_text = {'text': '审批通过', 'msgtype': 'rich-text'} 
+        elif _approval_index == -1:
+            _reply_text = {'text': '审批未通过', 'msgtype': 'rich-text'}
+        else:
+            _reply_text = {'text': '等待审批', 'msgtype': 'rich-text'}
+
+        if self.data()["IsApproval"] != _approval_index:
+            self.update_approval(_approval_index)
+            try:
+                _approval_ids = zfused_api.zFused.get("approval", filter = {"Object":"version","ObjectId":self.data()["Id"]})
+                if _approval_ids:
+                    _approval_handle = zfused_api.approval.Approval(_approval_ids[-1]["Id"])
+                    _approval_handle.update_approval(str(_approval_index))
+                    _task_handle = zfused_api.task.Task(self.data().get("TaskId"))
+                    _project_step_handle = zfused_api.step.ProjectStep( _task_handle.data().get("ProjectStepId") )
+                    _receiver_ids = _project_step_handle.approvalto_user_ids() + _project_step_handle.cc_user_ids()
+                    _user_id = zfused_api.zFused.USER_ID
+                    _message_id = zfused_api.im.submit_message( "user",
+                                                                _user_id,
+                                                                _receiver_ids,
+                                                                { "msgtype": "rich-text",
+                                                                  "rich-text": _reply_text },
+                                                                "reply", 
+                                                                "approval",
+                                                                _approval_handle.id(),
+                                                                "task",
+                                                                _task_handle.id() )
+                    _task_handle.update_approval_status(str(_approval_index))
+            except:
+                pass
+
+    def set_no_pass(self):
+        _approval_index = -1
+
+        if _approval_index == 1:
+            _reply_text = {'text': '审批通过', 'msgtype': 'rich-text'} 
+        elif _approval_index == -1:
+            _reply_text = {'text': '审批未通过', 'msgtype': 'rich-text'}
+        else:
+            _reply_text = {'text': '等待审批', 'msgtype': 'rich-text'}
+
+        if self.data()["IsApproval"] != _approval_index:
+            self.update_approval(_approval_index)
+            try:
+                _approval_ids = zfused_api.zFused.get("approval", filter = {"Object":"version","ObjectId":self.data()["Id"]})
+                if _approval_ids:
+                    _approval_handle = zfused_api.approval.Approval(_approval_ids[-1]["Id"])
+                    _approval_handle.update_approval(str(_approval_index))
+                    _task_handle = zfused_api.task.Task(self.data().get("TaskId"))
+                    _project_step_handle = zfused_api.step.ProjectStep( _task_handle.data().get("ProjectStepId") )
+                    _receiver_ids = _project_step_handle.approvalto_user_ids() + _project_step_handle.cc_user_ids()
+                    _user_id = zfused_api.zFused.USER_ID
+                    _message_id = zfused_api.im.submit_message( "user",
+                                                                _user_id,
+                                                                _receiver_ids,
+                                                                { "msgtype": "rich-text",
+                                                                  "rich-text": _reply_text },
+                                                                "reply", 
+                                                                "approval",
+                                                                _approval_handle.id(),
+                                                                "task",
+                                                                _task_handle.id() )
+                    _task_handle.update_approval_status(str(_approval_index))
+            except:
+                pass
+
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = u"{};{};{}".format(self._data.get("Name"), self.project_step().name_code(), self.project_entity().full_name_code())
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("version", self._data["Id"], self._data, "match", False)
+        if v:
+            return True
+        else:
+            return False

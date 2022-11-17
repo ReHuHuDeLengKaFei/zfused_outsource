@@ -2,6 +2,7 @@
 # --author-- lanhua.zhou
 from __future__ import print_function
 
+import re
 import sys
 import logging
 
@@ -57,11 +58,22 @@ class ListFilterProxyModel(QtCore.QSortFilterProxyModel):
     def _search(self, data):
         if not self._search_text:
             return True
-        _text =  u"{}".format(self._search_text.lower())
-        _in_name = _text in data["Name"].lower() # or _text in zfused_api.task.Task(data.get("Id")).project_entity().name_code()
-        if _in_name:
-            return True
-        return False
+        _low_text = self._search_text.lower()
+
+        # _in_name = _low_text in data["Match"].lower()
+        # return _in_name
+
+        # _low_text_list = _low_text.split(";| |；")
+        _low_text_list = re.split(u"；| |;", _low_text)
+        for _low_text in _low_text_list:
+            try:
+                _in_name = _low_text.lower() in data["Match"].lower()
+                if not _in_name:
+                    return False
+            except:
+                pass
+
+        return True
 
     def _filter_type(self, data):
         if not self._filter_type_list:

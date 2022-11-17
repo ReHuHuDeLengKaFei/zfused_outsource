@@ -167,15 +167,27 @@ class Login(_Entity):
             return False
 
     def user_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("UserId")
 
     def user(self):
-        return zfused_api.user.User(self._data.get("UserId"))
+        return zfused_api.user.User(self.user_id())
     
     def description(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("Description")
 
     def update_description(self, _description):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
         v = self.put("login", self._data["Id"], self._data, "description")
@@ -187,30 +199,62 @@ class Login(_Entity):
     def thumbnail(self):
         """ get thumbnai name
         """
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self.global_dict[self._id]["Thumbnail"]
 
     def get_thumbnail(self, is_version = False):
         return self.user().get_thumbnail()
 
     def ip(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("Ip")
     
     def port(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("Port")
 
     def app_name(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("AppName")
 
     def app_version(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("AppVersion")
     
     def machine_name(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("MachineName")
 
     def machine_user(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("MachineUser")
     
     def online_time(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         _time_text = self._data["OnlineTime"]
         if _time_text.startswith("0001"):
             return None
@@ -218,6 +262,10 @@ class Login(_Entity):
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
     def offline_time(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         _time_text = self._data["OfflineTime"]
         if _time_text.startswith("0001"):
             return None

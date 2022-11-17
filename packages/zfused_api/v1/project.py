@@ -401,6 +401,9 @@ class Project(_Entity):
         else:
             return False
 
+    def priority(self):
+        return self._data.get("Priority")
+
     def update_priority(self, priority_index):
         """
         """ 
@@ -485,6 +488,23 @@ class Project(_Entity):
         _property[key] = value
         self._config["Variables"] = str(_property)
         v = self.put("project_config", self._config["Id"], self._config, "Variables")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = self.full_name_code()
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("project", self._data["Id"], self._data, "match", False)
         if v:
             return True
         else:

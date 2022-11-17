@@ -133,6 +133,7 @@ class ProjectStep(_Entity):
     def file_path(self):
         return self.code()
 
+    @_Entity._recheck
     def color(self):
         """ return step color
             step数据库需要增加color属性,调用project step color效率低
@@ -144,32 +145,40 @@ class ProjectStep(_Entity):
             # get project step color
             _step_handle = Step(self._data["StepId"])
             return _step_handle.color()
-
+    
+    @_Entity._recheck
     def sort(self):
         return self._data["Sort"]
 
+    @_Entity._recheck
     def software(self):
         return zfused_api.software.Software(self._data.get("SoftwareId"))
 
+    @_Entity._recheck
     def project_id(self):
         return self._data.get("ProjectId")
 
+    @_Entity._recheck
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
+    @_Entity._recheck
     def project_step_type(self):
         return self._data.get("Object")
 
+    @_Entity._recheck
     def step_id(self):
         return self._data.get("StepId")
 
+    @_Entity._recheck
     def step(self):
         return Step(self._data.get("StepId"))
 
     def default_path(self):
         _path = "{}/{}".format(self.code(), self.software().code())
         return _path
-
+    
+    @_Entity._recheck
     def path(self):
         # default path
         _path = self.default_path()
@@ -309,73 +318,85 @@ class ProjectStep(_Entity):
             _attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._id})
         return _attrs if _attrs else []
 
+    @_Entity._recheck
     def init_script(self):
         return self._data.get("InitScript")
 
+    @_Entity._recheck
     def update_init_script(self, script):
         self.global_dict[self._id]["InitScript"] = script
         self._data["InitScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def combine_script(self):
         return self._data.get("CombineScript")
 
+    @_Entity._recheck
     def update_combine_script(self, script):
         self.global_dict[self._id]["CombineScript"] = script
         self._data["CombineScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def compute_script(self):
         return self._data.get("ComputeScript")
 
+    @_Entity._recheck
     def update_compute_script(self, script):
         self.global_dict[self._id]["ComputeScript"] = script
         self._data["ComputeScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self.id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def forbidden_script(self):
         return self._data.get("ForbiddenScript")
 
+    @_Entity._recheck
     def update_forbidden_script(self, script):
         self.global_dict[self._id]["ForbiddenScript"] = script
         self._data["ForbiddenScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def property_script(self):
         return self._data.get("PropertyScript")
 
+    @_Entity._recheck
     def update_property_script(self, script):
         self.global_dict[self._id]["PropertyScript"] = script
         self._data["PropertyScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def refresh_relative(self):
         return self._data.get("RefreshRelative")
 
+    @_Entity._recheck
     def update_refresh_relative(self, is_refresh):
         self.global_dict[self._id]["RefreshRelative"] = is_refresh
         self._data["RefreshRelative"] = is_refresh
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
@@ -408,30 +429,25 @@ class ProjectStep(_Entity):
             return [ProjectStepCheck(_node.get("Id")) for _node in _nodes]
         return []
 
+    @_Entity._recheck
     def check_script(self):
-        """get check script 
-        :rtype: str        
-        """
-        return self._data["CheckScript"]
+        return self._data.get("CheckScript")
 
+    @_Entity._recheck
     def update_check_script(self, script):
-        """ update project step check script
-        
-        :param script: 检查脚本
-        :rtype: bool
-        """
         self.global_dict[self._id]["CheckScript"] = script
         self._data["CheckScript"] = script
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
             return False
 
+    @_Entity._recheck
     def update_color(self, color):
         self.global_dict[self._id]["Color"] = color
         self._data["Color"] = color
-        v = self.put("project_step", self._data["Id"], self._data)
+        v = self.put("project_step", self._id, self._data)
         if v:
             return True
         else:
@@ -477,7 +493,6 @@ class Step(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def color(self):
-        """ return project step color
-        """
         return self._data["Color"]

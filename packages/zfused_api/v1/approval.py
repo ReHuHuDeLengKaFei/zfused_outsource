@@ -44,6 +44,7 @@ class Approval(_Entity):
     def full_name_code(self):
         return zfused_api.objects.Objects(self._data["Object"], self._data["ObjectId"]).full_name_code()
 
+    @_Entity._recheck
     def submit(self, _s, _des = None):
         currentTime = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -62,10 +63,15 @@ class Approval(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def is_approval(self):
         return self.global_dict[self._id]["Status"]
 
+    @_Entity._recheck
     def update_approval(self, is_approval):
+        if self._data.get("Status") == is_approval:
+            return 
+
         self.global_dict[self._id]["Status"] = is_approval
         self._data["Status"] = is_approval
         v = self.put("approval", self._data["Id"], self._data)
@@ -73,10 +79,11 @@ class Approval(_Entity):
             return True
         else:
             return False
-
+    @_Entity._recheck
     def task(self):
         return zfused_api.task.Task(self._data.get("TaskId"))
 
+    @_Entity._recheck
     def task_id(self):
         return self._data.get("TaskId")
 

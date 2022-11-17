@@ -536,7 +536,7 @@ def camera_in(*args,**kwargs):
                         cmds.file(_production_file, loadReference = _reference_node, options='v=0;')
                         return True
 
-    cmds.file(_production_file, ns = "{}".format("camera"), r = True, mergeNamespacesOnClash = False, ignoreVersion = True)
+    cmds.file(_production_file, ns = "{}".format("camera"), r = True, lck=True, mergeNamespacesOnClash = False, ignoreVersion = True)
 
     return True
 

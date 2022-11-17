@@ -45,6 +45,7 @@ from .v1 import assembly
 from .v1 import fileprovide
 from .v1 import check
 from .v1 import plugin
+from .v1 import chat
 
 from .v1 import attr
 
@@ -57,6 +58,8 @@ from .v1 import development
 from .v1 import login
 
 from .v1 import note
+
+from .v1 import group
 
 from . import im
 from . import util

@@ -42,6 +42,7 @@ class TaskManageWidget(window._Window):
     def _check(self, task_id):
         """检查任务文件规范
         """
+        record.write_task_id(task_id)
         _task = zfused_api.task.Task(task_id)
         _project_step = _task.project_step()
         _project_step_checks = _project_step.checks()

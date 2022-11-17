@@ -127,14 +127,21 @@ class Note(_Entity):
         return eval(self._data.get("RichText"))
 
     def update_status(self, status):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
+        if self._data.get("Status") == status:
+            return 
+        
         self.global_dict[self._id]["Status"] = status
         self._data["Status"] = status
         v = self.put("note", self._data["Id"], self._data, "status")
         if v:
-
             _count = zfused_api.zFused.get( "note", filter = { "EntityType": self.entity_type(),
                                                                "EntityId": self.entity_id(),
-                                                               "Status": 0 } )
+                                                               "Status": 0 }, 
+                                                    fields = ["Id"] )
             if _count:
                 _count = len(_count)
             else:

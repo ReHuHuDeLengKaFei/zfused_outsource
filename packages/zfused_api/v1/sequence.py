@@ -51,6 +51,8 @@ def new_sequence(project_id, name, code, status_id, episode_id = 0, type_id = 0,
     # _sequences = zfused_api.zFused.get( "sequence", 
     #                                     filter = {"ProjectId": project_id, "Code": code, "EpisodeId": episode_id})
     if _status:
+        _sequence = Sequence(_sequence["Id"])
+        _sequence.refresh_match()
         return _sequence["Id"], True
     return "{} create error".format(name), False
 
@@ -198,8 +200,11 @@ class Sequence(_Entity):
 
     def project_id(self):
         """ get project id
-
         """
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         return self._data["ProjectId"]
 
     def status_id(self):
@@ -607,9 +612,12 @@ class Sequence(_Entity):
             self.global_tasks[self._id].append(_task)
 
             _task = zfused_api.task.Task(_task["Id"])
+            _task.refresh_match()
             zfused_api.im.submit_message( "user",
                                         zfused_api.zFused.USER_ID,
-                                        self.user_ids(),
+                                        # 取消发送消息 改为全局发送
+                                        [],
+                                        # self.user_ids(),
                                         { "msgtype": "new", 
                                         "new": {"object": "task", "object_id": _task.id()} }, 
                                         "new",
@@ -620,3 +628,20 @@ class Sequence(_Entity):
 
             return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name    
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = self.full_name_code()
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("sequence", self._data["Id"], self._data, "match", False)
+        if v:
+            return True
+        else:
+            return False

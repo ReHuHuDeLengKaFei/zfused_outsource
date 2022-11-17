@@ -445,6 +445,7 @@ def paths(text_files):
         _files_set_dict = {}
         _set_list = []
         for _f in _files:
+            _f = _f.replace("\\","/")
             _set = set(_get_set(_f))
             _set_list.append(_set)
         return _set_list

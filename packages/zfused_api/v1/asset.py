@@ -76,6 +76,8 @@ def new_asset(project_id, name, code, type_id, status_id, active = "true", creat
                                                                       "CreatedBy":_create_by_id,
                                                                       "CreatedTime":_current_time } )
     if _status:
+        _asset = Asset(_value["Id"])
+        _asset.refresh_match()
         return _value["Id"], True
     return "{} create error".format(name), False
 
@@ -230,12 +232,14 @@ class Asset(_Entity):
     def type_id(self):
         return self._data.get("TypeId")
 
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
             return zfused_api.project.Project(_project_id)
         return None
 
+    @_Entity._recheck
     def project_id(self):
         """ get project id
         """
@@ -546,17 +550,10 @@ class Asset(_Entity):
                                                                   "SourceId": self._id})
         return set([(_relative["TargetObject"], _relative["TargetId"]) for _relative in _relatives if _relative["TargetId"] != self._id] if _relatives else [])
 
-    # @classmethod
-    # def load_task(cls, asset_id, project_step_id, task):
-    #     _key = "{}_{}".format(asset_id, project_step_id)    
-    #     cls.task_dict[_key].append(task)
-
+    @_Entity._recheck
     def update_status(self, status_id):
-        """ update project step check script
-        
-        :param status_id: 状态id
-        :rtype: bool
-        """
+        if self._data.get("StatusId") == status_id:
+            return 
         self.global_dict[self._id]["StatusId"] = status_id
         self._data["StatusId"] = status_id
         v = self.put("asset", self._data["Id"], self._data, "status_id")
@@ -565,9 +562,10 @@ class Asset(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def update_thumbnail(self, _thumbnail):
-        """
-        """
+        if self._data.get("Thumbnail") == _thumbnail:
+            return 
         self.global_dict[self._id]["Thumbnail"] = _thumbnail
         self._data["Thumbnail"] = _thumbnail
         v = self.put("asset", self._data["Id"], self._data, "thumbnai", False)
@@ -576,6 +574,7 @@ class Asset(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def update_thumbnail_path(self, thumbnail_path):
         if self.global_dict[self._id]["ThumbnailPath"] == thumbnail_path:
             return True
@@ -587,7 +586,10 @@ class Asset(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def update_description(self, _description):
+        if self._data.get("Description") == _description:
+            return 
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
         v = self.put("asset", self._data["Id"], self._data, "description")
@@ -652,9 +654,12 @@ class Asset(_Entity):
             self.global_tasks[self._id].append(_task)
 
             _task = zfused_api.task.Task(_task["Id"])
+            _task.refresh_match()
             zfused_api.im.submit_message( "user",
                                            zfused_api.zFused.USER_ID,
-                                           self.user_ids(),
+                                           # 取消发送消息 改为全局发送
+                                           [],
+                                           #    self.user_ids(),
                                            { "msgtype": "new", 
                                            "new": {"object": "task", "object_id": _task.id()} }, 
                                            "new",
@@ -690,16 +695,35 @@ class Asset(_Entity):
                             all_objects.append(object_dict)
         return all_objects
 
+    @_Entity._recheck
     def percent(self):
-        _percent =  self.global_dict[self._id].get("Percent")
+        _percent =  self._data.get("Percent")
         return _percent if _percent else - 100
 
+    @_Entity._recheck
     def update_percent(self, value):
         if self.global_dict[self._id]["Percent"] == value:
             return True
         self.global_dict[self._id]["Percent"] = value
         self._data["Percent"] = value
         v = self.put("asset", self._data["Id"], self._data, "percent")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = self.full_name_code()
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("asset", self._data["Id"], self._data, "match", False)
         if v:
             return True
         else:

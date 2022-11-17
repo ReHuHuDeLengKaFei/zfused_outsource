@@ -18,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 def new(task_id, title, thumbnail, description, introduction, relatives = []):
     # created by and user
-    _created_time = "{}+00:00".format( datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S") )
+    # _created_time = "{}+00:00".format( datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S") )
+    # _created_by = zfused_api.zFused.USER_ID
+    _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     _created_by = zfused_api.zFused.USER_ID
-    
     _task_handle = zfused_api.task.Task(task_id)
     _project_id = _task_handle.project_id()
     _project_step_id = _task_handle.project_step_id()
@@ -121,31 +122,72 @@ class FeedBack(_Entity):
                 return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
         return None
 
+    def project_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
+        return self._data.get("ProjectId")
+
     def project(self):
-        return zfused_api.project.Project(self._data.get("ProjectId"))
+        return zfused_api.project.Project(self.project_id())
 
     def project_entity_type(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data["ProjectEntityType"]
 
     def project_entity_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data["ProjectEntityId"]
 
     def project_entity(self):
-        return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
+        return zfused_api.objects.Objects(self.project_entity_type(), self.project_entity_id())
 
     def project_step_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("ProjectStepId")
 
     def project_step(self):
-        return zfused_api.step.ProjectStep(self._data.get("ProjectStepId"))
+        return zfused_api.step.ProjectStep(self.project_step_id())
+
+    def task_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
+        return self._data.get("TaskId")
+
+    def task(self):
+        return zfused_api.task.Task(self.task_id())
 
     def status(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("Value")
     
     def description(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+
         return self._data.get("Description")
 
     def relatives(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         return self._data.get("Relatives")
     
     def resubmit_relatives(self, relatives):
@@ -158,23 +200,40 @@ class FeedBack(_Entity):
         else:
             return False
 
-    def update_relatives(self, project_step_id, relative):
+    def update_relatives(self, task_id, relative):
         _relatives = self.relatives()
         _relatives = eval(_relatives)
+        _is_has = False
         for _index, _relative in enumerate(_relatives):
-            _project_step_id = _relative.get("project_step_id")
-            if project_step_id == _project_step_id:
+            _task_id = _relative.get("task_id")
+            if task_id == _task_id:
+                _is_has = True
                 for _key, _value in relative.items():
                     _relative[_key] = _value
                     if _key == "is_relative" or _key == "value":
                         _key_field = "".join( [_field.capitalize() for _field in _key.split("_")] )
                         _feedback_relative = zfused_api.zFused.get("feedback_relative", filter = { "FeedbackId": self._id,
-                                                                                                   "ProjectStepId": _project_step_id })
+                                                                                                   "TaskId": task_id })
                         if _feedback_relative:
                             _feedback_relative = _feedback_relative[0]
                             _feedback_relative[_key_field] = int(_value)
                             self.put("feedback_relative", _feedback_relative["Id"], _feedback_relative, _key, False)
                 break
+        if not _is_has:
+            _relatives.append(relative)
+            _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            _created_by = zfused_api.zFused.USER_ID
+            zfused_api.zFused.post( key = "feedback_relative", data = { "FeedbackId": self.id(),
+                                                                        "ProjectId": relative.get("project_id"),
+                                                                        "ProjectStepId": relative.get("project_step_id"),
+                                                                        "ProjectEntityType": relative.get("project_entity_type"),
+                                                                        "ProjectEntityId": relative.get("project_entity_id"),
+                                                                        "TaskId": relative.get("task_id"),
+                                                                        "IsRelative": int(relative.get("is_relative")),
+                                                                        "Value": int(relative.get("value")),
+                                                                        "CreatedBy": _created_by,
+                                                                        "CreatedTime": _created_time } )
+
         _relatives = str(_relatives)
         self.global_dict[self._id]["Relatives"] = _relatives
         self._data["Relatives"] = _relatives
@@ -183,6 +242,57 @@ class FeedBack(_Entity):
             return True
         else:
             return False
+
+        #     _project_step_id = _relative.get("project_step_id")
+        #     if project_step_id == _project_step_id:
+        #         for _key, _value in relative.items():
+        #             _relative[_key] = _value
+        #             if _key == "is_relative" or _key == "value":
+        #                 _key_field = "".join( [_field.capitalize() for _field in _key.split("_")] )
+        #                 _feedback_relative = zfused_api.zFused.get("feedback_relative", filter = { "FeedbackId": self._id,
+        #                                                                                            "ProjectStepId": _project_step_id })
+        #                 if _feedback_relative:
+        #                     _feedback_relative = _feedback_relative[0]
+        #                     _feedback_relative[_key_field] = int(_value)
+        #                     self.put("feedback_relative", _feedback_relative["Id"], _feedback_relative, _key, False)
+        #         break
+        # _relatives = str(_relatives)
+        # self.global_dict[self._id]["Relatives"] = _relatives
+        # self._data["Relatives"] = _relatives
+        # v = self.put("feedback", self._data["Id"], self._data, "relatives")
+        # if v:
+        #     return True
+        # else:
+        #     return False
+
+    # def update_relatives(self, project_step_id, relative):
+    #     _relatives = self.relatives()
+    #     _relatives = eval(_relatives)
+    #     for _index, _relative in enumerate(_relatives):
+    #         _project_step_id = _relative.get("project_step_id")
+    #         if project_step_id == _project_step_id:
+    #             for _key, _value in relative.items():
+    #                 _relative[_key] = _value
+    #                 if _key == "is_relative" or _key == "value":
+    #                     _key_field = "".join( [_field.capitalize() for _field in _key.split("_")] )
+    #                     _feedback_relative = zfused_api.zFused.get("feedback_relative", filter = { "FeedbackId": self._id,
+    #                                                                                                "ProjectStepId": _project_step_id })
+    #                     if _feedback_relative:
+    #                         _feedback_relative = _feedback_relative[0]
+    #                         _feedback_relative[_key_field] = int(_value)
+    #                         self.put("feedback_relative", _feedback_relative["Id"], _feedback_relative, _key, False)
+    #             break
+    #     _relatives = str(_relatives)
+    #     self.global_dict[self._id]["Relatives"] = _relatives
+    #     self._data["Relatives"] = _relatives
+    #     v = self.put("feedback", self._data["Id"], self._data, "relatives")
+    #     if v:
+    #         return True
+    #     else:
+    #         return False
+
+    def update_status(self, value):
+        self.update_solve(value)
 
     def update_solve(self, value):
         if self._data.get("Value") == value:

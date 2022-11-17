@@ -124,6 +124,10 @@ class Question(_Entity):
         return zfused_api.project.Project(self.project_id())
 
     def project_id(self):
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
+            self.global_dict[self._id] = self._data
+            
         _project_id = self._data["ProjectId"]
         return _project_id
 
@@ -177,9 +181,11 @@ class Question(_Entity):
     def update_status(self, status):
         """ update status
         """ 
-        if self._id not in self.global_dict:
+        if not isinstance(self._data, dict):
+            self._data = self.get_one(self._type, self._id)
             self.global_dict[self._id] = self._data
-        if self._data["Status"] == status:
+
+        if self._data.get("Status") == status:
             return False
 
         self.global_dict[self._id]["Status"] = status

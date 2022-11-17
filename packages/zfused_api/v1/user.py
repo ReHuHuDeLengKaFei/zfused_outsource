@@ -154,7 +154,7 @@ def cache_from_ids(user_ids = []):
 class User(_Entity):
 
     @classmethod
-    def match(cls, text):
+    def match(cls, text, project_ids = []):
         _matchs = zfused_api.zFused.get("user_profile", filter = {"NameCn__icontains": text, "Active":"true" }, fields = ["UserId"])
         _matchs += zfused_api.zFused.get("user_profile", filter = {"NameEn__icontains": text, "Active":"true"}, fields = ["UserId"])
         if _matchs:
@@ -175,15 +175,19 @@ class User(_Entity):
             _datas = self.get_one("user", self._id)
             if not _datas:
                 logger.error("user id {0} is not exists".format(self._id))
+                self._data = {}
+                self.profile = {}
                 return
             self._data = _datas
+            self.global_dict[self._id] = self._data
             _profiles = self.get("user_profile", filter={"UserId": self._id})
             if not _profiles:
                 logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
                 return
             self.profile = _profiles[0]
-            self.global_dict[self._id] = self._data
             self.global_profile[self._id] = self.profile
+
             self.global_post[self._id] = set(self.post_ids())
             self.global_department[self._id] = set(self.department_ids())
         else:
@@ -191,6 +195,7 @@ class User(_Entity):
             self.profile = self.global_profile[self._id]
         self._thumbnail = None
 
+    @_Entity._recheck
     def code(self):
         """
         get full path code
@@ -199,51 +204,79 @@ class User(_Entity):
         """
         if self._id == 0:
             return "none"
-        return self.profile["NameEn"]
+        return self.profile.get("NameEn")
 
+    @_Entity._recheck
     def name(self):
         """
         get full path name
-
         rtype: str
         """
         if self._id == 0:
             return u"无用户"
-        return self.profile["NameCn"]
+            
+        if not isinstance(self.profile, dict):
+            _profiles = self.get("user_profile", filter={"UserId": self._id})
+            if not _profiles:
+                logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
+                return None
+            self.profile = _profiles[0]
+            self.global_profile[self._id] = self.profile
 
+        return self.profile.get("NameCn")
+    
+    @_Entity._recheck
     def name_code(self):
         """
         get full path name and code
-
         rtype: str
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
-
+    @_Entity._recheck
     def full_code(self):
         """
         get full path code
-
         rtype: str
         """
-        return self.profile["NameEn"]
+        if not isinstance(self.profile, dict):
+            _profiles = self.get("user_profile", filter={"UserId": self._id})
+            if not _profiles:
+                logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
+                return None
+            self.profile = _profiles[0]
+            self.global_profile[self._id] = self.profile
 
+        return self.profile.get("NameEn")
+
+    @_Entity._recheck
     def full_name(self):
         """
         get full path name
-
         rtype: str
         """
-        return self.profile["NameCn"]
+        if not isinstance(self.profile, dict):
+            _profiles = self.get("user_profile", filter={"UserId": self._id})
+            if not _profiles:
+                logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
+                return None
+            self.profile = _profiles[0]
+            self.global_profile[self._id] = self.profile
 
+        return self.profile.get("NameCn")
+
+    @_Entity._recheck
     def full_name_code(self):
         """
         get full path name and code
-
         rtype: str
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def working_tasks(self):
         """
         获取制作中的任务
@@ -260,6 +293,7 @@ class User(_Entity):
             return _tasks
         return []
 
+    @_Entity._recheck
     def active_tasks(self):
         """ 获取当前用户激活中的任务
         """
@@ -273,29 +307,45 @@ class User(_Entity):
             return _tasks
         return []
 
+    @_Entity._recheck
     def thumbnail(self):
         return None
 
+    @_Entity._recheck
     def get_thumbnail(self):
-        # _thumbnail_path = self._data.get("ThumbnailPath")
-        # if _thumbnail_path:
-        #     if _thumbnail_path.startswith("storage"):
-        #         return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail_path.split("storage/")[-1])
-        # return None
-        _thumbnail = self.profile["Avatar"]
+        if not isinstance(self.profile, dict):
+            _profiles = self.get("user_profile", filter={"UserId": self._id})
+            if not _profiles:
+                logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
+                return None
+            self.profile = _profiles[0]
+            self.global_profile[self._id] = self.profile
+            
+        _thumbnail = self.profile.get("Avatar")
         if _thumbnail.startswith("storage"):
             return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail.split("storage/")[-1])
         return None
 
+    @_Entity._recheck
     def get_avatar(self):
-        _thumbnail = self.profile["Avatar"]
+        if not isinstance(self.profile, dict):
+            _profiles = self.get("user_profile", filter={"UserId": self._id})
+            if not _profiles:
+                logger.error("user id {0} is not exists".format(self._id))
+                self.profile = {}
+                return None
+            self.profile = _profiles[0]
+            self.global_profile[self._id] = self.profile
+
+        _thumbnail = self.profile.get("Avatar")
         if _thumbnail.startswith("storage"):
             return "{}/{}".format(zfused_api.zFused.CLOUD_IMAGE_SERVER_ADDR, _thumbnail.split("storage/")[-1])
         return None
 
     def update_avatar(self, avatar_path):
         self.profile["Avatar"] = avatar_path
-        v = self.put("user_profile", self.profile["Id"], self.profile, "avatar")
+        v = self.put("user_profile", self.profile.get("Id"), self.profile, "avatar")
         if v:
             return True
         else:
@@ -307,18 +357,18 @@ class User(_Entity):
         if not _group_user_list:
             return []
         else:
-            return self.get("user", filter={"Id__in": "|".join(["{}".format(_user["UserId"]) for _user in _group_user_list])})
+            return self.get("user", filter={"Id__in": "|".join(["{}".format(_user.get("UserId")) for _user in _group_user_list])})
 
     def post_ids(self):
         """ get post id
         
         """
         if self._id not in self.global_post:
-            _post_users = self.get("post_user", filter = {"UserId":self._id})
+            _post_users = self.get("post_user", filter = {"UserId":self._id}, fields = ["PostId"])
             if not _post_users:
                 self.global_post[self._id] = set([])
             else:
-                self.global_post[self._id] = set([_post_user["PostId"] for _post_user in _post_users])
+                self.global_post[self._id] = set([_post_user.get("PostId") for _post_user in _post_users])
         return self.global_post[self._id]
 
     def department_ids(self):
@@ -326,16 +376,18 @@ class User(_Entity):
 
         """
         if self._id not in self.global_department:
-            _department_users = self.get("department_user", filter = {"UserId": self._id})
+            _department_users = self.get("department_user", filter = {"UserId": self._id}, fields = ["DepartmentId"])
             if not _department_users:
                 self.global_department[self._id] = set([])
             else:
-                self.global_department[self._id] = set([_department_user["DepartmentId"] for _department_user in _department_users])
+                self.global_department[self._id] = set([_department_user.get("DepartmentId") for _department_user in _department_users])
         return self.global_department[self._id]
 
+    @_Entity._recheck
     def is_online(self):
         return self._data.get("IsOnline")
 
+    @_Entity._recheck
     def update_is_online(self, is_online):
         if self.global_dict[self._id]["IsOnline"] == is_online:
             return True
@@ -346,7 +398,6 @@ class User(_Entity):
             return True
         else:
             return False
-
 
     def clear_unread_messags(self):
         pass

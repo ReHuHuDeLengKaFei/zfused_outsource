@@ -141,10 +141,9 @@ def new_production_file(files, task_id, attr_output_id, index=0, relative_entity
 
 def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, start_time, due_time, description=None,
              outsource=None, estimated_time=0):
-    _task = zfused_api.zFused.get("task", filter={
-        "ProjectStepId": project_step_id,
-        "ProjectEntityType": link_obj,
-        "ProjectEntityId": link_id})
+    _task = zfused_api.zFused.get("task", filter={ "ProjectStepId": project_step_id,
+                                                   "ProjectEntityType": link_obj,
+                                                   "ProjectEntityId": link_id }) 
     if _task:
         return False, "%s is exists" % name
     _project_step_handle = zfused_api.step.ProjectStep(project_step_id)
@@ -179,7 +178,9 @@ def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, s
         _project_entity = _task.project_entity()
         zfused_api.im.submit_message("user",
                                      zfused_api.zFused.USER_ID,
-                                     _project_entity.user_ids(),
+                                     [],
+                                     # 取消消息通知
+                                     # _project_entity.user_ids() + [zfused_api.zFused.USER_ID],
                                      {
                                          "msgtype": "new",
                                          "new": {
@@ -189,8 +190,9 @@ def new_task(name, link_obj, link_id, project_step_id, status_id, assigned_id, s
                                      _project_entity.object(),
                                      _project_entity.id(),
                                      _project_entity.object(),
-                                     _project_entity.id())
+                                     _project_entity.id() )
         
+        _task.refresh_match()
         return _task.id(), "%s create success" % name
     
     return False, "%s create error" % name
@@ -280,7 +282,18 @@ def cache_from_ids(ids, extract_freeze=True):
 
 
 class Task(_Entity):
-    
+
+    @classmethod
+    def match(cls, text, project_ids = []):
+        if not project_ids:
+            _matchs = zfused_api.zFused.get("task", filter = {"Match__icontains": text, "Active":"true" }, fields = ["Id"])
+        else:
+            _matchs = zfused_api.zFused.get("task", filter = {"ProjectId__in": "|".join([str(_project_id) for _project_id in project_ids]), "Match__icontains": text, "Active":"true" }, fields = ["Id"])
+        # _matchs += zfused_api.zFused.get("user_profile", filter = {"NameEn__icontains": text, "Active":"true"}, fields = ["UserId"])
+        if _matchs:
+            return [_match.get("Id") for _match in _matchs]
+        return []
+
     @classmethod
     def new_sub_task(cls, task_id, name, code, description=""):
         if zfused_api.zFused.get("task", filter={
@@ -307,7 +320,7 @@ class Task(_Entity):
         _task_data["ParentTaskId"] = task_id
         _task_data["Description"] = description
         
-        _sub_task, _status = zfused_api.zFused.post(key="task", data=_task_data)
+        _sub_task, _status = zfused_api.zFused.post(key="task", data = _task_data)
         if _status:
             _task.set_has_sub_task(1)
             
@@ -328,13 +341,12 @@ class Task(_Entity):
             if self._data:
                 self.global_dict[self._id] = self._data
             else:
-                _data = self.get("task", filter={
-                    "Id": self._id})
+                _data = self.get_one("task", self._id)
                 if not _data:
                     logger.error("task id {0} not exists".format(self._id))
                     return
-                self._data = _data[0]
-                self.global_dict[self._id] = _data[0]
+                self._data = _data
+                self.global_dict[self._id] = _data
         else:
             if self._data:
                 self.global_dict[self._id] = self._data
@@ -429,71 +441,76 @@ class Task(_Entity):
             return zfused_api.project.Project(_project_id)
         return None
     
+    @_Entity._recheck
     def project_id(self):
-        """ get project id
-        """
         return self.global_dict[self._id]["ProjectId"]
     
+    @_Entity._recheck
     def project_entity_type(self):
         return self._data["ProjectEntityType"]
     
+    @_Entity._recheck
     def project_entity_id(self):
         return self._data["ProjectEntityId"]
     
+    @_Entity._recheck
     def project_entity(self):
         return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
     
+    @_Entity._recheck
     def entity(self):
         return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
     
+    @_Entity._recheck
     def project_step(self):
         _project_step_id = self._data.get("ProjectStepId")
         if _project_step_id:
             return zfused_api.step.ProjectStep(_project_step_id)
         return None
     
+    @_Entity._recheck
     def project_step_id(self):
-        return self.global_dict[self._id]["ProjectStepId"]
+        return self._data.get("ProjectStepId")
     
+    @_Entity._recheck
     def status(self):
         _status_id = self._data.get("StatusId")
         if _status_id:
             return zfused_api.status.Status(_status_id)
         return None
     
+    @_Entity._recheck
     def status_id(self):
         """ get status id 
         """
         return self._data.get("StatusId")
     
+    @_Entity._recheck
     def software(self):
         _software_id = self._data.get("SoftwareId")
         if _software_id:
             return zfused_api.software.Software(_software_id)
         return None
     
+    @_Entity._recheck
     def software_id(self):
         _software_id = self._data.get("SoftwareId")
         return _software_id
     
+    @_Entity._recheck
     def assigned_to(self):
         """
         """
-        return self.global_dict[self._id]["AssignedTo"]
-    
+        return self._data.get("AssignedTo")
+
+    @_Entity._recheck    
     def level(self):
-        """ get asset level
-        """
         return self._data["Level"]
     
+    @_Entity._recheck
     def update_level(self, index):
-        """
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["Level"] == index:
             return True
-        
         self.global_dict[self._id]["Level"] = index
         self._data["Level"] = index
         v = self.put("task", self._data["Id"], self._data, "level")
@@ -502,14 +519,12 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def priority(self):
         return self._data["Priority"]
     
+    @_Entity._recheck
     def update_priority(self, priority_index):
-        """
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["Priority"] == priority_index:
             return True
         
@@ -689,6 +704,9 @@ class Task(_Entity):
         else:
             return 0
     
+    def last_version(self):
+        return zfused_api.version.Version(self.last_version_id())
+    
     def last_version_index(self, is_approval=1):
         """get last version
         :rtype: int
@@ -846,7 +864,8 @@ class Task(_Entity):
             if not _status:
                 return False, "{} submit error".format(name)
         _version_id = _last_version["Id"]
-        
+        _version = zfused_api.version.Version(_version_id)
+        _version.refresh_match()
         # 提交最后版本id
         self.update_last_version_id(_version_id)
         
@@ -995,6 +1014,8 @@ class Task(_Entity):
             if not _status:
                 return False, "{} submit error".format(name)
         _version_id = _last_version["Id"]
+        _version = zfused_api.version.Version(_version_id)
+        _version.refresh_match()
         
         # 提交最后版本id
         self.update_last_version_id(_version_id)
@@ -1678,14 +1699,8 @@ class Task(_Entity):
             self.global_historys[self._id] = _historys
         return self.global_historys[self._id]
     
+    @_Entity._recheck
     def update_status(self, status_id):
-        """ update status
-        :param status_id: 状态id
-        :rtype: bool
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
-        
         if self.status_id() == status_id:
             return
         
@@ -1746,14 +1761,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_assigned(self, user_id):
-        """
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["AssignedTo"] == user_id:
             return True
-        
         self.global_dict[self._id]["AssignedTo"] = user_id
         self._data["AssignedTo"] = user_id
         v = self.put("task", self._data["Id"], self._data, "assigned_to")
@@ -1762,14 +1773,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_start_time(self, time_str):
-        """ update start time
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
             return False
-        
         self.global_dict[self._id]["StartTime"] = time_str
         self._data["StartTime"] = time_str
         v = self.put("task", self._data["Id"], self._data, "start_time")
@@ -1778,11 +1785,8 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_end_time(self, time_str):
-        """ update end time
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self._data["DueTime"].split("+")[0] == time_str.split("+")[0]:
             return False
         
@@ -1794,14 +1798,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_estimated_time(self, hour):
-        """ update estimated time
-        """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self._data["EstimatedTime"] == hour:
             return False
-        
         self._data["EstimatedTime"] = hour
         self.global_dict[self._id]["EstimatedTime"] = hour
         v = self.put("task", self._data["Id"], self._data, "estimated_time")
@@ -1810,6 +1810,7 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_description(self, _description):
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
@@ -1819,7 +1820,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_is_production(self, is_production):
+        if self._data.get("IsProduction") == is_production:
+            return 
         self.global_dict[self._id]["IsProduction"] = is_production
         self._data["IsProduction"] = is_production
         v = self.put("task", self._data["Id"], self._data, "is_production", False)
@@ -1828,7 +1832,10 @@ class Task(_Entity):
         else:
             return False
     
-    def update_is_outsource(self, outsourcer_id=0):
+    @_Entity._recheck
+    def update_is_outsource(self, outsourcer_id = 0):
+        if self._data.get("IsOutsource") == outsourcer_id:
+            return 
         self.global_dict[self._id]["IsOutsource"] = outsourcer_id
         self._data["IsOutsource"] = outsourcer_id
         v = self.put("task", self._data["Id"], self._data, "is_outsource")
@@ -1837,9 +1844,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_thumbnail(self, _thumbnail):
-        """
-        """
+        if self._data.get("Thumbnail") == _thumbnail:
+            return 
         self.global_dict[self._id]["Thumbnail"] = _thumbnail
         self._data["Thumbnail"] = _thumbnail
         v = self.put("task", self._data["Id"], self._data, "thumbnail", False)
@@ -1848,6 +1856,7 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_thumbnail_path(self, thumbnail_path):
         if self.global_dict[self._id]["ThumbnailPath"] == thumbnail_path:
             return True
@@ -1871,23 +1880,21 @@ class Task(_Entity):
             return self.entity().update_end_frame(end_frame)
         return False
     
+    @_Entity._recheck
     def review_status(self):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if "ReviewStatus" not in self.global_dict[self._id]:
             return ""
         return self.global_dict[self._id]["ReviewStatus"]
     
+
+    @_Entity._recheck
     def update_review_status(self, status):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["ReviewStatus"] == status:
             return True
         self.global_dict[self._id]["ReviewStatus"] = status
         self._data["ReviewStatus"] = status
         v = self.put("task", self._data["Id"], self._data, "review_status")
-        
-        # if status != "1":
+
         if self.approval_status() == "1":
             self.update_approval_status("01")
         
@@ -1919,9 +1926,8 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_review_process(self, process_id):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["ReviewProcessId"] == process_id:
             return True
         self.global_dict[self._id]["ReviewProcessId"] = process_id
@@ -1963,9 +1969,8 @@ class Task(_Entity):
             return ""
         return self.global_dict[self._id].get("ApprovalStatus")
     
+    @_Entity._recheck
     def update_approval_status(self, status):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id].get("ApprovalStatus") == status:
             return True
         
@@ -2016,9 +2021,9 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_approval_process(self, process_id):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
+
         if self.global_dict[self._id]["ApprovalProcessId"] == process_id:
             return True
         self.global_dict[self._id]["ApprovalProcessId"] = process_id
@@ -2029,11 +2034,10 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_performance_salary(self, salary):
         """ 更新绩效薪资
         """
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["PerformanceSalary"] == salary:
             return True
         self.global_dict[self._id]["PerformanceSalary"] = salary
@@ -2044,10 +2048,11 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def working_time(self):
         """ 计算任务制作总时间
         """
-        return self.global_dict[self._id].get("ProductionTime")
+        return self._data.get("ProductionTime")
     
     def analy_working_time(self):
         """ get work time
@@ -2092,14 +2097,15 @@ class Task(_Entity):
         self.global_dict[self._id]["WorkingTime"] = _hours
         return _hours
     
+    @_Entity._recheck
     def production_time(self):
-        return self.global_dict[self._id].get("ProductionTime")
+        return self._data.get("ProductionTime")
     
+    @_Entity._recheck
     def update_production_time(self, hours):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["ProductionTime"] == hours:
             return True
+
         self.global_dict[self._id]["ProductionTime"] = hours
         self._data["ProductionTime"] = hours
         v = self.put("task", self._data["Id"], self._data, "production_time")
@@ -2195,9 +2201,8 @@ class Task(_Entity):
         _status = self.update_prophet_value(1)
         return _status
     
+    @_Entity._recheck
     def update_prophet_value(self, value):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["ProphetValue"] == value:
             return True
         self.global_dict[self._id]["ProphetValue"] = value
@@ -2209,12 +2214,11 @@ class Task(_Entity):
             return False
     
     def percent(self):
-        _percent = self.global_dict[self._id].get("Percent")
+        _percent = self._data.get("Percent")
         return _percent if _percent else - 100
     
+    @_Entity._recheck
     def update_percent(self, value):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["Percent"] == value:
             return True
         self.global_dict[self._id]["Percent"] = value
@@ -2225,10 +2229,9 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_last_version_id(self, version_id):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
-        if self.global_dict[self._id]["LastVersionId"] == version_id:
+        if self._data.get("LastVersionId") == version_id:
             return True
         self.global_dict[self._id]["LastVersionId"] = version_id
         self._data["LastVersionId"] = version_id
@@ -2238,9 +2241,8 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def update_last_report_id(self, report_id):
-        if self._id not in self.global_dict:
-            self.global_dict[self._id] = self._data
         if self.global_dict[self._id]["LastReportId"] == report_id:
             return True
         self.global_dict[self._id]["LastReportId"] = report_id
@@ -2338,7 +2340,8 @@ class Task(_Entity):
                                       _created_by,
                                       _user_ids,
                                       { "title": title,
-                                        "rich_text": rich_text },
+                                        "msgtype": "rich-text",
+                                        "rich-text": eval(rich_text) },
                                       "note", 
                                       "note",
                                       _note_id,
@@ -2346,3 +2349,20 @@ class Task(_Entity):
                                       self._id )
 
         return _note_id, True
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = u"{};{};{}".format(self._data.get("Name"), self.project_step().name_code(), self.project_entity().full_name_code())
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("task", self._data["Id"], self._data, "match", False)
+        if v:
+            return True
+        else:
+            return False

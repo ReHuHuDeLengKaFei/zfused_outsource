@@ -77,6 +77,8 @@ def new_assembly(project_id, name, code, status_id, type_id = 0, active = "true"
                                                                         "CreatedBy":_create_by_id,
                                                                         "CreatedTime":_current_time })
     if _status:
+        _assembly = Assembly(_value["Id"])
+        _assembly.refresh_match()
         return _value["Id"], True
     return "{} create error".format(name), False
 
@@ -198,8 +200,7 @@ class Assembly(_Entity):
         """
         _name = self._data["Name"]
         if self._data["TypeId"]:
-            _step_name = zfused_api.types.Types(
-                self._data["TypeId"]).data()["Name"]
+            _step_name = zfused_api.types.Types(self._data["TypeId"]).data()["Name"]
             return u"{}/{}".format(_step_name, _name)
         else:
             return _name
@@ -219,16 +220,15 @@ class Assembly(_Entity):
             return zfused_api.types.Types(_type_id)
         return None
 
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
             return zfused_api.project.Project(_project_id)
         return None
 
+    @_Entity._recheck
     def project_id(self):
-        """ get project id
-        rtype: str
-        """
         return self._data["ProjectId"]
 
     def status_id(self):
@@ -655,9 +655,12 @@ class Assembly(_Entity):
             self.global_tasks[self._id].append(_task)
 
             _task = zfused_api.task.Task(_task["Id"])
+            _task.refresh_match()
             zfused_api.im.submit_message( "user",
                                         zfused_api.zFused.USER_ID,
-                                        self.user_ids(),
+                                        # 取消发送消息 改为全局发送
+                                        [],
+                                        # self.user_ids(),
                                         { "msgtype": "new", 
                                         "new": {"object": "task", "object_id": _task.id()} }, 
                                         "new",
@@ -703,6 +706,23 @@ class Assembly(_Entity):
         self.global_dict[self._id]["Percent"] = value
         self._data["Percent"] = value
         v = self.put("assembly", self._data["Id"], self._data, "percent")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def search_match(self):
+        return self._data.get("Match")
+
+    @_Entity._recheck
+    def refresh_match(self):
+        _match = self.full_name_code()
+        if self._data.get("Match") == _match:
+            return True
+        self.global_dict[self._id]["Match"] = _match
+        self._data["Match"] = _match
+        v = self.put("assembly", self._data["Id"], self._data, "match", False)
         if v:
             return True
         else:

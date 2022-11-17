@@ -137,7 +137,11 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
 
     # 获取场景信息
     if not _is_outsource:
-        _scene_elements = element.scene_elements()
+        try:
+
+            _scene_elements = element.scene_elements()
+        except:
+            _scene_elements =[]
 
     # 更新 propertry script
     _property_script = _project_step.property_script()
@@ -488,7 +492,7 @@ def single_publish_file(task_id, output_attr):
                                   "text": "single publish - {}.{} - {}".format(_name, _index, _output_script.name())},
                                  "text",
                                  "",
-                                 0)
+                                 0 )
 
     # 修改任务状态为审查中
     _review_ids = zfused_api.status.review_status_ids()
@@ -585,7 +589,7 @@ def fix_file(task_id, infomation, extend_attr = {}, attrs = [], elements = {}):
                                     'task',
                                     task_id,
                                     'task',
-                                    task_id)
+                                    task_id )
 
     # 上传结果ui
     cmds.confirmDialog(message=u"单独上传成功")
