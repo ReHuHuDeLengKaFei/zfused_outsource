@@ -49,7 +49,7 @@ class TaskPanelWidget(QtWidgets.QFrame):
             return
         self._task_handle = zfused_api.task.Task(task_id)
 
-        self.preview_widget.load_task_id(task_id)
+        # self.preview_widget.load_task_id(task_id)
         self.operation_widget.load_task_id(task_id)
 
         if self._task_handle.data().get("ProphetValue") == -1:
@@ -103,8 +103,8 @@ class TaskPanelWidget(QtWidgets.QFrame):
         # self.thumbnail_button.setMinimumSize(200, 200)
         # self.thumbnail_layout.addWidget(self.thumbnail_button)
         
-        self.preview_widget = previewwidget.PreviewWidget()
-        _layout.addWidget(self.preview_widget)
+        # self.preview_widget = previewwidget.PreviewWidget()
+        # _layout.addWidget(self.preview_widget)
 
         # operation widget
         self.operation_widget = operationwidget.operationwidget.OperationWidget()

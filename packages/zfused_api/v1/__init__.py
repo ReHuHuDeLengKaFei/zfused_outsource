@@ -48,9 +48,6 @@ key_lic = "{}/key.lic".format(LOCAL_KEY_PATH)
 if not os.path.isfile(key_lic):
     key_lic = "{}/key.lic".format(os.path.dirname(os.path.abspath(__file__)))
 if not os.path.isfile(key_lic):
-    _dir = os.path.dirname(sys.argv[0])
-    key_lic = "{}/key.lic".format(_dir)
-if not os.path.isfile(key_lic):
     key_lic = "C:/key.lic".format(_dir)
 
 if os.path.isfile(key_lic):
