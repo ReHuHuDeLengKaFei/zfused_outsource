@@ -21,7 +21,8 @@ _scale = 1.0
 # THUMBNAIL_SIZE = [192*_scale, 108*_scale]
 THUMBNAIL_SIZE = [192*_scale, 10]
 ITEM_DELEGATE_SIZE = [192*_scale, 108*_scale + 80]
-ITEM_DELEGATE_SIZE = [192*_scale, 10 + 80]
+ITEM_DELEGATE_SIZE = [192*_scale, 10 + 50]
+# ITEM_DELEGATE_SIZE = [192*_scale, 10 + 50]
 
 BACKGROUND_COLOR = "#F0F0F0"
 

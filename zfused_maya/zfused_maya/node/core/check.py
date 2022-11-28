@@ -598,7 +598,8 @@ def animation_layer():
     """
     _lays = cmds.ls(type="animLayer")
     if _lays:
-        _lays.remove('BaseAnimation')
+        if cmds.objExists('BaseAnimation'):
+            _lays.remove('BaseAnimation')
     if len(_lays) > 0:
         info = u"场景存在多余动画层\n"
         for _layer in _lays:
@@ -931,6 +932,39 @@ def ass_repeat():
                 _is_repeat = True
                 info += "{}\n".format(_name)
     
+    if _is_repeat:
+        return False, info
+    else:
+        return True, None
+
+
+def curve_repeat():
+    """
+    检查曲线是否重名
+    :return:
+    """
+
+    def get_uuid_info():
+        # 记录相同uuid下的mesh
+        uuid_dict = {}
+        _meshes = cmds.ls(type='nurbsCurve', ap=True)
+        for _mesh in _meshes:
+            _uuid = cmds.ls(_mesh, uuid=True)[0]
+            uuid_dict.setdefault(_uuid, []).append(_mesh)
+        return uuid_dict
+
+    _is_repeat = False
+    _lists = cmds.ls(noIntermediate=1, type='nurbsCurve')
+    info = u"场景存在重复命名曲线节点\n"
+    _uuid_info = get_uuid_info()
+    for _name in _lists:
+        if len(_name.split('|')) != 1:
+            _uuid = cmds.ls(_name, uuid=1)[0]
+            # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
+            if len(_uuid_info[_uuid]) == 1:
+                _is_repeat = True
+                info += "{}\n".format(_name)
+
     if _is_repeat:
         return False, info
     else:

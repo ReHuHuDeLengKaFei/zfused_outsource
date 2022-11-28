@@ -92,32 +92,45 @@ class ItemDelegate(QtWidgets.QStyledItemDelegate):
                                   _rect.height())
         painter.drawText(_time_rect, QtCore.Qt.AlignCenter, _create_time_text)
 
-        # painter user
-        _user_id = _version_handle.data()["CreatedBy"]
-        _user_handle = zfused_api.user.User(_user_id)
-        _user_name_text = _user_handle.full_name_code()
-        _name_rect = QtCore.QRectF(_time_rect.x() + _time_rect.width() + constants.Constants.SPACING,
-                                  _rect.y(),
-                                  _fm.width(_user_name_text),
-                                  _rect.height() )
-        painter.drawText(_name_rect, QtCore.Qt.AlignCenter, _user_name_text)
+        # # painter user
+        # _user_id = _version_handle.data()["CreatedBy"]
+        # _user_handle = zfused_api.user.User(_user_id)
+        # _user_name_text = _user_handle.full_name_code()
+        # _name_rect = QtCore.QRectF(_time_rect.x() + _time_rect.width() + constants.Constants.SPACING,
+        #                           _rect.y(),
+        #                           _fm.width(_user_name_text),
+        #                           _rect.height() )
+        # painter.drawText(_name_rect, QtCore.Qt.AlignCenter, _user_name_text)
 
-        # painter is approval
-        _approval_rect = QtCore.QRectF( _rect.x() + _rect.width() - 100, 
-                                       _rect.y() + 8,
-                                       80, 
-                                       20 )
-        if _version_data["IsApproval"] == 1:
-            painter.setBrush(QtGui.QColor("#0078D7"))
-            _approval_text = u"审批通过"
-        elif _version_data["IsApproval"] == 0:
-            painter.setBrush(QtGui.QColor("#F7B55E"))
-            _approval_text = u"未审批"
-        else:
-            painter.setBrush(QtGui.QColor("#FF0000"))
-            _approval_text = u"审批未通过"
-        painter.drawRect(_approval_rect)
-        painter.drawText(_approval_rect, QtCore.Qt.AlignCenter, _approval_text)
+        _name_rect = QtCore.QRectF( _time_rect.x() + _time_rect.width() + constants.Constants.SPACING,
+                                    _rect.y(),
+                                    0, # _fm.width(_user_name_text),
+                                    _rect.height() )
+
+        # painter description
+        _description = _version_handle.description()
+        _description_rect = QtCore.QRectF(  _name_rect.x() + _name_rect.width() + constants.Constants.SPACING,
+                                            _rect.y(),
+                                            _fm.width(_description),
+                                            _rect.height() )
+        painter.drawText(_description_rect, QtCore.Qt.AlignCenter, _description)
+        
+        # # painter is approval
+        # _approval_rect = QtCore.QRectF( _rect.x() + _rect.width() - 100, 
+        #                                _rect.y() + 8,
+        #                                80, 
+        #                                20 )
+        # if _version_data["IsApproval"] == 1:
+        #     painter.setBrush(QtGui.QColor("#0078D7"))
+        #     _approval_text = u"审批通过"
+        # elif _version_data["IsApproval"] == 0:
+        #     painter.setBrush(QtGui.QColor("#F7B55E"))
+        #     _approval_text = u"未审批"
+        # else:
+        #     painter.setBrush(QtGui.QColor("#FF0000"))
+        #     _approval_text = u"审批未通过"
+        # painter.drawRect(_approval_rect)
+        # painter.drawText(_approval_rect, QtCore.Qt.AlignCenter, _approval_text)
 
         if option.state & QtWidgets.QStyle.State_Selected:
             bgBrush = QtGui.QBrush(QtGui.QColor(149, 194, 197, 150))

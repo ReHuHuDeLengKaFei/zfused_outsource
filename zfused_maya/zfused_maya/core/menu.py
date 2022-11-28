@@ -16,7 +16,7 @@ MENU_KEY = [
             "utility", 
              "modeling", 
             "shading",
-            # "rigging", 
+            "rigging", 
              "assembly",
              "animation", 
             "fx", 

@@ -87,6 +87,14 @@
                 "cmd":"from zfused_maya.tool.utility.assemblymanage import assemblymanagewidget;ui = assemblymanagewidget.AssemblyManageWidget();ui.show()",
                 "color":"#820019",
                 "category":"文件管理"},
+
+            {   "name":"场景单元(元素)管理",
+                "code":"primitive management",
+                "title":"场景单元(元素)管理\nprimitive Manage",
+                "cmd":"from zfused_maya.tool.utility import primitivemanage;ui = primitivemanage.PrimitiveManageWidget();ui.show()",
+                "color":"#2e8be9",
+                "category":"场景装配"},
+
             {   "name":"任务管理",
                 "code":"task_management",
                 "title":"任务管理\nTask Manage",
@@ -171,6 +179,18 @@
                 "category":"group"
             }
     ],
+    "rigging":
+    [
+            {
+                "name":"传递UV",
+                "code":"transfer uv",
+                "title":"传递UV",
+                "cmd":"from zfused_maya.tool.rigging import transferuv;reload(transferuv);ui = transferuv.PolyTransfer();ui.UI()",
+                "color":"#343D46",
+                "category":"tool"
+            }
+    ]
+    ,
     "help":
         [
             {   "name":"更新",

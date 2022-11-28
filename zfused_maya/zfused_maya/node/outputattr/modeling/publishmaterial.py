@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 # test
 def publish_material(*args, **kwargs):
     """ 上传任务模型文件
-    
     """
     output_entity_type, output_entity_id, output_attr_id = args
 

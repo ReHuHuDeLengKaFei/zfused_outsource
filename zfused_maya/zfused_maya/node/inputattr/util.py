@@ -619,11 +619,13 @@ def _change_time_mode( fps ):
         24fps ： film
         25fps ： pal
         30fps ： ntsc
+        23fps : 23.976fps
     '''
     _dict = {
         24: "film",
         25: "pal",
-        30: "ntsc"
+        30: "ntsc",
+        23: "23.976fps"
     }
     _mode = _dict[fps]
     cmds.currentUnit( time = _mode )

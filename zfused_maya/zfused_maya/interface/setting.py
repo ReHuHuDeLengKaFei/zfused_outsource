@@ -37,8 +37,8 @@ class StartupSetting(QtCore.QObject):
         
         # cmds.scriptJob(e = ("PostSceneRead", self.preview_scene), protected = True)
         cmds.scriptJob(e = ("SceneSaved", self.unlock_file), protected = True)
-        cmds.scriptJob(e = ("SceneSaved", self.clear_nodeGraphEditorInfo), protected = True)
-        
+
+        # cmds.scriptJob(e = ("SceneSaved", self.clear_nodeGraphEditorInfo), protected = True)
         
         _incremental_save = True
         _clear_unused = True

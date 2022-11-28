@@ -138,6 +138,9 @@ def publish_file(files, src, dst):
             #  upload tx file
             _result = filefunc.publish_file(_tx_texture_file, _backup_tx_texture_file)
             # transfer.send_file_to_server(_tx_texture_file, _backup_tx_texture_file)
+            # 记录tx文件信息
+            _file_info = zfile.get_file_info(_tx_texture_file, _backup_tx_texture_file)
+            _file_infos.append(_file_info)
 
     return _file_infos
 

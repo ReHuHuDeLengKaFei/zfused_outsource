@@ -28,14 +28,15 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         self._spacing = 2
         self._extend_width = 10
 
+        self._font = QtGui.QFont("Microsoft YaHei UI", 9)
+
     def paint(self, painter, option, index):
-
-        self._font = painter.font()
-
         _data = index.data()
         _id = _data["Id"]
-        _assembly = zfused_api.assembly.Assembly(_id)
-        _name = _assembly.full_name_code().replace("/","_")
+        _task = zfused_api.task.Task(_id, _data)
+        _project_entity = _task.project_entity() # zfused_api.objects.Objects(_task.data()["ProjectEntityType"], _task.data()["ProjectEntityId"])
+        _project_step = _task.project_step() # zfused_api.step.ProjectStep(_task.data()["ProjectStepId"])
+        _name = _task.full_name_code().replace("/","_")
 
         painter.save()
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
@@ -45,80 +46,85 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 
-        # _pixmap = cache.ThumbnailCache.get_pixmap(_assembly, self.parent().parent().update)
-        # _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-        #                                 constants.THUMBNAIL_SIZE[0], 
-        #                                 constants.THUMBNAIL_SIZE[1] )
-        # if _pixmap:
-        #     _pixmap_size = _pixmap.size()
-        #     if _pixmap_size.width() and _pixmap_size.height():
-        #         _label_size = QtCore.QSize(constants.THUMBNAIL_SIZE[0], 
-        #                                     constants.THUMBNAIL_SIZE[1])
-        #         scale = max(float(_label_size.width() / float(_pixmap_size.width())),
-        #                     float(_label_size.height()) / float(_pixmap_size.height()))
-        #         _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
-        #                                   _pixmap_size.height() * scale,
-        #                                   QtCore.Qt.KeepAspectRatio, 
-        #                                   QtCore.Qt.SmoothTransformation )
-        #         _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
-        #                                           (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
-        #                                           _label_size.width(), 
-        #                                           _label_size.height() )
-        #         # self.THUMBNAIL_PIXMAP[_id] = _thumbnail_pixmap
-        #         painter.drawPixmap(_rect.x(), _rect.y(), _thumbnail_pixmap)
-        # else:
-        #     painter.setBrush(QtGui.QColor(color.LetterColor.color(_assembly.code().lower()[0])))
-        #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
-        #     painter.setPen(QtGui.QPen(QtGui.QColor(
-        #         0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
-        #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+        _pixmap = cache.ThumbnailCache.get_pixmap(_project_entity, self.parent().parent().update)
 
         _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
                                         constants.THUMBNAIL_SIZE[0], 
                                         constants.THUMBNAIL_SIZE[1] )
-        painter.setBrush(QtGui.QColor(color.LetterColor.color(_assembly.code().lower()[0])))
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+        if _pixmap:
+            _pixmap_size = _pixmap.size()
+            if _pixmap_size.width() and _pixmap_size.height():
+                _label_size = QtCore.QSize(constants.THUMBNAIL_SIZE[0], 
+                                            constants.THUMBNAIL_SIZE[1])
+                scale = max(float(_label_size.width() / float(_pixmap_size.width())),
+                            float(_label_size.height()) / float(_pixmap_size.height()))
+                _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
+                                          _pixmap_size.height() * scale,
+                                          QtCore.Qt.KeepAspectRatio, 
+                                          QtCore.Qt.SmoothTransformation )
+                # _thumbnail_pixmap = _pixmap
+                _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
+                                                  (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
+                                                  _label_size.width(), 
+                                                  _label_size.height() )
+                # self.THUMBNAIL_PIXMAP[_id] = _thumbnail_pixmap
+                painter.drawPixmap(_rect.x(), _rect.y(),_thumbnail_pixmap)
+        else:
+            painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
+            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+            painter.setPen(QtGui.QPen(QtGui.QColor(
+                0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
+            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
-        # # 绘制 name
-        # self._font.setPixelSize(13)
+        # 绘制link
+        # self._font.setPixelSize(12)
         # self._font.setBold(True)
         # painter.setFont(self._font)
-        painter.setPen(QtGui.QPen(QtGui.QColor("#333333")))
-        _link_full_name = _assembly.full_name().replace("/"," - ")
+        _project_handle = zfused_api.project.Project(_project_entity.data()["ProjectId"])
+        painter.setPen(QtGui.QPen(QtGui.QColor("#222222")))
+        if _project_entity.object() == "asset":
+            _link_full_name = _project_entity.name()
+        else:
+            _link_full_name = _project_entity.code()
         _link_rect = QtCore.QRectF( _thumbnail_rect.x() + self._extend_width,
                                    _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
                                    _thumbnail_rect.width() - self._extend_width*2 ,
                                    20 )
         painter.drawText(_link_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _link_full_name)
 
-        # 绘制 code
-        painter.setPen(QtGui.QPen(QtGui.QColor("#666666")))
+        # 绘制project step
         _step_rect = QtCore.QRectF( _link_rect.x(),
                                    _link_rect.y() + _link_rect.height() + self._spacing,
                                    _link_rect.width(),
                                    20 )
-        _project_step_name = _assembly.code()
+        if _project_step:
+            painter.setPen(QtGui.QPen(QtGui.QColor(_project_step.color())))
+            _project_step_name = _project_step.name()
+        else:
+            painter.setPen(QtGui.QPen(QtGui.QColor("#FF0000")))
+            _project_step_name = "还未选择任务步骤"
+        # self._font.setBold(True)
+        painter.setFont(self._font)
         painter.drawText(_step_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _project_step_name)
 
         #  绘制任务名
         # self._font.setPixelSize(12)
         # self._font.setBold(False)
-        # _fm = QtGui.QFontMetrics(self._font)
-        # painter.setFont(self._font)
-        # painter.setPen(QtGui.QPen(QtGui.QColor(constants.INFO_TEXT_COLOR), 1))
-        # if _assembly:
-        #     _name_code = _assembly.data()["Name"]
-        # else:
-        #     _name_code = "暂无任务"
-        # _name_rect = QtCore.QRectF( _step_rect.x(),
-        #                            _step_rect.y() + _step_rect.height() + self._spacing,
-        #                            _step_rect.width() ,
-        #                            24 )
-        # painter.drawText(_name_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _name_code)
+        _fm = QtGui.QFontMetrics(self._font)
+        painter.setFont(self._font)
+        painter.setPen(QtGui.QPen(QtGui.QColor(constants.INFO_TEXT_COLOR), 1))
+        if _task:
+            _name_code = _task.data()["Name"]
+        else:
+            _name_code = "暂无任务"
+        _name_rect = QtCore.QRectF( _step_rect.x(),
+                                   _step_rect.y() + _step_rect.height() + self._spacing,
+                                   _step_rect.width() ,
+                                   24 )
+        painter.drawText(_name_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _name_code)
 
         # #  绘制任务状态
-        # _status_handle = zfused_api.status.Status(_assembly.data()["StatusId"])
+        # _status_handle = zfused_api.status.Status(_task.data()["StatusId"])
         # _status_code = _status_handle.name()
         # _status_width = _fm.width(_status_code) + self._extend_width
         # _status_rect = QtCore.QRectF( _rect.x() + (_rect.width() - _status_width)/2,

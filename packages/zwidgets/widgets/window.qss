@@ -55,7 +55,7 @@ QTabBar::tab:selected {
 
 /*====================== QPushButton ======================*/
 QPushButton{
-    font: bold 12px;
+    font: 12px;
     color: #FFFFFF;
     background-color: #222222;
     border: none;

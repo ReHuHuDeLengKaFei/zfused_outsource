@@ -29,7 +29,7 @@ def nodes():
 
 def if_member():
     '''
-    whether proxy group contains members
+    whether proxy group contains members 
     '''
     if_member = False
     _group = nodes()
