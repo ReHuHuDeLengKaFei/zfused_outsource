@@ -1944,6 +1944,7 @@ def lock_cam():
         _is_reference = cmds.referenceQuery(cam, isNodeReferenced=True)
         if _is_reference:
             cameras.remove(cam)
+
     used_cameras = list(set(cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
     def getAllLayers():
         layerlist=[]
@@ -1964,6 +1965,8 @@ def lock_cam():
     layers = getAllLayers()
     for cam in used_cameras:
         camtrans = cmds.listRelatives(cam,p = True)[0]
+        if not str(camtrans).endswith('_cam'):
+            continue
         caminfo = u"{}\n".format(camtrans)
         for attr in attrilist:
             if_lock = cmds.getAttr(camtrans+'.'+attr, lock = True)

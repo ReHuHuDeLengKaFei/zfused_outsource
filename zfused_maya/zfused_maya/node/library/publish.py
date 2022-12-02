@@ -93,7 +93,7 @@ def publish(infomation):
         # save publish file
         cmds.file(save = True, type = _format, f = True, options = "v=0;")
         # publish file
-        transfer.send_file_to_server(_temp_file, _edition_name)
+        filefunc.publish_file(_temp_file, _edition_name)
         _,_err = zfused_api.library.new_edition(_library_id, _library_entity_id, _code, _software_id, _renderer, _description, _format, _suffix, _file_size)
         if _err:
             _library_entity_handle.update_count()

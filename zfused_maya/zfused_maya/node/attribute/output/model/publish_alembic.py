@@ -10,7 +10,7 @@ import maya.cmds as cmds
 
 import zfused_api
 
-from zcore import zfile,transfer
+from zcore import zfile,transfer,filefunc
 
 from zfused_maya.node.core import renderinggroup
 
@@ -64,8 +64,8 @@ def publish_alembic(*args, **kwargs):
         if _rendering_group:
             _job = "-frameRange 1 1 -attr rendering -stripNamespaces -uvWrite -writeColorSets -writeFaceSets -worldSpace -writeVisibility -writeUVSets -root {} -file {}".format(" ".join(_rendering_group), _publish_file)
             cmds.AbcExport(j = [_job])
-            transfer.send_file_to_server(_publish_file, _production_file)
-            transfer.send_file_to_server(_publish_file, _cover_file)      
+            filefunc.publish_file(_publish_file, _production_file)
+            filefunc.publish_file(_publish_file, _cover_file)      
 
         # record in file
         _file_info = zfile.get_file_info(_publish_file, _production_file)
