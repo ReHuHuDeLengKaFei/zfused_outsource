@@ -314,11 +314,27 @@ class Window(QtWidgets.QMainWindow):
 
         # self.infomation_widget.hide()
 
-        #_qss = resource.get("qss", "./window.qss")
+        # #_qss = resource.get("qss", "./window.qss")
+        # _qss = "{}/window.qss".format(os.path.dirname(__file__))
+        # with open(_qss) as f:
+        #     qss = f.read()
+        #     self.setStyleSheet(qss)
+
+        _font_file = '{}/WenQuanWeiMiHei-1.ttf'.format(os.path.dirname(__file__))
+        # if not os.path.isfile(_font_file):
+        #     _font_file = "{}/fonts/WenQuanWeiMiHei-1.ttf".format(os.path.dirname(sys.argv[0]))
+        font_database = QtGui.QFontDatabase()
+        font_id = font_database.addApplicationFont(_font_file)
+        font_family = font_database.applicationFontFamilies(font_id)
+        _font = QtGui.QFont(font_family[0])
+        # _font.setPixelSize(14)
+        self.setFont( _font )
+
         _qss = "{}/window.qss".format(os.path.dirname(__file__))
         with open(_qss) as f:
             qss = f.read()
             self.setStyleSheet(qss)
+
 
 
 class _Button(QtWidgets.QPushButton):

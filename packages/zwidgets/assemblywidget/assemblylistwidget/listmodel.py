@@ -9,7 +9,7 @@ from Qt import QtGui, QtCore
 
 import zfused_api
 
-__all__ = ["ListFilterProxyModel", "ListModel"]
+from . import constants
 
 logger = logging.getLogger(__name__)
 
@@ -117,3 +117,6 @@ class ListModel(QtCore.QAbstractListModel):
 
         if role == 0:
             return self._items[index.row()]
+            
+        elif role == QtCore.Qt.SizeHintRole:
+            return QtCore.QSize(constants.ITEM_DELEGATE_SIZE[0], constants.ITEM_DELEGATE_SIZE[1])

@@ -12,7 +12,8 @@ import glob
 import maya.cmds as cmds
 
 import zfused_api
-import zfused_maya.node.core.attr as attr
+
+from zfused_maya.node.core import attr, op
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,101 @@ if not _is_load:
     except Exception as e:
         logger.error(e)
 
+
+
+def local_replace_relative_current_file(*args, **kwargs):
+    # _task_id, _task_attr_input_id, _input_task_id, _input_task_attr_output_id = args
+    _task_id = kwargs.get("task_id")
+    _task_attr_input_id = kwargs.get("task_attr_input_id")
+    _input_task_id = kwargs.get("input_task_id")
+    _input_task_attr_output_id = kwargs.get("input_task_attr_output_id")
+    _namespace = kwargs.get("namespace")
+    _index = kwargs.get("index")
+
+
+    _task = zfused_api.task.Task(_task_id)
+    _task_attr_input = zfused_api.attr.Input(_task_attr_input_id)
+    _extended_version = _task_attr_input.extended_version()
+    if _index == -1:
+        _extended_version = False
+    elif _index:
+        _extended_version = True
+
+    _input_task = zfused_api.task.Task(_input_task_id)
+    _input_task_attr_output = zfused_api.attr.Output(_input_task_attr_output_id)
+    _input_task_project_step_id = _input_task_attr_output.project_step_id()
+    _input_production_path = _input_task.production_path()
+    
+    # get file 
+    # _file_index = "{:0>4d}".format(_input_task.last_version_index())
+    if _index:
+        _file_index = "{:0>4d}".format(_index)
+    else:
+        _file_index = "{:0>4d}".format(_input_task.last_version_index())
+    _file_suffix = _input_task_attr_output.suffix()
+    if _extended_version:
+        _production_file = zfused_api.zFused.get("production_file", filter = {"TaskId": _input_task_id, "ProjectStepAttrId": _input_task_project_step_id, "Index": int(_file_index)})
+        if _production_file:
+            _production_file = _production_file[0]["Path"]
+        else:
+            _production_file = "{}/{}/{}.{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(),_file_index, _file_suffix)
+    else:
+        _production_file = "{}/{}/{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(), _file_suffix)
+    
+    print(_production_file)
+    # local production file
+    _current_file = cmds.file(q=True, sn=True)
+    print(_current_file)
+    
+    # replace file 
+    op.replace_reference_relative(_current_file, _production_file)
+
+
+
+def local_save_current_file(*args, **kwargs):
+    # _task_id, _task_attr_input_id, _input_task_id, _input_task_attr_output_id = args
+    _task_id = kwargs.get("task_id")
+    _task_attr_input_id = kwargs.get("task_attr_input_id")
+    _input_task_id = kwargs.get("input_task_id")
+    _input_task_attr_output_id = kwargs.get("input_task_attr_output_id")
+    _namespace = kwargs.get("namespace")
+    _index = kwargs.get("index")
+
+
+    _task = zfused_api.task.Task(_task_id)
+    _task_attr_input = zfused_api.attr.Input(_task_attr_input_id)
+    _extended_version = _task_attr_input.extended_version()
+    if _index == -1:
+        _extended_version = False
+    elif _index:
+        _extended_version = True
+
+    _input_task = zfused_api.task.Task(_input_task_id)
+    _input_task_attr_output = zfused_api.attr.Output(_input_task_attr_output_id)
+    _input_task_project_step_id = _input_task_attr_output.project_step_id()
+    _input_production_path = _input_task.production_path()
+    
+    # get file 
+    # _file_index = "{:0>4d}".format(_input_task.last_version_index())
+    if _index:
+        _file_index = "{:0>4d}".format(_index)
+    else:
+        _file_index = "{:0>4d}".format(_input_task.last_version_index())
+    _file_suffix = _input_task_attr_output.suffix()
+    if _extended_version:
+        _production_file = zfused_api.zFused.get("production_file", filter = {"TaskId": _input_task_id, "ProjectStepAttrId": _input_task_project_step_id, "Index": int(_file_index)})
+        if _production_file:
+            _production_file = _production_file[0]["Path"]
+        else:
+            _production_file = "{}/{}/{}.{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(),_file_index, _file_suffix)
+    else:
+        _production_file = "{}/{}/{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(), _file_suffix)
+    
+    # local production file
+    _current_file = cmds.file(q=True, sn=True)
+
+    # copy file
+    shutil.copyfile(_production_file, _current_file)
 
 
 def open_file(*args, **kwargs):
@@ -70,6 +166,11 @@ def open_file(*args, **kwargs):
         _production_file = "{}/{}/{}{}".format(_input_production_path,_input_task_attr_output.code(),_input_task.file_code(), _file_suffix)
     
     # do somthing
+    # 需要提前处理文件 比如绑定切换 等等 
+    # 如何定义呢？ 
+    
+    
+    
     cmds.file(_production_file, o = True, f = True, options = "v=0;")
     # rfn = cmds.referenceQuery(rf, rfn = True)
     # _version_id = _input_task.last_version_id()

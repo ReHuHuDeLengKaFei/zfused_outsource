@@ -155,5 +155,5 @@ class ItemDelegate(QtWidgets.QStyledItemDelegate):
 
         painter.restore()
 
-    def sizeHint(self, option, index):
-        return QtCore.QSize(constants.Constants.ITEM_DELEGATE_SIZE[0], constants.Constants.ITEM_DELEGATE_SIZE[1])
+    # def sizeHint(self, option, index):
+    #     return QtCore.QSize(constants.Constants.ITEM_DELEGATE_SIZE[0], constants.Constants.ITEM_DELEGATE_SIZE[1])

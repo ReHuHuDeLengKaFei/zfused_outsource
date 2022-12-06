@@ -149,5 +149,5 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         
         painter.restore()
 
-    def sizeHint(self, option, index):
-        return QtCore.QSize(constants.ITEM_DELEGATE_SIZE[0], constants.ITEM_DELEGATE_SIZE[1])
+    # def sizeHint(self, option, index):
+    #     return QtCore.QSize(constants.ITEM_DELEGATE_SIZE[0], constants.ITEM_DELEGATE_SIZE[1])

@@ -1,17 +1,16 @@
 QMainWindow{
-    font-family: Microsoft YaHei UI;
-    font: bold 12px;
+    font: 12px;
     background-color: #444444;
     color: #FFFFFF;
 }
 
 QWidget{
-    font-family: Microsoft YaHei UI;
+    font: 12px;
     background-color:transparent;
 }
 
 QFrame{
-    font-family: Microsoft YaHei UI;
+    font: 12px;
     background-color: #353535;
     color: #FFFFFF;
     border: 0px solid gray;
@@ -32,7 +31,6 @@ QFrame#operation_frame{
 }
 
 QTabWidget{
-    font: bold 11px;
     background-color: #F1F1F1;
 }
 
@@ -44,7 +42,6 @@ QTabBar::tab {
     background-color: #222222;
     color: #AAAAAA;
     height: 28px;
-    font-size: 11px;
 }
 
 QTabBar::tab:selected {
@@ -55,11 +52,11 @@ QTabBar::tab:selected {
 
 /*====================== QPushButton ======================*/
 QPushButton{
-    font: 12px;
     color: #FFFFFF;
     background-color: #222222;
-    border: none;
+    border: 1px;
     qproperty-iconSize: 20px;
+    height: 24px;
 }
 QPushButton:hover{
     color: #DDDDDD;
@@ -89,8 +86,9 @@ QPushButton#icon_button{
     qproperty-iconSize: 20px;
     Text-align: center;
     border: 0px solid;
-    padding-left: 4px;
-    padding-right: 8px;
+    padding-left: 4px;      
+    padding-right: 8px; 
+    background-color:transparent;
 }
 
 /*====================== title_button ======================*/
@@ -119,7 +117,6 @@ QPushButton#attr_title_button{
 
 /*====================== QCheckBox ======================*/
 QCheckBox{
-    font: bold 12px;
     color: #EEEEEE;
     background-color: #353535;
 }
@@ -175,13 +172,11 @@ QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{
 
 /*====================== label ======================*/
 QLabel{    
-    font: bold 12px;
     color: #DDDDDD;
 }
 
 /*====================== QTextEdit ======================*/
 QTextEdit{    
-    font: bold 12px;
     color: #ABABAB;
     border-radius:0px;
     background-color:#444444;
@@ -194,7 +189,6 @@ QListWidget{
 
 QListWidget::Item{
     color: #888888;
-    font: bold 12px;
     height: 30px;
     background-color: #2D2D2D;
 }
@@ -202,14 +196,12 @@ QListWidget::Item{
 
 
 QLineEdit{
-    font: bold 12px;
     color: #DDDDDD;
     border: 1px solid #555555;
     border-bottom: 1px solid #555555;
 }
 
 QComboBox{
-    font: bold 12px;
     color: #DDDDDD;
     border: 1px solid #555555;
     border-bottom: 1px solid #555555;
@@ -226,7 +218,6 @@ QTreeView {
     background-color: #282828;
 }
 QTreeView::item{
-    font-size: 14px;
     margin: 0px 0px 0px 0px;
     color: #DDDDDD;
     border:none;
@@ -287,7 +278,6 @@ QMenu::separator{
 QMenu::item{
     background-color: #222222;
     color: #DDDDDD;
-    font-size: 12px;
     margin: 2px 2px;
     padding: 5px 20px 5px 20px;
     height: 20px;
@@ -330,13 +320,11 @@ QSlider::handle:horizontal {
 ===============================================================
 */
 QGroupBox{
-    font: bold 12px;
     color: #DDDDDD;
     border: 1px solid #444444;
 }
 
 QGroupBox::title {
-    font: bold 12px;
     subcontrol-origin: margin;
     subcontrol-position: top center; /* position at the top center */
     padding: 0 3px;
