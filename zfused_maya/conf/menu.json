@@ -87,6 +87,12 @@
                 "cmd":"from zfused_maya.tool.utility.assemblymanage import assemblymanagewidget;ui = assemblymanagewidget.AssemblyManageWidget();ui.show()",
                 "color":"#820019",
                 "category":"文件管理"},
+            {   "name":"任务文件接收管理",
+                "code":"task receive management",
+                "title":"任务文件接收管理\nTask Receive Manage",
+                "cmd":"from zfused_maya.tool.utility.task_receive_manage import task_receive_manage_widget;ui = task_receive_manage_widget.TaskReceiveManageWidget();ui.show()",
+                "color":"#827719",
+                "category":"文件管理"},
 
             {   "name":"场景单元(元素)管理",
                 "code":"primitive management",
