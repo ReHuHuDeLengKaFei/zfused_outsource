@@ -88,6 +88,8 @@ def animation_layer():
     _lays = cmds.ls(type = "animLayer")
     if _lays:
         for _lay in _lays:
+            if cmds.referenceQuery(_lay,isNodeReferenced=True):#如果动画层为参考则跳过
+                continue
             cmds.delete(_lay)
 
 def unknown_node():

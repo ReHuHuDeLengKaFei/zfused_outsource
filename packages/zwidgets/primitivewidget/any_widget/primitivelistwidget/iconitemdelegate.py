@@ -28,9 +28,11 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         self._spacing = 2
         self._extend_width = 10
 
-        self._font = QtGui.QFont("Microsoft YaHei UI", 9)
+        # self._font = QtGui.QFont("Microsoft YaHei UI", 9)
 
     def paint(self, painter, option, index):
+        self._font = painter.font()
+
         _data = index.data()
         _id = _data["Id"]
         _task = zfused_api.task.Task(_id, _data)
@@ -41,8 +43,9 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.save()
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
         _rect = option.rect
-        _pen = QtGui.QPen(QtGui.QColor(constants.Constants.INFO_TEXT_COLOR), 0.1)
-        painter.setPen(_pen)
+        # _pen = QtGui.QPen(QtGui.QColor(constants.Constants.INFO_TEXT_COLOR), 0.1)
+        # painter.setPen(_pen)
+        painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 

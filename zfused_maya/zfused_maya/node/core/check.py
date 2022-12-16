@@ -6,22 +6,19 @@
 from __future__ import print_function
 
 import copy
-import os
 import logging
-import collections
+import os
 
 import maya.api.OpenMaya as om
 import maya.cmds as cmds
-import pymel.core as pm
 import maya.mel as mel
+import pymel.core as pm
 import xgenm as xg
+import copy
 
 import zfused_api
-
 from zfused_maya.core import record
-
 from . import property, renderinggroup, shadingengine, texture, xgen
-
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +75,7 @@ def texture_is_chinese():
             info += u"{}\n".format(_error_node)
         return False, info
     return True, None
-    
+
 
 # =======================================================================================================
 # 检查贴图等不在制作路径下
@@ -101,15 +98,15 @@ def texture_work_path():
     _backup_path = _project.backup_path()
     _work_path = _project.work_path()
     _production_path = _project.production_path()
-    
+
     _files = texture.files()
     if not _files:
         return True, None
-    
+
     _error_path = []
     info = u"以下路径的贴图未在项目work路径下\n"
     for _file in _files:
-        _file = _file.replace("\\","/")
+        _file = _file.replace("\\", "/")
         if _work_path in _file or _production_path in _file or _backup_path in _file:
             continue
         else:
@@ -155,7 +152,7 @@ def grow_caching():
 def useless_camera():
     """ check camera
     """
-    
+
     logger.info(u"检查多余摄像机")
 
     _extra_camera = ["facial_cam"]
@@ -332,7 +329,6 @@ def lost_material():
 # =======================================================================================================
 # 检查模型按面赋材质球
 def multi_material():
-    
     logger.info(u"检查模型按面赋材质球")
 
     _polygons = cmds.ls(type="mesh", ni=True)
@@ -426,7 +422,7 @@ def check_history():
         for child in _history:
             info += u"%s\n" % child
         return False, info
-    
+
     return True, None
 
 
@@ -595,25 +591,37 @@ def texture_path():
 
 def animation_layer():
     """ check animation layer
+    仅限动画环节使用
     """
     _lays = cmds.ls(type="animLayer")
+    _lays_copys = copy.deepcopy(_lays)
     if _lays:
         if cmds.objExists('BaseAnimation'):
             _lays.remove('BaseAnimation')
+        for _lay in _lays_copys:
+            if cmds.referenceQuery(_lay, isNodeReferenced=True):
+                _lays.remove(_lay)
+
     if len(_lays) > 0:
         info = u"场景存在多余动画层\n"
         for _layer in _lays:
             info += "{}\n".format(_layer)
         return False, info
     return True, None
+
+
 def animation_layer2():
     """
-    
+    非动画环节使用
     :return: check animation layer
     """
     """ check animation layer
     """
     _lays = cmds.ls(type="animLayer")
+    _lays_copys = copy.deepcopy(_lays)
+    for _lay in _lays_copys:
+        if cmds.referenceQuery(_lay, isNodeReferenced=True):
+            _lays.remove(_lay)
     if len(_lays) > 0:
         info = u"场景存在多余动画层\n"
         for _layer in _lays:
@@ -658,7 +666,7 @@ def light():
     """ check light
     """
     _lights = cmds.ls(type=cmds.listNodeTypes("light"))
-    
+
     if _lights:
         info = "场景存在多余灯光节点\n"
         for _light in _lights:
@@ -757,7 +765,7 @@ def equal_namespace():
 def multi_namespace():
     """ 检查文件中存在 多级 namespace
     """
-    
+
     # #set the current naemspace to world
     # curNS = cmds.namespaceInfo(cur=True)
     # cmds.namespace(set=":")
@@ -803,7 +811,7 @@ def multi_namespace():
     #         info += "{} - {}\n".format(_error_rf_node[0], _error_rf_node[1])
     #     return False, info
     # return True, None
-    
+
     _rendergrps = renderinggroup.nodes()
     _error_rf_nodes = []
     for dag in _rendergrps:
@@ -814,7 +822,7 @@ def multi_namespace():
         if _namespace:
             if len(_namespace.split(":")) >= 3:
                 _error_rf_nodes.append(dag)
-    
+
     if _error_rf_nodes:
         info = u"场景存在 多级 namespace 参考\n"
         for _error_rf_node in _error_rf_nodes:
@@ -826,11 +834,11 @@ def multi_namespace():
 def repeat(node_type="mesh"):
     """ 检查重命名
     """
-    
+
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
-        #render_node  =renderinggroup.nodes()
+        # render_node  =renderinggroup.nodes()
         _meshes = cmds.ls(type='mesh', ap=True)
         for _mesh in _meshes:
             if cmds.nodeType(_mesh) != "mesh":
@@ -838,9 +846,9 @@ def repeat(node_type="mesh"):
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-    
+
     _is_repeat = False
-    
+
     # _lists = cmds.ls(noIntermediate = 1, type = node_type)
     # _repeat_list = defaultdict(list)
     # for _shape, _index in [(_shape.split("|")[-1], _index) for _index, _shape in enumerate(_lists) ]:
@@ -852,21 +860,21 @@ def repeat(node_type="mesh"):
     #         for _index in _index_list:
     #             _name = _lists[_index]
     #             info += "{}\n".format(_name)
-    #render_node = renderinggroup.nodes()
+    # render_node = renderinggroup.nodes()
 
     _lists = cmds.ls(noIntermediate=1, type=node_type)
     info = "场景存在重复命名节点\n"
     _uuid_info = get_uuid_info()
     for _name in _lists:
-        _trans = cmds.listRelatives(_name, p = True, pa = True)[0]
+        _trans = cmds.listRelatives(_name, p=True, pa=True)[0]
         if len(_name.split('|')) != 1 or len(_trans.split('|')) != 1:
-        # if len(_name.split('|')) != 1:
+            # if len(_name.split('|')) != 1:
             _uuid = cmds.ls(_name, uuid=1)[0]
             # 若len()不等于1，说明当前uuid值下的模型有多个，且为instance形式存在（因为不同的DAG节点有不同的uuid）
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-    
+
     if _is_repeat:
         return False, info
     else:
@@ -877,7 +885,7 @@ def gpu_repart():
     """
     检查GPU 重命名
     """
-    
+
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
@@ -886,7 +894,7 @@ def gpu_repart():
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-    
+
     _is_repeat = False
     _lists = cmds.ls(noIntermediate=1, type='gpuCache')
     info = u"场景存在重复命名gpu节点\n"
@@ -898,7 +906,7 @@ def gpu_repart():
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-    
+
     if _is_repeat:
         return False, info
     else:
@@ -910,7 +918,7 @@ def ass_repeat():
     检查ASS是否重名
     :return:
     """
-    
+
     def get_uuid_info():
         # 记录相同uuid下的mesh
         uuid_dict = {}
@@ -919,7 +927,7 @@ def ass_repeat():
             _uuid = cmds.ls(_mesh, uuid=True)[0]
             uuid_dict.setdefault(_uuid, []).append(_mesh)
         return uuid_dict
-    
+
     _is_repeat = False
     _lists = cmds.ls(noIntermediate=1, type='aiStandIn')
     info = u"场景存在重复命名ass节点\n"
@@ -931,7 +939,7 @@ def ass_repeat():
             if len(_uuid_info[_uuid]) == 1:
                 _is_repeat = True
                 info += "{}\n".format(_name)
-    
+
     if _is_repeat:
         return False, info
     else:
@@ -1093,7 +1101,7 @@ def useless_key():
         缓存是从geometry组开始发布的
         该组的父组不允许存在任何k帧信息
     '''
-    
+
     def get_key_attr(grp, _list=[]):
         checkattr = set(
             ["visibility", "translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ", "scaleX",
@@ -1110,7 +1118,7 @@ def useless_key():
                     if _checkattr:
                         _list.append(grp)
         return _list
-    
+
     _rendergrps = renderinggroup.nodes()
     if not _rendergrps:
         return True, None
@@ -1229,7 +1237,7 @@ def postfix_group():
     _gro_list = []
     _is_error = False
     info = u"场景存在不是以_group为后缀的组名\n"
-    
+
     for i in _node_list:
         _child = cmds.listRelatives(i, c=True, type='shape')
         if _child == None:
@@ -1261,11 +1269,11 @@ def node_name():
     _task_id = record.current_task_id()
     _task_entity = zfused_api.task.Task(_task_id)
     _asset_name = _task_entity.project_entity().code()
-    
+
     _node_list = cmds.ls(dag=True, transforms=True)
     _wrongnode = []
     info = u"场景存在不规范的命名\n"
-    
+
     _defult_cam = ['persp', 'top', 'front', 'side']
     for cam in _defult_cam:
         _node_list.remove(cam)
@@ -1286,11 +1294,11 @@ def material_name():
     _task_id = record.current_task_id()
     _task_entity = zfused_api.task.Task(_task_id)
     _asset_name = _task_entity.project_entity().code()
-    
+
     _node_list = cmds.ls(mat=True)
     _wrongnode = []
     info = u"场景存在不规范的材质命名\n"
-    
+
     _defult_shader = ['standardSurface1', 'particleCloud1', 'lambert1']
     for _shader in _defult_shader:
         _node_list.remove(_shader)
@@ -1419,7 +1427,7 @@ def constraint_pos():
     _gro_list = []
     _is_error = False
     info = u"存在非规范位置的约束节点\n"
-    
+
     for _node in _node_list:
         _child = cmds.listRelatives(_node, c=True, type='shape')
         if _child == None:
@@ -1454,7 +1462,7 @@ def meshuv_sets():
                 if uvsets[0] != 'map1':
                     info += u'{}\n'.format(mesh)
                     _is_error = True
-    
+
     if _is_error is True:
         return False, info
     return True, None
@@ -1471,7 +1479,7 @@ def groom_caching_grp():
         if cmds.objExists('{}.groom_caching'.format(tr)) is True:
             if not tr in check_list:
                 check_list.append(tr)
-    
+
     if len(check_list) == 1:
         return True, None
     elif len(check_list) == 0:
@@ -1495,7 +1503,7 @@ def out_curve_grp():
         if cmds.objExists('{}.out_curve'.format(tr)) is True:
             if not tr in check_list:
                 check_list.append(tr)
-    
+
     if len(check_list) == 1:
         return True, None
     elif len(check_list) == 0:
@@ -1539,7 +1547,7 @@ def growmesh_sole():
     else:
         for _mesh in error_meshs:
             info += u'{}\n'.format(_mesh)
-    
+
     return False, info
 
 
@@ -1582,7 +1590,7 @@ def model_description():
     for _transform in _trs:
         if not _transform in _all_mesh:
             error_meshs.append(_transform)
-    
+
     info = u'下列模型不为生长面但是在生长面组\n'
     if len(error_meshs) == 0:
         return True, None
@@ -1675,7 +1683,7 @@ def guide_sole():
         return True, None
     for _error in error_list:
         info += '{}\n'.format(_error)
-    
+
     return False, info
 
 
@@ -1737,7 +1745,7 @@ def last_version():
         return True, None
     for node in error_nodes:
         info += '{}\n'.format(node)
-    
+
     return False, info
 
 
@@ -1746,7 +1754,7 @@ def tx():
     检查贴图tx 是否转换
     :return:
     """
-    
+
     def comp_ctime(file1, file2):
         """
         判断贴图时间和tx 时间，正常应该是tx 时间大于贴图时间
@@ -1759,7 +1767,7 @@ def tx():
         if time1 <= time2:
             return True
         return False
-    
+
     _files = texture.files()
     _error_nodes = []
     for _file in _files:
@@ -1783,7 +1791,7 @@ def collection_path():
     检查collection的路径是否为多重路径
     :return:
     """
-    
+
     all_palette = xg.palettes()
     if not all_palette:
         return True, None
@@ -1797,13 +1805,13 @@ def collection_path():
         if not os.path.exists(_paths_[0]):
             error_node.append(_palette)
             continue
-    
+
     if not error_node:
         return True, None
     info = u'xgen 路径为多重路径或文件路径不存在\n'
     for _node in error_node:
         info += '{}\n'.format(_node)
-    
+
     return False, info
 
 
@@ -1816,7 +1824,7 @@ def check_unused_nodes():
     ignore_list = cmds.ls(defaultNodes=True)
     ignore_list += [u'shapeEditorManager', u'poseInterpolatorManager', u'sceneConfigurationScriptNode', u'xgenGlobals']
     undel = cmds.ls(ud=True)
-    
+
     nodes = cmds.ls()
     for node in nodes:
         if node not in undel:
@@ -1833,7 +1841,7 @@ def check_unused_nodes():
                 if not cons and not relatives_des and not relatives_par:
                     delete_list.append(node)
                     info += u'{}\n'.format(node)
-    
+
     if delete_list:
         return False, info
     else:
@@ -1854,16 +1862,16 @@ def check_default_name():
         'nurbsCircle', 'curve', 'nurbsSquare', 'topnurbsSquare', 'leftnurbsSquare', 'bottomnurbsSquare',
         'rightnurbsSquare',
         'locator', 'group', 'null', 'joint']
-    
+
     info = u"场景存在默认命名\n"
     _wrongnode = []
-    
+
     lists = cmds.ls(dag=True, transforms=True)
     for default in defaults:
         for list in lists:
             if default in list:
                 _wrongnode.append(list)
-    
+
     if _wrongnode != []:
         for _node in _wrongnode:
             _node_name = str(_node)
@@ -1879,14 +1887,14 @@ def repet_model():
     """
     all_nodes = cmds.ls(type='mesh')
     _dict = {}
-    error_nodes =[]
-    
+    error_nodes = []
+
     for _node in all_nodes:
         if cmds.nodeType(_node) != "mesh":
             continue
         _node_max = cmds.getAttr('{}.boundingBoxMax'.format(_node))
         _node_min = cmds.getAttr('{}.boundingBoxMin'.format(_node))
-        _list = [_node_min,_node_max]
+        _list = [_node_min, _node_max]
         if not _list in _dict.values():
             _dict[_node] = _list
         else:
@@ -1895,10 +1903,10 @@ def repet_model():
             error_nodes.append(_a)
     info = u'以下节点有疑似完全相同\n'
     if not error_nodes:
-        return True,None
+        return True, None
     for _n in error_nodes:
-        info += _n+'\n'
-    return False,info
+        info += _n + '\n'
+    return False, info
 
 
 def imported_assets():
@@ -1928,7 +1936,7 @@ def error_rendering():
     if _error_nodes:
         info = u"Rendering属性被添加到了mesh上\n"
         for _error in _error_nodes:
-            info += "%s\n"%_error
+            info += "%s\n" % _error
         return False, info
     return True, None
 
@@ -1937,50 +1945,54 @@ def lock_cam():
     '''
     检查相机是否有锁或k帧，此检查包括含动画层的情况
     '''
-    attrilist = ['translateX','translateY','translateZ','rotateX','rotateY','rotateZ']
+    attrilist = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ']
     cameras = cmds.ls(type="camera")
     for cam in cameras:
-        #忽略引用的相机
+        # 忽略引用的相机
         _is_reference = cmds.referenceQuery(cam, isNodeReferenced=True)
         if _is_reference:
             cameras.remove(cam)
 
     used_cameras = list(set(cameras) - set(["frontShape", "topShape", "perspShape", "sideShape"]))
+
     def getAllLayers():
-        layerlist=[]
+        layerlist = []
         rootLayer = cmds.animLayer(q=True, r=True)
         if rootLayer:
             layerlist.append(rootLayer)
-            def search(layer):           
+
+            def search(layer):
                 children = cmds.animLayer(layer, q=True, c=True)
                 if children:
                     for child in children:
                         if child not in layerlist:
                             layerlist.append(child)
                             search(child)
+
             search(rootLayer)
         return layerlist
+
     preinfo = u'相机未锁或k帧\n'
     info = ''
     layers = getAllLayers()
     for cam in used_cameras:
-        camtrans = cmds.listRelatives(cam,p = True)[0]
+        camtrans = cmds.listRelatives(cam, p=True)[0]
         if not str(camtrans).endswith('_cam'):
             continue
         caminfo = u"{}\n".format(camtrans)
         for attr in attrilist:
-            if_lock = cmds.getAttr(camtrans+'.'+attr, lock = True)
-            if_key = cmds.keyframe( camtrans, attribute=attr, query=True)
+            if_lock = cmds.getAttr(camtrans + '.' + attr, lock=True)
+            if_key = cmds.keyframe(camtrans, attribute=attr, query=True)
             if not if_lock and not if_key:
-                #如果没k帧也没锁
-                #print if_lock,if_key
+                # 如果没k帧也没锁
+                # print if_lock,if_key
                 if layers:
-                    for layer in layers: 
+                    for layer in layers:
                         mel.eval('animLayerEditorOnSelect "{}" 1'.format(layer))
-                        if_key_layer = cmds.keyframe(camtrans, attribute=attr, query = True)
+                        if_key_layer = cmds.keyframe(camtrans, attribute=attr, query=True)
                         if not if_key_layer:
                             if caminfo not in info:
-                                info += caminfo 
+                                info += caminfo
                         else:
                             break
                 else:
@@ -1992,7 +2004,7 @@ def lock_cam():
         return True, None
     else:
         info = preinfo + info
-        return False,info
+        return False, info
 
 
 def unused_reference_file():
@@ -2004,18 +2016,18 @@ def unused_reference_file():
     unused_nodes = []
     for __rfn in _all_ref:
         try:
-            if not cmds.referenceQuery(__rfn,isLoaded=True):
+            if not cmds.referenceQuery(__rfn, isLoaded=True):
                 unused_nodes.append(__rfn)
         except Exception as e:
             unused_nodes.append(__rfn)
     if not unused_nodes:
-        return True,None
+        return True, None
     else:
         info = u'下列参考没有引用，拒绝上传\n'
         for _node in unused_nodes:
             info += u'{}\n'.format(_node)
 
-        return False,info
+        return False, info
 
 
 def horizon():
@@ -2024,19 +2036,20 @@ def horizon():
     :return:
     """
     info = u'下列节点低于平面\n'
-    geo_groups = [i for i in cmds.ls(type = 'transform', l=True) if cmds.objExists("{}.Name".format(i)) and cmds.getAttr('{}.Name'.format(i))=='geometry']
+    geo_groups = [i for i in cmds.ls(type='transform', l=True) if
+                  cmds.objExists("{}.Name".format(i)) and cmds.getAttr('{}.Name'.format(i)) == 'geometry']
     _rending_node = renderinggroup.nodes()
-    check_node =list(set(geo_groups+_rending_node) )
+    check_node = list(set(geo_groups + _rending_node))
     error_node = False
     for group in check_node:
         miny = cmds.getAttr('{}.boundingBoxMinY'.format(group))
-        if miny <0:
+        if miny < 0:
             info += '{}\n'.format(group)
-            error_node =True
+            error_node = True
 
-    if error_node  is False:
-        return True,None
-    return False,info
+    if error_node is False:
+        return True, None
+    return False, info
 
 
 def repeat_color_space():
@@ -2073,7 +2086,3 @@ def repeat_color_space():
             _status = True
     if _status:
         return False, info
-
-
-
-

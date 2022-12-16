@@ -321,11 +321,13 @@ def is_instanced_xform(xform):
     _shapes = cmds.listRelatives(xform, s=True)
     if not _shapes:
         return False
-    for _shape in _shapes:
-        if len(cmds.listRelatives(_shape, ap=True) or []) > 1:
-            return True
+    try:
+        for _shape in _shapes:
+            if len(cmds.listRelatives(_shape, ap=True) or []) > 1:
+                return True
+    except:
+        return False
     return False
-
 
 def optimize_instance():
     def jump_mash():
@@ -395,8 +397,8 @@ def optimize_instance():
                 continue
             if _transform == _ori_instance:
                 continue
-            if is_instanced_xform(_transform):
-                continue
+            # if is_instanced_xform(_transform):
+            #     continue
             _name = "{}__gpu__{:>02d}".format(_code, _index + _is_has)
             _instance = cmds.instance(_ori_instance)[0]
             cmds.rename(_instance, "zfused_test")

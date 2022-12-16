@@ -118,3 +118,5 @@ class InsideWidget(QtWidgets.QFrame):
         # self.operating_widget = operation_widget.OperationWidget()
         # _layout.addWidget(self.operating_widget)
         self.filter_widget = filter_widget.FilterWidget(self.splitter)
+
+        self.splitter.setSizes([ 2/3.0*self.width(), 1/3.0*self.width() ])

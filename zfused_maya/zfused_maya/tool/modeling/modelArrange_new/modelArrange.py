@@ -249,9 +249,9 @@ class Ui(object):
             (l_armAssBut, 'left', 205),
             (l_armAssBut, 'top', 291),
             (r_handAssBut, 'left', 30),
-            (r_handAssBut, 'top', 271),
+            (r_handAssBut, 'top', 371),
             (l_handAssBut, 'left', 240),
-            (l_handAssBut, 'top', 271),
+            (l_handAssBut, 'top', 371),
             (r_legAssBut, 'left', 120),
             (r_legAssBut, 'top', 426),
             (l_legAssBut, 'left', 160),
@@ -1357,7 +1357,7 @@ class Ui(object):
                     alphalist.append(i)
             alpha = ''.join(alphalist)
             num = ''.join(numlist)
-            name = alpha + 'Shape' + num
+            name = alpha + num + 'Shape'
 
         return name
 

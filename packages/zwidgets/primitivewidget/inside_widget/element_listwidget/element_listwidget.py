@@ -23,14 +23,11 @@ class ElementListWidget(QtWidgets.QFrame):
     def __init__(self, parent = None):
         super(ElementListWidget, self).__init__(parent)
         self._build()
+
         self.search_lineedit.search_clicked.connect(self._search)
-
         self.listwidget.clicked.connect(self._selected_task)
-
         self.listwidget.doubleClicked.connect(self._selected_task)
-
         self.listwidget.download.connect(self._selected_task)
-
         self.listwidget.download.connect(self._import_gpu)
 
     def _selected_task(self, index):
@@ -100,10 +97,11 @@ class ElementListWidget(QtWidgets.QFrame):
         # task list widget
         self.listwidget = listview.ListView()
         # self.listwidget.setViewMode(QtWidgets.QListView.IconMode)
-        # self.listwidget.setViewMode(QtWidgets.QListView.ListMode)
+        self.listwidget.setSpacing(4)
+        self.listwidget.setViewMode(QtWidgets.QListView.ListMode)
         self.contant_layout.addWidget(self.listwidget)
         self.listwidget.setObjectName("listwidget")
         self.task_proxy_model = listmodel.ListFilterProxyModel()
         self.listwidget.setModel(self.task_proxy_model)
-        self.listwidget.setItemDelegate(iconitemdelegate.IconItemDelegate(self.listwidget))
-        # self.listwidget.setItemDelegate(listitemdelegate.ListItemDelegate(self.listwidget))
+        # self.listwidget.setItemDelegate(iconitemdelegate.IconItemDelegate(self.listwidget))
+        self.listwidget.setItemDelegate(listitemdelegate.ListItemDelegate(self.listwidget))

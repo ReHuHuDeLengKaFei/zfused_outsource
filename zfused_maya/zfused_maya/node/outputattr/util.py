@@ -108,7 +108,7 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                             if _file_check.get("version_index") != _last_version.get("Index"):
                                 _is_error = True
                         if _is_error:
-                            cmds.confirmDialog(message=u"未领取最新提交版本文件修改\n请联系制片修改\n切换为外包公司")
+                            cmds.confirmDialog(message=u"未领取最新提交版本文件修改\n请联系制片修改,切换为外包公司")
                             return
         
         # 检查节点

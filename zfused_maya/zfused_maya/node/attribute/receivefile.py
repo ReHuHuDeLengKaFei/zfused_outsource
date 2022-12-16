@@ -306,7 +306,8 @@ def reference_file(*args, **kwargs):
     _ori_assemblies = cmds.ls(assemblies=True)
     
     if _namespace:
-        rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.file_code(), _input_task_attr_output.code()))
+        # rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.file_code(), _input_task_attr_output.code()))
+        rf = cmds.file(_production_file, r = True, ns = "{}__in__{}_{}".format(_namespace, _input_task_project_step.id(), _input_task_attr_output.id()))
     else:
         _project = _input_task.project()
         _default_namespace = _project.variables("default_namespace", "__ns__00") 
