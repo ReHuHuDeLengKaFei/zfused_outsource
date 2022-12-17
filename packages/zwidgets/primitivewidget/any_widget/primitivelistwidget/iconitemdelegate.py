@@ -49,40 +49,35 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 
-        _pixmap = cache.ThumbnailCache.get_pixmap(_project_entity, self.parent().parent().update)
-
+        
         _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-                                        constants.THUMBNAIL_SIZE[0], 
-                                        constants.THUMBNAIL_SIZE[1] )
-        if _pixmap:
-            _pixmap_size = _pixmap.size()
-            if _pixmap_size.width() and _pixmap_size.height():
-                _label_size = QtCore.QSize(constants.THUMBNAIL_SIZE[0], 
-                                            constants.THUMBNAIL_SIZE[1])
-                scale = max(float(_label_size.width() / float(_pixmap_size.width())),
-                            float(_label_size.height()) / float(_pixmap_size.height()))
-                _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
-                                          _pixmap_size.height() * scale,
-                                          QtCore.Qt.KeepAspectRatio, 
-                                          QtCore.Qt.SmoothTransformation )
-                # _thumbnail_pixmap = _pixmap
-                _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
-                                                  (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
-                                                  _label_size.width(), 
-                                                  _label_size.height() )
-                # self.THUMBNAIL_PIXMAP[_id] = _thumbnail_pixmap
-                painter.drawPixmap(_rect.x(), _rect.y(),_thumbnail_pixmap)
-        else:
-            painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
-            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
-            painter.setPen(QtGui.QPen(QtGui.QColor(
-                0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
-            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+                                         constants.THUMBNAIL_SIZE[0], 
+                                         constants.THUMBNAIL_SIZE[1] )
+        
+        # _pixmap = cache.ThumbnailCache.get_pixmap(_project_entity, self.parent().parent().update)
+        # if _pixmap:
+        #     _pixmap_size = _pixmap.size()
+        #     if _pixmap_size.width() and _pixmap_size.height():
+        #         _label_size = QtCore.QSize(constants.THUMBNAIL_SIZE[0], 
+        #                                     constants.THUMBNAIL_SIZE[1])
+        #         scale = max(float(_label_size.width() / float(_pixmap_size.width())),
+        #                     float(_label_size.height()) / float(_pixmap_size.height()))
+        #         _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
+        #                                   _pixmap_size.height() * scale,
+        #                                   QtCore.Qt.KeepAspectRatio, 
+        #                                   QtCore.Qt.SmoothTransformation )
+        #         # _thumbnail_pixmap = _pixmap
+        #         _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
+        #                                           (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
+        #                                           _label_size.width(), 
+        #                                           _label_size.height() )
+        #         # self.THUMBNAIL_PIXMAP[_id] = _thumbnail_pixmap
+        #         painter.drawPixmap(_rect.x(), _rect.y(),_thumbnail_pixmap)
+        # else:
+        #     painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
+        #     painter.setPen(QtCore.Qt.NoPen)
+        #     painter.drawRoundedRect( _thumbnail_rect, 0, 0 )
 
-        # 绘制link
-        # self._font.setPixelSize(12)
-        # self._font.setBold(True)
-        # painter.setFont(self._font)
         _project_handle = zfused_api.project.Project(_project_entity.data()["ProjectId"])
         painter.setPen(QtGui.QPen(QtGui.QColor("#222222")))
         if _project_entity.object() == "asset":
@@ -90,9 +85,9 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         else:
             _link_full_name = _project_entity.code()
         _link_rect = QtCore.QRectF( _thumbnail_rect.x() + self._extend_width,
-                                   _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
-                                   _thumbnail_rect.width() - self._extend_width*2 ,
-                                   20 )
+                                    _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
+                                    _thumbnail_rect.width() - self._extend_width*2 ,
+                                    20 )
         painter.drawText(_link_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _link_full_name)
 
         # 绘制project step

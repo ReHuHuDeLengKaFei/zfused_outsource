@@ -43,33 +43,34 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 
-        _pixmap = _pixmap = cache.ThumbnailCache.get_pixmap(_task, self.parent().update)
-        if _pixmap:
-            _pixmap_size = _pixmap.size()
-            if _pixmap_size.width() and _pixmap_size.height():
-                _label_size = QtCore.QSize( constants.ITEM_DELEGATE_SIZE[0], 
-                                            constants.ITEM_DELEGATE_SIZE[1] )
-                scale = max(float(_label_size.width() / float(_pixmap_size.width())),
-                            float(_label_size.height()) / float(_pixmap_size.height()))
-                _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
-                                          _pixmap_size.height() * scale, 
-                                          QtCore.Qt.KeepAspectRatio, 
-                                          QtCore.Qt.SmoothTransformation )
-                _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
-                                                  (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
-                                                  _label_size.width(), 
-                                                  _label_size.height() )
-                painter.drawPixmap(_rect.x(), _rect.y(), _thumbnail_pixmap)
-        else:
-            _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-                                            constants.ITEM_DELEGATE_SIZE[0], 
-                                            constants.ITEM_DELEGATE_SIZE[1] )
-            painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
-            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
-            painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 255),
-                                      0.2,
-                                      QtCore.Qt.DashLine))
-            painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+        _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
+                                        constants.ITEM_DELEGATE_SIZE[0], 
+                                        constants.ITEM_DELEGATE_SIZE[1] )
+
+        # _pixmap = _pixmap = cache.ThumbnailCache.get_pixmap(_task, self.parent().update)
+        # if _pixmap:
+        #     _pixmap_size = _pixmap.size()
+        #     if _pixmap_size.width() and _pixmap_size.height():
+        #         _label_size = QtCore.QSize( constants.ITEM_DELEGATE_SIZE[0], 
+        #                                     constants.ITEM_DELEGATE_SIZE[1] )
+        #         scale = max(float(_label_size.width() / float(_pixmap_size.width())),
+        #                     float(_label_size.height()) / float(_pixmap_size.height()))
+        #         _pixmap = _pixmap.scaled( _pixmap_size.width() * scale, 
+        #                                   _pixmap_size.height() * scale, 
+        #                                   QtCore.Qt.KeepAspectRatio, 
+        #                                   QtCore.Qt.SmoothTransformation )
+        #         _thumbnail_pixmap = _pixmap.copy( (_pixmap_size.width() * scale - _label_size.width()) / 2.0, 
+        #                                           (_pixmap_size.height() * scale - _label_size.height()) / 2.0, 
+        #                                           _label_size.width(), 
+        #                                           _label_size.height() )
+        #         painter.drawPixmap(_rect.x(), _rect.y(), _thumbnail_pixmap)
+        # else:
+        #     painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
+        #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
+        #     painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 255),
+        #                               0.2,
+        #                               QtCore.Qt.DashLine))
+        #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
         # info widget
         _info_rect = QtCore.QRectF(
@@ -85,10 +86,6 @@ class ListItemDelegate(QtWidgets.QStyledItemDelegate):
                 _info_rect.width(),
                 5
             )
-        # _status_id = _task.data()["StatusId"]
-        # _status_handle = zfused_api.status.Status(_status_id)
-        # painter.setBrush(QtGui.QColor(_status_handle.data()["Color"]))
-        # painter.drawRoundedRect(_status_rect, 0, 0)
 
         #  绘制任务名
         _font = painter.font()

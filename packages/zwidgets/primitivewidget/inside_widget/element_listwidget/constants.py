@@ -18,8 +18,12 @@ INFO_TEXT_COLOR = "#000000"
 
 _scale = 0.5
 
-THUMBNAIL_SIZE = [192*_scale, 108*_scale]
-ITEM_DELEGATE_SIZE = [192*_scale, 108*_scale]
+# THUMBNAIL_SIZE = [192*_scale, 108*_scale]
+# ITEM_DELEGATE_SIZE = [192*_scale, 108*_scale]
+
+THUMBNAIL_SIZE = [192*_scale*0, 108*_scale]
+ITEM_DELEGATE_SIZE = [192*_scale*0, 108*_scale]
+
 BACKGROUND_COLOR = "#F0F0F0"
 
 PLAY_ICON_SIZE = [60, 60]
