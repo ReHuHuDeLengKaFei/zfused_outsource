@@ -212,8 +212,8 @@ def publish_ue_camera(*args,**kwargs):
     export_fbx(_start_frame, _end_frame, _out_fbx_path)
     try:
         #传输文件
-        filefunc.publish_file(_out_fbx_path,_production_fbx_path)
-        filefunc.publish_file(_out_fbx_path,_production_cover_fbx_path)
+        filefunc.publish_file(_out_fbx_path, _production_fbx_path)
+        filefunc.publish_file(_out_fbx_path, _production_cover_fbx_path)
         #记录文件
     # production file
         _file_info = zfile.get_file_info(_out_fbx_path, _production_fbx_path)
@@ -221,6 +221,7 @@ def publish_ue_camera(*args,**kwargs):
         zfused_api.task.new_production_file([_file_info, _cover_file_info], _task_id, _output_attr_id,int(_file_index))
     except Exception as e:
         return False
+    return True
 
 
 
