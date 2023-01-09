@@ -11,7 +11,6 @@ import json
 
 import zfused_api
 import zfused_maya.core.record as record
-reload(record)
 
 import os
 #

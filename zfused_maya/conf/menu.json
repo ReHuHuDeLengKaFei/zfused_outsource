@@ -197,6 +197,18 @@
             }
     ]
     ,
+    "lighting":
+    [
+         {
+                "name":"代理显示",
+                "code":"proxy display",
+                "title":"代理显示\n proxy display",
+                "cmd":"from zfused_maya.tool.lighting import proxydisplay;reload(proxydisplay);ui = proxydisplay.ProxyDisplayWidget();ui.show()",
+                "color":"#343D46",
+                "category":"tool"
+            }
+        
+    ],
     "help":
         [
             {   "name":"更新",

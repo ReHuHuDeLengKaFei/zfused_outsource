@@ -19,7 +19,8 @@ MENU_KEY = [
             "rigging", 
              "assembly",
              "animation", 
-            "fx", 
+            "fx",
+            "lighting",
             # "rendering", 
             # "technology",
              "help" ]
