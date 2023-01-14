@@ -11,8 +11,6 @@ import zfused_api
 
 from zcore import zfile,transfer
 
-# from zfused_maya.core import transfer
-
 import zfused_maya.node.core.material as material
 import zfused_maya.node.core.renderinggroup as renderinggroup
 

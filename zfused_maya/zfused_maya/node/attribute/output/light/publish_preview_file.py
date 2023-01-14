@@ -99,9 +99,9 @@ def publish_preview_file(*args, **kwargs):
         _result = filefunc.publish_file(_publish_file, _production_file)
         _result = filefunc.publish_file(_publish_file, _cover_file)
         
-        # link files
-        zfused_api.files.new_file("task", _task_id, _production_file, int(_file_index))
-        zfused_api.files.new_file("task", _task_id, _cover_file, int(_file_index))
+        # # link files
+        # zfused_api.files.new_file("task", _task_id, _production_file, int(_file_index))
+        # zfused_api.files.new_file("task", _task_id, _cover_file, int(_file_index))
 
         # production file
         _file_info = zfile.get_file_info(_publish_file, _production_file)

@@ -260,7 +260,7 @@ def reference_file(*args, **kwargs):
         _file_index = "{:0>4d}".format(_input_task.last_version_index())
     _file_suffix = _input_task_attr_output.suffix()
     if _extended_version:
-        _production_file = zfused_api.zFused.get("production_file", filter = {"TaskId": _input_task_id, "ProjectStepAttrId": _input_task_project_step_id, "Index": int(_file_index)})
+        _production_file = zfused_api.zFused.get("production_file", filter = {"TaskId": _input_task_id, "ProjectStepAttrId": _input_task_attr_output_id, "Index": int(_file_index)})
         if _production_file:
             _production_file = _production_file[0]["Path"]
         else:

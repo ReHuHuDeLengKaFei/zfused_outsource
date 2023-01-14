@@ -10,6 +10,9 @@ import logging
 
 from Qt import QtWidgets, QtGui, QtCore
 
+# from ..std_widget import std_widget
+
+
 LABLE_TEXT = ""
 MINIMUM = 0
 MAXIMUM = 1
@@ -84,46 +87,50 @@ class ProgressBar(QtWidgets.QFrame):
 
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Window)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
-        self.setFixedSize(600,200)
+        # self.setFixedSize(600,200)
+        self.setFixedHeight(200)
 
         self._timer = QtCore.QTimer()
-        # self._timer.setInterval(1000)
         self._timer.timeout.connect(self._change_value)
         
         self._background_color = "#444444"
-        # _qss = "{}/window.qss".format(os.path.dirname(__file__))
-        # with open(_qss) as f:
-        #     qss = f.read()
-        #     self.setStyleSheet(qss)
+
+
+    # def _build(self):
+    #     _layout = QtWidgets.QVBoxLayout(self)
+    #     _layout.addStretch(True)
+    #     self.std_widget = std_widget.StdOutputWidget()
+    #     _layout.addWidget(self.std_widget)
 
     def _change_value(self):
         self.showNormal()
         self.repaint()
-        # QtWidgets.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
     def paintEvent(self, event):
         _rect = self.rect()
         painter = QtGui.QPainter()
         painter.begin(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
-
+        
+        painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QColor(self._background_color))
         painter.drawRect(_rect)
 
-        _rect = QtCore.QRect(_rect.x() + 20,
-                             _rect.y(),
-                             _rect.width() - 40,
-                             _rect.height())
+        _rect = QtCore.QRect( _rect.x() + 20,
+                              _rect.y(),
+                              _rect.width() - 40,
+                              _rect.height() )
 
         # 设置字体
-        _font = QtGui.QFont("Microsoft YaHei UI", 10)
-        _font.setPixelSize(12)
-        _font.setBold(True)
-        painter.setFont(_font)
-        fm = QtGui.QFontMetrics(_font)
-        _pen = QtGui.QPen(QtGui.QColor("#DDDDDD"), 1, QtCore.Qt.SolidLine)
-        _pen.setWidth(0.1)
-        painter.setPen(_pen)
+        # _font = QtGui.QFont("Microsoft YaHei UI", 10)
+        # _font.setPixelSize(12)
+        # _font.setBold(True)
+        # painter.setFont(_font)
+        # fm = QtGui.QFontMetrics(_font)
+        # _pen = QtGui.QPen(QtGui.QColor("#DDDDDD"), 1, QtCore.Qt.SolidLine)
+        # _pen.setWidth(0.1)
+        painter.setPen(QtGui.QColor("#DDDDDD"))
         #fm = QtGui.QFontMetrics(self.font())
 
         # 绘制主进度UI
@@ -221,13 +228,11 @@ class ProgressBar(QtWidgets.QFrame):
         event.accept()
 
     def start(self):
-        print(u"显示进度条")
         reset()
         self._timer.start()
         self.showNormal()
         self._start_time = time.time()
 
     def stop(self):
-        print(u"隐藏进度条")
         self._timer.stop()
         self.close()

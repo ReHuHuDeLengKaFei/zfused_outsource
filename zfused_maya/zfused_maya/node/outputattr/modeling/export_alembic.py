@@ -12,8 +12,6 @@ import zfused_api
 
 from zcore import zfile,transfer,filefunc
 
-# from zfused_maya.core import transfer
-
 from zfused_maya.node.core import renderinggroup
 
 __all__ = ["export_alembic"]

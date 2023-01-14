@@ -8,6 +8,7 @@ import os.path
 import re
 import tempfile
 import time
+import logging
 
 import maya.api.OpenMaya as om
 import maya.cmds as cmds
@@ -21,6 +22,8 @@ from zcore import filefunc
 
 from zfused_maya.node.core import renderinggroup
 import zfused_maya.node.core.xgen as xgens
+
+logger = logging.getLogger(__name__)
 
 
 def task_to_project_entity(task_id):
@@ -42,7 +45,18 @@ def _write_to_disk(project_entity, data={}):
     with open(_temp_file, "w") as handle:
         json.dump(data, handle, indent=4)
     handle.close()
-    filefunc.publish_file(_temp_file, _production_file)
+    filefunc.publish_file(_temp_file, _production_file, is_cloud = False)
+
+    # publish to cloud 
+    try:
+        _production_path = os.path.dirname(_production_file)
+        _name = os.path.basename(_production_file)
+        _dir, _path = os.path.splitdrive(_production_path)
+        _dir = _dir.replace(":", "")
+        _production_file = "production/{}{}/{}".format( _dir, _path, _name )
+        filefunc.publish_file(_temp_file, _production_file, is_cloud = True)
+    except:
+        logger.waring("has no permission for clould")
 
 
 # ==================================================================
