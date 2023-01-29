@@ -28,9 +28,10 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         self._spacing = 2
         self._extend_width = 10
 
-        self._font = QtGui.QFont("Microsoft YaHei UI", 9)
+        # self._font = QtGui.QFont("Microsoft YaHei UI", 9)
 
     def paint(self, painter, option, index):
+        self._font = painter.font()
         _data = index.data()
         _id = _data["Id"]
         _task_handle = zfused_api.task.Task(_id, _data)

@@ -81,6 +81,8 @@ class TaskReceiveWidget(panel.ShowPanelWidget):
         _file_provides = zfused_api.zFused.get("file_provide", filter = {"ProjectId": project_id, "CompanyId": company_id}, fields = ["Id"])
         if _file_provides:
             _file_provides = zfused_api.fileprovide.cache_from_ids([_file_provide.get("Id") for _file_provide in _file_provides])
+            _task_ids = [_file_provide.get("TaskId") for _file_provide in _file_provides]
+            zfused_api.task.cache_from_ids(_task_ids)
         else:
             _file_provides = []
         self.task_listwidget.load_datas(_file_provides)

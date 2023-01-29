@@ -34,6 +34,18 @@ def task_to_project_entity(task_id):
     return _project_entity
 
 
+# get project entity property for server file
+def get_project_entity_property_from_file(project_entity):
+    # get json file from local server
+    _json_file = "{}/{}.property".format(project_entity.production_path(), project_entity.file_code())
+    if not os.path.isfile(_json_file):
+        return None
+    with open(_json_file, "r") as _handle:
+        data = _handle.read()
+        _json_data = json.loads(data)
+        return _json_data
+
+
 # =================================================================
 def _write_to_disk(project_entity, data={}):
     if not data:
@@ -433,7 +445,6 @@ def camera_node(task_id):
         # write to disk cache
         _data = _project_entity.property()
         _write_to_disk(_project_entity, _data)
-
 
 
 def groom_caching(task_id):

@@ -18,6 +18,9 @@ import zfused_maya.core.record as record
 
 from . import attr
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 __CACHE_DICT = {
     "namespace": "",
@@ -265,11 +268,13 @@ def replace_by_step(element, project_step_id):
                                                               "ProjectEntityId": _link_id,
                                                               "ProjectStepId": project_step_id})
     if not _replace_tasks:
+        logging.info("no tasks")
         return
     _replace_task = _replace_tasks[0]
     _replace_task_handle = zfused_api.task.Task(_replace_task["Id"])
     _version_id = _replace_task_handle.last_version_id()
     if not _version_id:
+        logging.info("no version id")
         return
     _version_handle = zfused_api.version.Version(_version_id)
     # get replace file
@@ -423,6 +428,7 @@ class ReferenceElement(object):
 class GPUElement(object):
     def __init__(self, element):
         self._data = element
+        print(self._data.keys())
 
 
     def reference_node(self):
@@ -447,7 +453,6 @@ class GPUElement(object):
     def replace_by_project_step(self, project_step_id):
         if project_step_id == self._data["project_step_id"]:
             return
-
         # get project
         _project_step_handle = zfused_api.step.ProjectStep(project_step_id)
 
@@ -455,10 +460,16 @@ class GPUElement(object):
         _key_output_attr = _project_step_handle.key_output_attr()
 
         # get step file
+        #目前不是很稳妥，后面再改
+        # try:
+        #     _link_handle = zfused_api.objects.Objects(self._data["project_entity_type"], self._data["project_entity_id"])
+        # except:
         _link_handle = zfused_api.objects.Objects(self._data["link_object"], self._data["link_id"])
 
         _tasks = _link_handle.tasks([project_step_id])
+
         if not _tasks:
+            logger.info("no tasks")
             return
         _task = zfused_api.task.Task(_tasks[0].get("Id"))
 

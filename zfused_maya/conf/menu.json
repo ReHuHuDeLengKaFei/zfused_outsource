@@ -133,7 +133,7 @@
                 "name": "提取property",
                 "code": "extract property",
                 "title":"提取property\n",
-                "cmd": "from zfused_maya.tool.technology .extract_info import extract_property;reload(extract_property);ui = extract_property.ExtractProperty();ui.show()",
+                "cmd": "from zfused_maya.tool.technology .extract_info import extract_property;reload(extract_property);ui = extract_property.ExtractPropertyBar();ui.show()",
                 "color": "#54FF9F",
                 "category": "工具"
             },

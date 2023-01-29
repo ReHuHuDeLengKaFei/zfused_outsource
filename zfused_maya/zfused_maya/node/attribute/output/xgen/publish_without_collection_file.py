@@ -16,7 +16,7 @@ from zcore import zfile,transfer,filefunc
 # import zfused_maya.node.core.fixmeshname as fixmeshname
 # import zfused_maya.node.core.renderinggroup as renderinggroup
 from zfused_maya.node.core import xgen,texture,material,fixmeshname,renderinggroup,referencefile
-
+from zfused_maya.node.core import clear
 __all__ = ["publish_without_collection_file"]
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,9 @@ def publish_without_collection_file(*args, **kwargs):
     
     try:
         # save publish file
+
+        clear.unknown_node()
+
         cmds.file(rename = _publish_file)
         cmds.file(save = True, type = _file_format, f = True, options = "v=0;")
         
