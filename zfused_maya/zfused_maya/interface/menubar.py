@@ -30,9 +30,7 @@ def change_company():
         record.write_company_id(_company_id)
         if cmds.menuItem("zfused_company", q=True, exists=True):
             cmds.menuItem("zfused_company", e = True, label = zfused_api.company.Company(_company_id).name())
-
         _build_project_menu()
-        
     return _res
 
 def _build_project_menu():
