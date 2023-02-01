@@ -1,15 +1,11 @@
 # coding:utf-8
-
+import maya.cmds as cmds
 import os
 import subprocess
 import logging
-
-import maya.cmds as cmds
-
 from zfused_maya.node.core import clear
 
 logger = logging.getLogger(__name__)
-
 
 def delete_dajiangjun():
     logger.info("run kill dajiangjun")
