@@ -2,6 +2,7 @@
 # --author-- lanhua.zhou
 from __future__ import print_function
 
+import os
 import datetime
 import logging
 
@@ -34,10 +35,10 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         self._font = painter.font()
         _data = index.data()
         _id = _data["Id"]
-        _task_handle = zfused_api.task.Task(_id, _data)
-        _project_entity_handle = _task_handle.project_entity() # zfused_api.objects.Objects(_task_handle.data()["ProjectEntityType"], _task_handle.data()["ProjectEntityId"])
-        _project_step_handle = _task_handle.project_step() # zfused_api.step.ProjectStep(_task_handle.data()["ProjectStepId"])
-        _name = _task_handle.full_name_code().replace("/","_")
+        _task = zfused_api.task.Task(_id, _data)
+        _project_entity = _task.project_entity()
+        _project_step_handle = _task.project_step()
+        _name = _task.full_name_code().replace("/","_")
 
         painter.save()
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
@@ -47,10 +48,13 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 
-        # _pixmap = cache.ThumbnailCache.get_pixmap(_project_entity_handle, self.parent().parent().update)
-        # _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-        #                                 constants.THUMBNAIL_SIZE[0], 
-        #                                 constants.THUMBNAIL_SIZE[1] )
+        # print(_task.production_path())
+        # _path = "{}/{}/thumbnail/{}.png".format(_project_entity.production_path(), _task.path(), _project_entity.file_code())
+        # _pixmap = cache.ServerImageCache.get_pixmap("{}/thumbnail/{}.png".format(_task.production_path(), _project_entity.file_code()), self.parent().parent().update)
+
+        _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
+                                        constants.THUMBNAIL_SIZE[0], 
+                                        constants.THUMBNAIL_SIZE[1] )
         # if _pixmap:
         #     _pixmap_size = _pixmap.size()
         #     if _pixmap_size.width() and _pixmap_size.height():
@@ -69,29 +73,26 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         #         # self.THUMBNAIL_PIXMAP[_id] = _thumbnail_pixmap
         #         painter.drawPixmap(_rect.x(), _rect.y(), _thumbnail_pixmap)
         # else:
-        #     painter.setBrush(QtGui.QColor(color.LetterColor.color(_task_handle.code().lower()[0])))
+        #     painter.setBrush(QtGui.QColor(color.LetterColor.color(_task.code().lower()[0])))
         #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
-        #     painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
+        #     painter.setPen(QtGui.QPen(QtGui.QColor(
+        #         0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
         #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
-
-        _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-                                        constants.THUMBNAIL_SIZE[0], 
-                                        constants.THUMBNAIL_SIZE[1] )
 
         # 绘制link
-        self._font.setPixelSize(12)
-        self._font.setBold(True)
-        painter.setFont(self._font)
-        _project_handle = zfused_api.project.Project(_project_entity_handle.data()["ProjectId"])
+        # self._font.setPixelSize(12)
+        # self._font.setBold(True)
+        # painter.setFont(self._font)
+        _project_handle = zfused_api.project.Project(_project_entity.data()["ProjectId"])
         painter.setPen(QtGui.QPen(QtGui.QColor("#222222")))
-        if _project_entity_handle.object() == "asset":
-            _link_full_name = _project_entity_handle.full_name()
+        if _project_entity.object() == "asset":
+            _link_full_name = _project_entity.full_name()
         else:
-            _link_full_name = _project_entity_handle.full_code()
+            _link_full_name = _project_entity.full_code()
         _link_rect = QtCore.QRectF( _thumbnail_rect.x() + self._extend_width,
-                                    _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
-                                    _thumbnail_rect.width() - self._extend_width*2 ,
-                                    20 )
+                                   _thumbnail_rect.y() + _thumbnail_rect.height() + self._spacing,
+                                   _thumbnail_rect.width() - self._extend_width*2 ,
+                                   20 )
         painter.drawText(_link_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _link_full_name)
 
         # 绘制project step
@@ -105,18 +106,16 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         else:
             painter.setPen(QtGui.QPen(QtGui.QColor("#FF0000")))
             _project_step_name = "还未选择任务步骤"
-        self._font.setBold(True)
-        painter.setFont(self._font)
+        # self._font.setBold(True)
+        # painter.setFont(self._font)
         painter.drawText(_step_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _project_step_name)
 
         #  绘制任务名
-        self._font.setPixelSize(12)
-        self._font.setBold(False)
         _fm = QtGui.QFontMetrics(self._font)
         painter.setFont(self._font)
         painter.setPen(QtGui.QPen(QtGui.QColor(constants.INFO_TEXT_COLOR), 1))
-        if _task_handle:
-            _name_code = _task_handle.data()["Name"]
+        if _task:
+            _name_code = _task.data()["Name"]
         else:
             _name_code = "暂无任务"
         _name_rect = QtCore.QRectF( _step_rect.x(),
@@ -125,8 +124,17 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
                                    24 )
         painter.drawText(_name_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, _name_code)
 
+        # frame
+        _frame_rect = QtCore.QRectF( _name_rect.x(),
+                                     _name_rect.y() + _name_rect.height() + self._spacing,
+                                     _name_rect.width() ,
+                                     24 )
+        if isinstance( _project_entity, zfused_api.shot.Shot ):
+            painter.drawText( _frame_rect, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, str(_project_entity.start_frame()))
+            painter.drawText( _frame_rect, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter, str(_project_entity.end_frame()))
+
         # #  绘制任务状态
-        # _status_handle = zfused_api.status.Status(_task_handle.data()["StatusId"])
+        # _status_handle = zfused_api.status.Status(_task.data()["StatusId"])
         # _status_code = _status_handle.name()
         # _status_width = _fm.width(_status_code) + self._extend_width
         # _status_rect = QtCore.QRectF( _rect.x() + (_rect.width() - _status_width)/2,
@@ -155,14 +163,13 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         #                                _rect.y() + self._spacing,
         #                                _name_width,
         #                                _name_height)
-
-        # if _task_handle.is_sub_task():
+        # if _task.is_sub_task():
         #     painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
         #     painter.setBrush(QtGui.QBrush(QtGui.QColor("#e1a021")))
         #     painter.drawRoundedRect(_sub_task_rect, 2, 2)
         #     painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 1))
         #     painter.drawText( _sub_task_rect, QtCore.Qt.AlignCenter, _name)
-        # if _task_handle.has_sub_task():
+        # if _task.has_sub_task():
         #     painter.setPen(QtGui.QPen(QtGui.QColor(0,0,0,0), 1))
         #     painter.setBrush(QtGui.QBrush(QtGui.QColor("#007fce")))
         #     painter.drawRoundedRect(_sub_task_rect, 2, 2)

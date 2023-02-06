@@ -455,6 +455,17 @@ class Task(_Entity):
     
     @_Entity._recheck
     def project_entity(self):
+        _project_entity_type = self.project_entity_type()
+        if _project_entity_type == "asset":
+            return zfused_api.asset.Asset(self.project_entity_id())
+        elif _project_entity_type == "assembly":
+            return zfused_api.assembly.Assembly(self.project_entity_id())
+        elif _project_entity_type == "episode":
+            return zfused_api.episode.Episode(self.project_entity_id())
+        elif _project_entity_type == "sequence":
+            return zfused_api.sequence.Sequence(self.project_entity_id())
+        elif _project_entity_type == "shot":
+            return zfused_api.shot.Shot(self.project_entity_id())
         return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
     
     @_Entity._recheck
@@ -597,8 +608,7 @@ class Task(_Entity):
         get task production path
         rtype: str
         """
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).production_path()
+        _link_path = self.project_entity().production_path()
         _path = "{}/{}".format(_link_path, self.path())
         return _path
     

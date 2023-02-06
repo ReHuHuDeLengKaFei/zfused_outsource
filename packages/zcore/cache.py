@@ -3,6 +3,7 @@
 from __future__ import print_function
 from collections import defaultdict
 
+import os
 import time
 import threading
 import requests
@@ -221,26 +222,104 @@ ThumbnailCache = _ThumbnailCache()
 
 CloudImageCache = _CloudImageCache()
 
-# class _ThumbnailPixmapThread(threading.Thread):
-#     exec_ = False
-#     def __init__(self, handle):
-#         super(_ThumbnailPixmapThread, self).__init__()
 
-#         self._handle = handle
 
-#     def run(self):
-#         _object = self._handle.object()
-#         _id = self._handle.id()
-#         _object_id = "{}:{}".format(_object, _id)
-#         _thumbnail = self._handle.get_thumbnail()
-#         if _thumbnail:
-#             if _thumbnail.startswith("http:"):
-#                 req = httpsession.get(_thumbnail)
-#                 _pixmap = QtGui.QPixmap()
-#                 _pixmap.loadFromData(req.content)
-#             else:
-#                 _pixmap = QtGui.QPixmap(_thumbnail)
-#         else:
-#             _pixmap = None
-#         # self.PIXMAP[self._user_id] = _pixmap        
-#         ThumbnailCache.PIXMAP_CACHE[_object_id] = _pixmap
+
+
+
+
+
+
+
+class ServerImagePixmapThread(QtCore.QObject):
+    cached = QtCore.Signal(str)
+    stop_signal = QtCore.Signal()
+    def __init__(self):
+        super(ServerImagePixmapThread, self).__init__()
+        self._count = 0
+
+        self._sleep_time = 0
+
+        self._path_pool = []
+
+        self._cmd_pool = []
+
+    def get(self, path, cmd):
+        self._path_pool.append( path )
+        self._cmd_pool.append( cmd )
+
+    def analyze(self):
+        self._count += 1
+        while True:
+            if self._path_pool:
+                for _index, _path in enumerate(self._path_pool):
+                    print(_path)
+                    _thumbnail = _path
+                    try:
+                        _pixmap = None
+                        if _thumbnail:
+                            if os.path.isfile(_thumbnail):
+                                _pixmap = QtGui.QPixmap(_thumbnail)      
+                    except:
+                        _pixmap = None
+                    _ServerImageCache.PIXMAP_CACHE[_path] = _pixmap
+                    # self.cached.emit(_object_id)
+                    self._path_pool.pop(_index)
+                    if self._cmd_pool[_index]:
+                        try:
+                            self._cmd_pool[_index]()
+                        except Exception as e:
+                            print(e)
+                    self._cmd_pool.pop(_index)
+                self._sleep_time = 0
+            else:
+                self._sleep_time = 0.1
+            # return
+            self.stop_signal.emit()
+            time.sleep(self._sleep_time)
+
+
+class _ServerImageCache(QtCore.QObject):
+    cached = QtCore.Signal(str)
+    PIXMAP_CACHE = {}
+
+    @classmethod
+    def clear(cls):
+        _ServerImageCache.PIXMAP_CACHE = defaultdict(QtGui.QPixmap)
+        # cls.THUMBNAIL_PATH_CACHE = defaultdict(str)
+
+    def __init__(self):
+        super(_ServerImageCache, self).__init__()
+        
+        self._thread_start = False
+
+        self._thread = QtCore.QThread()
+        self._pixmap_thread = ServerImagePixmapThread()
+        self._pixmap_thread.moveToThread(self._thread)
+
+        self._pixmap_thread.stop_signal.connect(self.finish_analyze)
+        self._thread.started.connect(self._pixmap_thread.analyze)
+        # self._thread.finished.connect(self.finish_analyze)
+
+        self._pixmap_thread.cached.connect(self.cached.emit)
+
+    def _cached_emit(self, object_id):
+        self.cached.emit(object_id)
+
+    def finish_analyze(self):
+        self._thread_start = False
+        # print("cloud image thread finish")
+        self._thread.quit()
+        # self._thread.wait()
+
+    # @classmethod
+    def get_pixmap(self, path, cmd = None):
+        if path not in self.PIXMAP_CACHE:
+            self.PIXMAP_CACHE[path] = None
+            self._pixmap_thread.get(path, cmd)
+            if not self._thread_start:
+                self._thread.start()
+                self._thread_start = True
+        return self.PIXMAP_CACHE[path]
+
+ServerImageCache = _ServerImageCache()

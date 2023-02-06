@@ -14,7 +14,6 @@ import maya.cmds as cmds
 import maya.mel as mel
 import pymel.core as pm
 import xgenm as xg
-import copy
 
 import zfused_api
 from zfused_maya.core import record
@@ -198,6 +197,7 @@ def geometry_structure():
     """
     # 获取当前的任务
     _task_id = record.current_task_id()
+    print(_task_id)
     _task = zfused_api.task.Task(_task_id)
     _project_entity = _task.project_entity()
     _property = _project_entity.property("geometry")
@@ -208,14 +208,18 @@ def geometry_structure():
     if not _property[0].has_key("md5"):
         info += u"【上游文件提示】：资产模型需要重新上传，以此更新模型结构信息\n"
     _asset_md5 = ["{}_{}".format(_pro.get("transform"), _pro.get("md5")) for _pro in _property]
+    _asset_md5.sort()
     # get current geometry
     _geometry = property.get_geometrys()
     _cur_md5 = ["{}_{}".format(_geo.get("transform"), _geo.get("md5")) for _geo in _geometry]
+    _cur_md5.sort()
     if _cur_md5 != _asset_md5:
         info += u"【当前文件提示】：文件几何体结构与资产模型文件结构不统一,请修正统一(文件层级或者拓扑不一致，请自行检查)\n"
         for _prodic, _geodic in zip(_property, _geometry):
             if "{}_{}".format(_prodic.get("transform"), _prodic.get("md5")) != "{}_{}".format(_geodic.get("transform"),
                                                                                               _geodic.get("md5")):
+                print("{}_{}".format(_prodic.get("transform"), _prodic.get("md5")))
+                print("{}_{}".format(_geodic.get("transform"), _geodic.get("md5")))
                 info += "{}\n".format(_geodic["transform"])
         return False, info
     return True, None
@@ -431,7 +435,7 @@ def check_history():
 def multi_rendering_group():
     rendering = []
     _renderingdag = [i for i in cmds.ls(dag=1) if cmds.objExists("{}.rendering".format(i))]
-    if _renderingdag:
+    if len(_renderingdag) != 0:
         for dag in _renderingdag:
             value = cmds.getAttr("%s.rendering" % dag)
             if value:
@@ -540,7 +544,7 @@ def camera_name():
     _project_entity = _task.project_entity()
     _name = _project_entity.file_code()
     info = u"当前摄像机名称与任务名{}_cam不匹配\n".format(_name)
-    if not cmds.ls("*%s*" % _name, type="camera"):
+    if not cmds.ls("%s*" % _name, type="camera"):
         return False, info
     return True, None
 

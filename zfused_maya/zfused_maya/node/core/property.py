@@ -47,7 +47,7 @@ def get_project_entity_property_from_file(project_entity):
 
 
 # =================================================================
-def _write_to_disk(project_entity, data={}):
+def _write_to_disk(project_entity, data = {}):
     if not data:
         return
     _production_path = project_entity.production_path()
@@ -56,7 +56,8 @@ def _write_to_disk(project_entity, data={}):
     _temp_file = "%s/%s_%s.property" % (tempfile.gettempdir(), project_entity.code(), time.time())
     with open(_temp_file, "w") as handle:
         json.dump(data, handle, indent=4)
-    handle.close()
+
+    # publish to server
     filefunc.publish_file(_temp_file, _production_file, is_cloud = False)
 
     # publish to cloud 
@@ -440,6 +441,7 @@ def camera(task_id):
 def camera_node(task_id):
     _project_entity = task_to_project_entity(task_id)
     _cam_nodes = camera(task_id)
+    print(_cam_nodes)
     if _cam_nodes and _project_entity:
         _project_entity.update_property("camera", _cam_nodes)
         # write to disk cache
