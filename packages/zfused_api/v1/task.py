@@ -470,7 +470,8 @@ class Task(_Entity):
     
     @_Entity._recheck
     def entity(self):
-        return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
+        # return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
+        return self.project_entity()
     
     @_Entity._recheck
     def project_step(self):
