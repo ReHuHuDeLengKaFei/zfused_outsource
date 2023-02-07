@@ -45,10 +45,11 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         painter.setBrush(QtGui.QColor(constants.Constants.INFO_BACKGROUND_COLOR))
         painter.drawRoundedRect(option.rect, 0, 0)
 
+        _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
+                                        constants.THUMBNAIL_SIZE[0], 
+                                        constants.THUMBNAIL_SIZE[1] )
+
         # _pixmap = cache.ThumbnailCache.get_pixmap(_assembly, self.parent().parent().update)
-        # _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-        #                                 constants.THUMBNAIL_SIZE[0], 
-        #                                 constants.THUMBNAIL_SIZE[1] )
         # if _pixmap:
         #     _pixmap_size = _pixmap.size()
         #     if _pixmap_size.width() and _pixmap_size.height():
@@ -73,12 +74,6 @@ class IconItemDelegate(QtWidgets.QStyledItemDelegate):
         #         0, 0, 0, 255), 0.2, QtCore.Qt.DashLine))
         #     painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
-        _thumbnail_rect = QtCore.QRectF( _rect.x(), _rect.y(), 
-                                        constants.THUMBNAIL_SIZE[0], 
-                                        constants.THUMBNAIL_SIZE[1] )
-        painter.setBrush(QtGui.QColor(color.LetterColor.color(_assembly.code().lower()[0])))
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.drawRoundedRect(_thumbnail_rect, 1, 1)
 
         # # 绘制 name
         # self._font.setPixelSize(13)
