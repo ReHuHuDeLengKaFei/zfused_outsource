@@ -313,6 +313,24 @@ def standard_surface():
 
 
 # =======================================================================================================
+# 检查场景非standardSurface
+def standard_surface_only():
+    _default_materials = ["lambert1", "particleCloud1", "standardSurface1"]
+    _materials = cmds.ls(mat=True)
+    _materials = list(set(_materials) - set(_default_materials))
+    _is_error = False
+    info = u"场景存在非standardSurface材质\n"
+    for _material in _materials:
+        _type = cmds.nodeType(_material)
+        if _type not in ["standardSurface"]:
+            _is_error = True
+            info += "{}\n".format(_material)
+    if _is_error:
+        return False, info
+    return True, None
+
+
+# =======================================================================================================
 # 检查模型是否丢失材质球
 def lost_material():
     _polygons = cmds.ls(type="mesh", ni=True)
