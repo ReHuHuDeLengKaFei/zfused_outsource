@@ -65,8 +65,8 @@ def publish_usd(*args, **kwargs):
     try:
         if _rendering_group:
             export_usd(_rendering_group, _publish_file)
-            _result = filefunc.publish_file(_publish_file,_production_file)
-            _result = filefunc.publish_file(_publish_file,_cover_file)
+            _result = filefunc.publish_file(_publish_file, _production_file)
+            _result = filefunc.publish_file(_publish_file, _cover_file)
     except Exception as e:
         logger.error(e)
         print(e)

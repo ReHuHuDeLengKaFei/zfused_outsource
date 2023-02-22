@@ -13,6 +13,7 @@ import maya.cmds as cmds
 from pymel.core import *
 
 import zfused_api
+from zcore import zfile,transfer,filefunc
 from zfused_maya.core import record
 
 CAM_KEYWORD_LIST = ['cam', 'CAM', 'FKXR','EP']
@@ -22,8 +23,9 @@ ASSET_TYPE_LIST = ['char', 'prop', 'env']
 ATTR_LIST_TRANSFORM = ['tx','ty','tz','rx','ry','rz','sx','sy','sz']
 ATTR_LIST_CAM_SHAPE = ['focalLength']
 ROOT_JOINT_NAME = 'DeformationSystem'
-# ROOT_NAME = 'Root_M'
-ROOT_GEO_NAME = 'geometry_grp'
+# ROOT_JOINT_NAME = 'Root_M'
+# ROOT_GEO_NAME = 'geometry_grp'
+ROOT_GEO_NAME = 'geometry_group'
 
 logger = logging.getLogger(__name__)
 _is_load = cmds.pluginInfo("fbxmaya", query=True, loaded = True)
@@ -171,6 +173,7 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
     shot_dict['shot_name'] = file_name
     shot_dict['version']   = version
     shot_dict['maya_file'] = sceneName()
+    shot_dict['shot_data_dir']   = shot_data_dir
     shot_dict['frame_start'] = frame_start
     shot_dict['frame_end']   = frame_end
     shot_dict['frame_start_ext'] = frame_start_ext
@@ -190,9 +193,11 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
     if get_cam_list():
         cam_value_dict = get_cam_dict(frame_ext)
         cam_name = cam_value_dict['cam_name']
-        cam_fbx_file  = shot_data_dir + cam_name + '.fbx'
+        cam_fbx_file  = os.path.join(shot_data_dir, cam_name + '.fbx').replace('\\', '/')
+        # cam_fbx_name  = os.path.split(cam_fbx_file)[1]
         cam_dict[cam_name] = collections.OrderedDict()
         cam_dict[cam_name]['fbx']  = cam_fbx_file
+        cam_dict[cam_name]['fbx_name'] = os.path.split(cam_fbx_file)[1]
         cam_dict[cam_name]['focal_length']  = cam_value_dict['focal_length']
         cam_dict[cam_name]['focal_length_key_list']  = cam_value_dict['focal_length_key_list']
         print(cam_value_dict)
@@ -214,33 +219,39 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
                     asset_type_dir = '/' + asset_type + '/'
                     if asset_type_dir in ref_path:
                         if referenceQuery(ref_node, isLoaded = True):
-                            print(ref_node)
+                            # print(ref_node)
                             print(ref_path)
                             ref_namespace = referenceQuery(ref_node, namespace = True).split(':', 1)[-1]
                             print(ref_namespace)
                             asset_name = ref_path.split(asset_type_dir)[1].split('/')[0]
                             #ani_name = file_name + '_' + asset_name
                             ani_name = file_name + '_' + ref_namespace.replace(':', '___')
-                            fbx_path = shot_data_dir + ani_name + '.fbx'
+                            fbx_path = os.path.join(shot_data_dir, ani_name + '.fbx').replace('\\', '/')
+                            fbx_name = os.path.split(fbx_path)[1]
                             asset_dict[ref_namespace] = collections.OrderedDict()
                             asset_dict[ref_namespace]['maya_path']  = ref_path
                             asset_dict[ref_namespace]['maya_node']  = str(ref_node)
                             asset_dict[ref_namespace]['asset_name'] = asset_name
                             asset_dict[ref_namespace]['ani_name']   = ani_name
                             asset_dict[ref_namespace]['fbx_path']   = ''
+                            asset_dict[ref_namespace]['fbx_name']   = ''
                             asset_dict[ref_namespace]['root_joint_available'] = False
                             asset_dict[ref_namespace]['root_geo_available'] = False
                             print(asset_dict)
                             if objExists(ref_namespace + ':' + ROOT_JOINT_NAME):
+                                try:
+                                    setAttr(ref_namespace + ':Main.jointVis', 1)
+                                except:
+                                    pass
                                 asset_dict[ref_namespace]['root_joint_available'] = True
                                 joint_root = ls(ref_namespace + ':' + ROOT_JOINT_NAME)
                                 print(joint_root)
                                 joint_parent = cmds.listRelatives(joint_root, parent = True)
                                 print(joint_parent)
-
-                                if objExists(ref_namespace + ':' + ROOT_GEO_NAME):
+                                
+                                if objExists(ref_namespace + ':' + asset_name + '_' + ROOT_GEO_NAME):
                                     asset_dict[ref_namespace]['root_geo_available'] = True
-                                    geo_root = ls(ref_namespace + ':' + ROOT_GEO_NAME)
+                                    geo_root = ls(ref_namespace + ':' + asset_name + '_' + ROOT_GEO_NAME)
                                     print(geo_root)
                                     geo_parent = cmds.listRelatives(geo_root, parent = True)
                                     print(geo_parent)
@@ -254,6 +265,7 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
                                     select(geo_root, joint_root, replace = True)
                                     export_fbx(frame_start_ext, frame_end_ext, fbx_path)
                                     asset_dict[ref_namespace]['fbx_path'] = fbx_path
+                                    asset_dict[ref_namespace]['fbx_name'] = fbx_name
                                     file_export_list.append(fbx_path)
                                 else:
                                     cmds.file(ref_path, importReference = True)
@@ -263,16 +275,17 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
                                     select(joint_root, replace = True)
                                     export_fbx(frame_start_ext, frame_end_ext, fbx_path)
                                     asset_dict[ref_namespace]['fbx_path'] = fbx_path
+                                    asset_dict[ref_namespace]['fbx_name'] = fbx_name
                                     file_export_list.append(fbx_path)
                                 
                                 control_main = ref_namespace + ':Main'
-                                if listAttr(control_main, string = 'vis'):
-                                    asset_dict[ref_namespace]['vis'] = []
-                                    if keyframe(control_main, attribute = 'vis', query = True, keyframeCount = True) != 0:
-                                        attr_node = PyNode(control_main + '.vis')
+                                if listAttr(control_main, string = 'jointVis'):
+                                    asset_dict[ref_namespace]['jointVis'] = []
+                                    if keyframe(control_main, attribute = 'jointVis', query = True, keyframeCount = True) != 0:
+                                        attr_node = PyNode(control_main + '.jointVis')
                                         for frame in range(frame_start_ext, frame_end_ext):
                                             attr_value = attr_node.get(time = frame)
-                                            asset_dict[ref_namespace]['vis'].append(attr_value)
+                                            asset_dict[ref_namespace]['jointVis'].append(attr_value)
 
                             else:
                                 pass
@@ -280,7 +293,7 @@ def export_shot(shot_data_dir, zfused_dict = {}, frame_ext = 10):
                     print(ref, '            bad bad')
             progressBar(progressControl, edit = True, step= 1)
     
-    shot_json_file = shot_data_dir + file_name + '.json'
+    shot_json_file = os.path.join(shot_data_dir, file_name + '.json').replace('\\', '/')
     write_json_file(shot_dict, shot_json_file)
     file_export_list.insert(0, shot_json_file)
     deleteUI(progress_window)
@@ -304,6 +317,15 @@ def publish_ue(*args, **kwargs):
 
     _task = zfused_api.task.Task(_task_id)
     _task_name = _task.code()
+    _production_path = _task.production_path()
+    _project_entity_production_path = _task.project_entity().production_path()
+    _temp_path = _task.temp_path()
+    _file_code = _task.file_code()
+    _output_attr_handle = zfused_api.attr.Output(_output_attr_id)
+    _file_format = _output_attr_handle.format()
+    _suffix = _output_attr_handle.suffix()
+    _attr_code = _output_attr_handle.code()
+    
     # print('_task_name:                           ', _task_name)
     _shot_id = _task._data["ProjectEntityId"]
     _shot = zfused_api.shot.Shot(_shot_id)
@@ -314,8 +336,8 @@ def publish_ue(*args, **kwargs):
     _sequence_name = zfused_api.sequence.Sequence(_sequence_id).code()
     # print('_sequence_name:                       ', _sequence_name)
 
-    _episode_id = _shot._data["EpisodeId"]
-    _episode_name = zfused_api.episode.Episode(_episode_id).code()
+    # _episode_id = _shot._data["EpisodeId"]
+    # _episode_name = zfused_api.episode.Episode(_episode_id).code()
     # print('_episode_name:                       ', _episode_name)
 
     _project_id = record.current_project_id()
@@ -325,11 +347,19 @@ def publish_ue(*args, **kwargs):
     # print(_ue_cache_root)
     _ue_json_fbx_dir = "{}/{}".format(_ue_cache_root, 'json/fbx')
 
-    _ue_shot_dir = "{}/{}/{}/{}".format(_ue_cache_root, _episode_name, _sequence_name, _shot_name)
+    # _ue_shot_dir = "{}/{}/{}/{}".format(_ue_cache_root, _episode_name, _sequence_name, _shot_name)
     _file_index = "{:0>4d}".format(_task.last_version_index( 0 ) + 1)
     # print('_file_index 0: ', _file_index)
-    _ue_fbx_version_dir = "{}/{}/{}/".format(_ue_shot_dir, 'fbx', _file_index)
-    print(_ue_fbx_version_dir)
+
+    _production_file = "{}/{}/{}/{}{}".format( _production_path, _attr_code, _file_index, _file_code, _suffix )
+    _production_file_dir = os.path.dirname(_production_file)
+    _cover_file = "{}/{}/{}{}".format(_production_path, _attr_code, _file_code, _suffix)
+    _publish_file = "{}/{}/{}/{}{}".format( _temp_path, _attr_code, _file_index, _file_code, _suffix )
+    _publish_file_dir = os.path.dirname(_publish_file)
+
+    # _ue_fbx_version_dir = "{}/{}/{}/".format(_ue_shot_dir, 'fbx', _file_index)
+    _ue_fbx_version_dir = _publish_file_dir
+    # print(_ue_fbx_version_dir)
     
     
 
@@ -340,7 +370,7 @@ def publish_ue(*args, **kwargs):
     # print(_name_en, _name_cn)
     
     zfused_dict = collections.OrderedDict()
-    zfused_dict['episode_name'] = _episode_name
+    # zfused_dict['episode_name'] = _episode_name
     zfused_dict['sequence_name'] = _sequence_name
     zfused_dict['shot_name'] = _shot_name
     zfused_dict['task_name'] = _task_name
@@ -368,12 +398,27 @@ def publish_ue(*args, **kwargs):
     
     if not os.path.isdir(_ue_fbx_version_dir):
         os.makedirs(_ue_fbx_version_dir)
-    if not os.path.isdir(_ue_json_fbx_dir):
-        os.makedirs(_ue_json_fbx_dir)
+    # if not os.path.isdir(_ue_json_fbx_dir):
+    #     os.makedirs(_ue_json_fbx_dir)
+    # print(_ue_fbx_version_dir)
+    # print(_ue_json_fbx_dir)
     try:
+        # print(_ue_fbx_version_dir)
+        # print(zfused_dict)
         shot_json_file = export_shot(_ue_fbx_version_dir, zfused_dict)
-        shot_json_file_copy = "{}/{}".format(_ue_json_fbx_dir, shot_json_file.split('/')[-1])
-        shutil.copyfile(shot_json_file, shot_json_file_copy)
+        # print(shot_json_file)
+        local_file_list = os.listdir(_ue_fbx_version_dir)
+        for local_file_name in local_file_list:
+            # print(local_file_name)
+            local_file = os.path.join(_ue_fbx_version_dir, local_file_name).replace('\\', '/')
+            cache_file = os.path.join(_production_file_dir, local_file_name).replace('\\', '/')
+            # print(cache_file)
+            _result = filefunc.publish_file(local_file, cache_file)
+            print(_result)
+        _result = filefunc.publish_file(_publish_file, _cover_file)
+        print(_result)
+        # shot_json_file_copy = "{}/{}".format(_ue_json_fbx_dir, shot_json_file.split('/')[-1])
+        # shutil.copyfile(shot_json_file, shot_json_file_copy)
     except Exception as e:
         logger.error(e)
         print(e)

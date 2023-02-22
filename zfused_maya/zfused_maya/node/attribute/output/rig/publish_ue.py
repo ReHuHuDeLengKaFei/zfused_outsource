@@ -17,8 +17,8 @@ from zfused_maya.core import record
 from zfused_maya.node.core import renderinggroup
 from zcore import filefunc,zfile
 
-# ROOT_JOINT_NAME = 'DeformationSystem'
-ROOT_JOINT_NAME = 'Root_M'
+ROOT_JOINT_NAME = 'DeformationSystem'
+# ROOT_JOINT_NAME = 'Root_M'
 ROOT_GEO_NAME = 'geometry_group'
 
 logger = logging.getLogger(__name__)

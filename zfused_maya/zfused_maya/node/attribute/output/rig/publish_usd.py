@@ -37,7 +37,10 @@ def export_usd(rendering_group, usd_path):
     root_joint = get_root_joint()
     root_geo = rendering_group
     SkelRoot = createNode('transform', name = 'SkelRoot')
-    parent(root_joint, SkelRoot)
+    rename('DeformationSystem', 'DeformationSystem_old')
+    DeformationSystem = createNode('joint', name = 'DeformationSystem')
+    parent(DeformationSystem, SkelRoot)
+    parent(root_joint, DeformationSystem)
 
     select(root_joint, replace = True)
     select(root_geo, add = True)
