@@ -332,13 +332,6 @@ def publish_ue(*args, **kwargs):
     _shot_name = _shot.code()
     # print('_shot_name:                           ', _shot_name)
 
-    _sequence_id = _shot._data["SequenceId"]
-    _sequence_name = zfused_api.sequence.Sequence(_sequence_id).code()
-    # print('_sequence_name:                       ', _sequence_name)
-
-    # _episode_id = _shot._data["EpisodeId"]
-    # _episode_name = zfused_api.episode.Episode(_episode_id).code()
-    # print('_episode_name:                       ', _episode_name)
 
     _project_id = record.current_project_id()
     _project = zfused_api.project.Project(_project_id)
@@ -370,8 +363,20 @@ def publish_ue(*args, **kwargs):
     # print(_name_en, _name_cn)
     
     zfused_dict = collections.OrderedDict()
-    # zfused_dict['episode_name'] = _episode_name
-    zfused_dict['sequence_name'] = _sequence_name
+    _episode_id = _shot._data["EpisodeId"]
+    if _episode_id:
+        _episode_name = zfused_api.episode.Episode(_episode_id).code()
+        # print('_episode_name:                       ', _episode_name)
+        zfused_dict['episode_name'] = _episode_name
+    else:
+        zfused_dict['episode_name'] = ''
+    _sequence_id = _shot._data["SequenceId"]
+    if _sequence_id:
+        _sequence_name = zfused_api.sequence.Sequence(_sequence_id).code()
+        # print('_sequence_name:                       ', _sequence_name)
+        zfused_dict['sequence_name'] = _sequence_name
+    else:
+        zfused_dict['sequence_name'] = ''
     zfused_dict['shot_name'] = _shot_name
     zfused_dict['task_name'] = _task_name
     zfused_dict['file_index'] = _file_index

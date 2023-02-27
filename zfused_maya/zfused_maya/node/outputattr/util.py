@@ -134,11 +134,21 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                     check.Check.value = False
                 else:
                     return False
+    # else:
+    #     _project_step_checks = _project_step.checks()
+    #     if _project_step_checks:
+    #         _ui = checkwidget.CheckWidget(_project_step_checks)
+    #         if not check.Check.value:
+    #             _ui.show()
+    #         if check.Check.value == True:
+    #             _ui.close()
+    #             check.Check.value = False
+    #         else:
+    #             return False
 
     # 获取场景信息
     if not _is_outsource:
         try:
-
             _scene_elements = element.scene_elements()
         except:
             _scene_elements =[]
@@ -167,7 +177,9 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
     if not _is_outsource:
         _value = publish_backup(task_id, infomation)
         if not _value:
-            cmds.confirmDialog(message=u"上传备份文件失败")
+            if not is_auto:
+                cmds.confirmDialog(message=u"上传备份文件失败")
+            logger.error(u"上传备份文件失败")
             return False
 
     progress.set_label_text(u"3/4 - 上传自定义数据文件")
@@ -197,8 +209,10 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
             exec(_output_script.script())
             zfused_api.zFused.RESET = False
             if not publish_result:
-                cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
-                cmds.file(_current_file, o=True, f=True, pmt=False)
+                if not is_auto:
+                    cmds.confirmDialog(message=u"发布失败 \n{}".format(_output_script.script()))
+                    cmds.file(_current_file, o=True, f=True, pmt=False)
+                logger.error(u"发布失败 \n{}".format(_output_script.script()))
                 return False
 
     # 提交审批数据
@@ -267,7 +281,9 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
                                         str(_introduction),
                                         str(_compute_record) )
         if not _v:
-            cmds.confirmDialog(message=u"上传数据库信息失败 {}".format(_info))
+            if not is_auto:
+                cmds.confirmDialog(message=u"上传数据库信息失败 {}".format(_info))
+            logger.error(u"上传数据库信息失败 {}".format(_info))
             return False
 
         # 提交关联信息
@@ -283,9 +299,10 @@ def publish_file(task_id, infomation = {}, extend_attr = {}, is_auto = False):
     if not is_auto:
         # 上传结果ui
         cmds.confirmDialog(message=u"上传成功")
-        return True
-
-    return False
+    logger.info(u"上传成功")
+    
+    return True
+    # return False
 
 
 def batch_alone_publish_file(task_id, infomation={}, is_auto=False):
@@ -333,6 +350,7 @@ def batch_alone_publish_file(task_id, infomation={}, is_auto=False):
     _value = publish_backup(task_id, infomation)
     if not _value:
         # cmds.confirmDialog(message = u"上传备份文件失败")
+
         return False
 
     # 运行自定义脚本
@@ -716,5 +734,112 @@ def publish_backup(task_id, infomation={}, fix_version = False):
         cmds.file(_current_file, o=True, f=True, pmt=False)
 
     return True
+
+                 
+
+
+def publish_farm_temp(task_id, farm_id): #  infomation={}, fix_version = False):
+    """ 上传备份文件
+    """
+    # _infomation = infomation
+    _current_file = cmds.file(q=True, sn=True)
+    
+    _farm = zfused_api.farm.Farm(farm_id)
+    _task_id = task_id
+    _task = zfused_api.task.Task(_task_id)
+    # get farm temp path
+    _project = _task.project()
+    # _project_entity = _task.project_entity()
+    _farm_temp_path = _task.farm_temp_path(_farm)
+    # _backup_path = _task.backup_path()
+    # _production_path = _task.production_path()
+    _file_code = _task.file_code()
+    
+    # if fix_version:
+    #     _file_index = _task.last_version_index(0)
+    # else:
+    #     _file_index = _task.last_version_index() + 1
+
+    _project_step = _task.project_step()
+    _key_attr = _project_step.key_output_attr()
+    _file_type = _key_attr.format()
+    _file_suffix = _key_attr.suffix().replace(".","")
+
+    # 文件后缀版本 需修改
+    # _backup_file = "{}/{}.{:>04d}.{}".format(_farm_temp_path, _file_code, _file_index, _file_suffix)
+    _backup_file = "{}/{}.{}".format(_farm_temp_path, _file_code, _file_suffix)
+
+    # get publish file path
+    _temp_path = _task.temp_path()
+    # _publish_file = "{}/{}.{:>04d}.{}".format(_temp_path, _file_code, _file_index, _file_suffix)
+    _publish_file = "{}/{}.{}".format(_temp_path, _file_code, _file_suffix)
+    _publish_file_dir = os.path.dirname(_publish_file)
+
+    _is_sync_backup_external_files = _project.variables("is_sync_backup_external_files", 1)
+    if not os.path.isdir(_publish_file_dir):
+        os.makedirs(_publish_file_dir)
+    try:
+        # save publish file
+        cmds.file(rename = _publish_file)
+        cmds.file(save = True, type=_file_type, f=True, options="v=0;")
+        # publish xgen file
+        if xgen.files():
+            if _is_sync_backup_external_files:
+                xgen.publish_file(_farm_temp_path)
+                cmds.file(save = True, type=_file_type, f=True, options="v=0;")
+            xgen.publish_xgen(_farm_temp_path)
+        if _is_sync_backup_external_files:
+            # publish texture
+            _texture_files = texture.files()
+            if _texture_files:
+                _path_set = texture.paths(_texture_files)[0]
+                _intersection_path = max(_path_set)
+                texture.publish_file(_texture_files, _intersection_path, _farm_temp_path + "/texture")
+                # change maya texture node path
+                _file_nodes = texture.nodes()
+                if _file_nodes:
+                    texture.change_node_path(_file_nodes, _intersection_path, _farm_temp_path + "/texture")
+            # publish alembic cache
+            _alembic_files = alembiccache.files()
+            if _alembic_files:
+                _path_set = alembiccache.paths(_alembic_files)[0]
+                _intersection_path = max(_path_set)
+                alembiccache.publish_file(_alembic_files, _intersection_path, _farm_temp_path + "/cache/alembic")
+                _file_nodes = alembiccache.nodes()
+                if _file_nodes:
+                    alembiccache.change_node_path(_file_nodes, _intersection_path, _farm_temp_path + "/cache/alembic")
+            # publish reference file
+            _reference_files = referencefile.files()
+            if _reference_files:
+                _path_set = referencefile.paths(_reference_files)[0]
+                _intersection_path = max(_path_set)
+                referencefile.publish_file(_reference_files, _intersection_path, _farm_temp_path + "/reference")
+                _file_nodes = referencefile.nodes()
+                if _file_nodes:
+                    referencefile.change_node_path(_file_nodes, _intersection_path, _farm_temp_path + "/reference")
+            # publish yeti node texture
+            _yeti_texture_file = yeti.tex_files()
+            if _yeti_texture_file:
+                _path_set = yeti.paths(_yeti_texture_file)[0]
+                _intersection_path = max(_path_set)
+                yeti.publish_file(_yeti_texture_file, _intersection_path, _farm_temp_path + "/texture/yeti")
+                _yeti_texture_dict = yeti._get_yeti_attr("texture", "file_name")
+                yeti.change_node_path(_yeti_texture_dict, _intersection_path, _farm_temp_path + "/texture/yeti")
+            # save publish file
+            cmds.file(save = True, type=_file_type, f=True, options="v=0;")
+        
+        # publish file
+        filefunc.publish_file(_publish_file, _backup_file)
+
+    except Exception as e:
+        logger.error(e)
+        return False
+    
+    # 取消多次保存
+    if _is_sync_backup_external_files:
+        cmds.file(new=True, f=True)
+        cmds.file(_current_file, o=True, f=True, pmt=False)
+
+    return _backup_file
 
                  

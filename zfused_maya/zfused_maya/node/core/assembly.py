@@ -270,6 +270,96 @@ def gpu_to_model(is_sel=True, is_hide_gpu=True):
             cmds.hide(_tran)
 
 
+def gpu_to_model_imported(is_sel=True, is_hide_gpu=True):
+
+    def remove_ref(rfn):
+        _filename = cmds.referenceQuery(rfn, f=True)
+        try:
+            cmds.file(_filename, ir=True)
+        except:
+            pass
+
+    if is_sel:
+        _sels = cmds.ls(sl=True)
+    else:
+        _sels = cmds.ls(type="gpuCache")
+
+    rfns = []
+    for _sel in _sels:
+        # print(_sel)
+        if not cmds.objExists("{}.cacheFileName".format(_sel)):
+            continue
+
+        # get gpu file
+        _gpu_file = cmds.getAttr("{}.cacheFileName".format(_sel))
+        print(_gpu_file)
+        _maya_file = _gpu_file.replace("/gpu/", "/file/").replace(".abc", ".mb")
+        if not os.path.isfile(_maya_file):
+            _maya_file = _gpu_file.replace("/gpu/", "/file/").replace(".abc", ".ma")
+        if not os.path.isfile(_maya_file):
+            continue
+
+        print(_maya_file)
+
+        _init_scene_node = "init_import_grp"
+        _shot_scene_node = "shotscene_import_grp"
+        for _node in ["init_import_grp", "shotscene_import_grp"]:
+            if not cmds.objExists(_node):
+                cmds.createNode("transform", name=_node)
+
+        _name = os.path.basename(_gpu_file).split(".")[0]
+        _parent_node = "{}_import_grp".format(_name)
+        if not cmds.objExists(_parent_node):
+            cmds.createNode("transform", name=_parent_node)
+            cmds.parent(_parent_node, _shot_scene_node)
+
+        _instance_node = "{}_import_00".format(_name)
+
+        # if not cmds.objExists(_instance_node):
+        #    cmds.createNode("transform", name = _instance_node)
+        #    cmds.parent(_instance_node, _parent_node)
+
+        if not cmds.objExists(_instance_node):
+            cmds.createNode("transform", name=_instance_node)
+            cmds.parent(_instance_node, _init_scene_node)
+            # refernce file
+            _ori_assemblies = cmds.ls(assemblies=True)
+            rf = cmds.file(_maya_file, r=True, ns="{}_import".format(_name))
+            rfn = cmds.referenceQuery(rf, rfn=True)
+            rfns.append(rfn)
+            # attr.set_node_attr(rfn, _key_output_attr["Id"], _version_handle.id(), "false")
+            _new_assemblies = cmds.ls(assemblies=True)
+            _asset_tops = list(set(_new_assemblies) - set(_ori_assemblies))
+            if _asset_tops:
+                for _asset_top in _asset_tops:
+                    try:
+                        cmds.parent(_asset_top, _instance_node)
+                    except:
+                        pass
+        print(_sel)
+        if cmds.nodeType(_sel) == "gpuCache":
+            _sel = cmds.listRelatives(_sel, p=True)[0]
+        _mt = cmds.xform(_sel, q=True, m=True, ws=True)
+        _instance = cmds.duplicate(_instance_node)[0]
+        cmds.parent(_instance, _parent_node)
+        cmds.xform(_instance, m=_mt, ws=True)
+        # cmds.parent(_instance, _parent_node)
+
+        if is_hide_gpu:
+            cmds.setAttr("{}.visibility".format(_sel), 0)
+
+    _trans = cmds.ls(type="transform")
+    for _tran in _trans:
+        if _tran.endswith("_import_00"):
+            cmds.hide(_tran)
+
+    rfns = list(set(rfns))
+    for rfn in rfns:
+        remove_ref(rfn)
+    cmds.delete("init_import_grp")
+
+
+
 def import_gpu(name, path):
     # import gpu
     # _name = os.path.basename(os.path.splitext(path)[0])
