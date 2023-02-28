@@ -56,7 +56,13 @@
                 "title"   :"动画相机\nsupercam",
                 "cmd"     :"from zfused_maya.tool.technology.playblast import playblast_maya;reload(playblast_maya);ui = playblast_maya.Playblast();ui.show()",
                 "color"   :"#7FFF00",
-                "category":"相机"}
+                "category":"相机"},
+            {   "name"    :"相机黑边预览",
+                "code"    :"letterbox cam preview",
+                "title"   :"相机黑边预览\nletterbox cam preview",
+                "cmd"     :"import zfused_maya.tool.animation.letterboxpreview.preview as preview;reload(preview);preview.ui()",
+                "color"   :"#343D46",
+                "category":"工具"}
                 ],
     "modeling":
         [

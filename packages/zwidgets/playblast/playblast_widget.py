@@ -4,7 +4,7 @@
 @Author  : Jerris_Cheng
 @File    : playblast_maya.py
 '''
-from __future__ import print_function
+from __future__ import print_function, division
 
 import json
 import os
@@ -15,6 +15,7 @@ import shutil
 
 from Qt import QtWidgets,QtCore,QtGui
 global font_scale
+font_scale = 1
 
 
 class Hud_Frame(QtWidgets.QFrame):
@@ -254,7 +255,6 @@ class PlayblastWidget(QtWidgets.QFrame):
         self.operation_widget.extra_path.connect(self.extra_path.emit)
         self.operation_widget.resolution_scale.connect(self.resolution_scale.emit)
 
-
         self._config = {}
 
     def init(self, init_config):
@@ -273,14 +273,14 @@ class PlayblastWidget(QtWidgets.QFrame):
     def resizeEvent(self,event):
         if self._config:
             width_ratio,height_ratio = self._config.get("image_size")
-            
-            new_size = event.size()
+            new_size = self.size()
             if (new_size.height() < width_ratio * self.hud_widget.height()/height_ratio):
                 new_size.setHeight(height_ratio * self.hud_widget.width()/width_ratio)
             else:
                 new_size.setWidth(width_ratio * self.hud_widget.height()/height_ratio)
-
+            self.hud_widget.resize(new_size)
             self.resize(self.hud_widget.width(), self.hud_widget.height() + self.operation_widget.height())
+            # self.resize(new_size.width(), new_size.height() + self.operation_widget.height())
 
             global font_scale
             font_scale = float(new_size.width())/float(width_ratio)*1.5 if float(new_size.width())/float(width_ratio)*1.5<1 else 1
@@ -289,6 +289,8 @@ class PlayblastWidget(QtWidgets.QFrame):
         _layout = QtWidgets.QVBoxLayout(self)
         _layout.setSpacing(0)
         _layout.setContentsMargins(0,0,0,0)
+
+        # self.setFixedWidth(800)
         
         self.hud_widget = Hud_Frame()
         _layout.addWidget(self.hud_widget)
