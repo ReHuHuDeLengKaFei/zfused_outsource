@@ -43,13 +43,11 @@ LOCAL_KEY_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),"..", ".
 # print(LOCAL_DATABASE_PATH)
 
 key_licence = ""
-
 key_lic = "{}/key.lic".format(LOCAL_KEY_PATH)
 if not os.path.isfile(key_lic):
     key_lic = "{}/key.lic".format(os.path.dirname(os.path.abspath(__file__)))
 if not os.path.isfile(key_lic):
     key_lic = "C:/key.lic"
-
 if os.path.isfile(key_lic):
     with open(key_lic, "r") as key_file:
         key_licence = key_file.read()
