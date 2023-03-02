@@ -150,7 +150,8 @@ class zFused(object):
                 return r.json() if r.json() else []
             else:
                 return []
-        except :
+        except Exception as e :
+            logger.error(e)
             logger.error("Timeout occurred")
             return []
 
