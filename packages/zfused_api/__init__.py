@@ -61,6 +61,12 @@ from .v1 import note
 
 from .v1 import group
 
+from .v1 import file
+
+from .v1 import farm
+
+from .v1 import farm_job
+
 from . import im
 from . import util
 from .v1 import objects

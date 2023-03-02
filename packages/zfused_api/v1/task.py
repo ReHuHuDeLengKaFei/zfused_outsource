@@ -15,8 +15,7 @@ from . import worktime
 logger = logging.getLogger(__name__)
 
 
-def new_production_file(files, task_id, attr_output_id, index=0, relative_entity_type="", relative_entity_id=0,
-                        relative_name_sapce="", fix_version=False):
+def new_production_file(files, task_id, attr_output_id, index=0, relative_entity_type="", relative_entity_id=0,relative_name_sapce="", fix_version=False):
     if not files:
         return
     
@@ -213,7 +212,7 @@ def cache(project_ids=[], extract_freeze=True):
     """ get project tasks 
         init 
     """
-    _s_t = time.clock()
+    _s_t = time.time()
     
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields=["Id"])
@@ -240,7 +239,7 @@ def cache(project_ids=[], extract_freeze=True):
     if _task_versions:
         list(map(lambda _task_version: Task.global_versions[_task_version["TaskId"]].append(_task_version),
                  _task_versions))
-    _e_t = time.clock()
+    _e_t = time.time()
     
     logger.info("task cache time = " + str(1000 * (_e_t - _s_t)) + "ms")
     
@@ -248,7 +247,7 @@ def cache(project_ids=[], extract_freeze=True):
 
 
 def cache_from_ids(ids, extract_freeze=True):
-    _s_t = time.clock()
+    _s_t = time.time()
     
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields=["Id"])
@@ -276,7 +275,7 @@ def cache_from_ids(ids, extract_freeze=True):
     if _task_versions:
         list(map(lambda _task_version: Task.global_versions[_task_version["TaskId"]].append(_task_version),
                  _task_versions))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("task cache time = " + str(1000 * (_e_t - _s_t)) + "ms")
     return _tasks
 
@@ -376,26 +375,32 @@ class Task(_Entity):
                 "ObjectId": self._id})
         return self._time_nodes
     
+    @_Entity._recheck
     def description(self):
-        return self._data["Description"]
+        return self._data.get("Description")
     
+    @_Entity._recheck
     def link_object(self):
-        return self._data["ProjectEntityType"]
+        return self._data.get("ProjectEntityType")
     
+    @_Entity._recheck
     def link_id(self):
-        return self._data["ProjectEntityId"]
+        return self._data.get("ProjectEntityId")
     
+    @_Entity._recheck
     def link(self):
-        return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
+        return zfused_api.objects.Objects(self._data.get("ProjectEntityType"), self._data.get("ProjectEntityId"))
     
+    @_Entity._recheck
     def user(self):
         _user_id = self._data.get("AssignedTo")
         if _user_id:
             return zfused_api.user.User(_user_id)
         return None
     
+    @_Entity._recheck
     def user_id(self):
-        return self._data["AssignedTo"]
+        return self._data.get("AssignedTo")
     
     def full_code(self):
         """
@@ -404,6 +409,7 @@ class Task(_Entity):
         """
         return self.code()
     
+    @_Entity._recheck
     def full_name(self):
         """
         get full path name
@@ -418,6 +424,7 @@ class Task(_Entity):
         """
         return u"{}".format(self.full_name())
     
+    @_Entity._recheck
     def file_code(self):
         """ get file name
         :rtype: str
@@ -435,6 +442,7 @@ class Task(_Entity):
         
         return _code
     
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
@@ -443,29 +451,30 @@ class Task(_Entity):
     
     @_Entity._recheck
     def project_id(self):
-        return self.global_dict[self._id]["ProjectId"]
+        return self._data.get("ProjectId")
     
     @_Entity._recheck
     def project_entity_type(self):
-        return self._data["ProjectEntityType"]
+        return self._data.get("ProjectEntityType")
     
     @_Entity._recheck
     def project_entity_id(self):
-        return self._data["ProjectEntityId"]
+        return self._data.get("ProjectEntityId")
     
     @_Entity._recheck
     def project_entity(self):
         _project_entity_type = self.project_entity_type()
+        _project_entity_id = self.project_entity_id()
         if _project_entity_type == "asset":
-            return zfused_api.asset.Asset(self.project_entity_id())
+            return zfused_api.asset.Asset(_project_entity_id)
         elif _project_entity_type == "assembly":
-            return zfused_api.assembly.Assembly(self.project_entity_id())
+            return zfused_api.assembly.Assembly(_project_entity_id)
         elif _project_entity_type == "episode":
-            return zfused_api.episode.Episode(self.project_entity_id())
+            return zfused_api.episode.Episode(_project_entity_id)
         elif _project_entity_type == "sequence":
-            return zfused_api.sequence.Sequence(self.project_entity_id())
+            return zfused_api.sequence.Sequence(_project_entity_id)
         elif _project_entity_type == "shot":
-            return zfused_api.shot.Shot(self.project_entity_id())
+            return zfused_api.shot.Shot(_project_entity_id)
         return zfused_api.objects.Objects(self._data["ProjectEntityType"], self._data["ProjectEntityId"])
     
     @_Entity._recheck
@@ -499,15 +508,17 @@ class Task(_Entity):
     
     @_Entity._recheck
     def software(self):
-        _software_id = self._data.get("SoftwareId")
-        if _software_id:
-            return zfused_api.software.Software(_software_id)
-        return None
+        # _software_id = self._data.get("SoftwareId")
+        # if _software_id:
+        #     return zfused_api.software.Software(_software_id)
+        # return None
+        return self.project_step().software()
     
     @_Entity._recheck
     def software_id(self):
-        _software_id = self._data.get("SoftwareId")
-        return _software_id
+        # _software_id = self._data.get("SoftwareId")
+        # return _software_id
+        return self.project_step().software_id()
     
     @_Entity._recheck
     def assigned_to(self):
@@ -548,49 +559,53 @@ class Task(_Entity):
         else:
             return False
     
+    @_Entity._recheck
     def start_time(self):
         """get start time
         rtype: datetime.datetime
         """
-        _time_text = self._data["StartTime"]
+        _time_text = self._data.get("StartTime")
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
     
+    @_Entity._recheck
     def end_time(self):
         """ 
         get end time
         rtype: datetime.datetime
         """
-        _time_text = self._data["DueTime"]
+        _time_text = self._data.get("DueTime")
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
     
+    @_Entity._recheck
     def create_time(self):
         """ 
         get create time
         :rtype: datetime.datetime
         """
-        _time_text = self._data["CreateTime"]
+        _time_text = self._data.get("CreateTime")
         if _time_text.startswith("0001"):
             return None
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
     
+    @_Entity._recheck
     def estimated_time(self):
         """ 
         get estimated time
         :rtype: datetime.datetime
         """
-        return self.global_dict[self._id]["EstimatedTime"]
+        return self._data.get("EstimatedTime")
     
     def default_path(self):
-        # return r"{}/{}".format(self.project_step().code(), self.software().code())
         return self.project_step().path()
     
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
         # project entity
@@ -604,13 +619,16 @@ class Task(_Entity):
                 _path = self.get_custom_path(_custom_path)
         return _path
     
+    @_Entity._recheck
     def production_path(self):
         """
         get task production path
         rtype: str
         """
-        _link_path = self.project_entity().production_path()
-        _path = "{}/{}".format(_link_path, self.path())
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).production_path()
+        _project_entity_path = self.project_entity().production_path()
+        _path = "{}/{}".format(_project_entity_path, self.path())
         return _path
     
     def transfer_path(self):
@@ -618,49 +636,60 @@ class Task(_Entity):
         _path = "{}/{}".format(_link_path, self.path())
         return _path
     
+    @_Entity._recheck
     def backup_path(self):
         """get task backup path
         rtype: str
         """
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).backup_path()
-        _path = "{}/{}".format(_link_path, self.path())
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).backup_path()
+        _project_entity_path = self.project_entity().backup_path()
+        _path = "{}/{}".format(_project_entity_path, self.path())
         return _path
     
+    @_Entity._recheck
     def work_path(self, absolute=True):
         """get task work path
         rtype: str
         """
         _step_code = zfused_api.step.ProjectStep(self._data["ProjectStepId"]).code()
         _software_code = zfused_api.software.Software(self._data["SoftwareId"]).code()
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).work_path(absolute)
-        _path = "{}/{}/{}".format(_link_path, _step_code, _software_code)
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).work_path(absolute)
+        _project_entity_path = self.project_entity().work_path()
+        _path = "{}/{}/{}".format(_project_entity_path, _step_code, _software_code)
         return _path
     
+    @_Entity._recheck
     def temp_path(self):
         """get task publish path
         rtype: str
         """
         _step_code = zfused_api.step.ProjectStep(self._data["ProjectStepId"]).code()
         _software_code = zfused_api.software.Software(self._data["SoftwareId"]).code()
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).temp_path()
-        _path = "{}/{}/{}".format(_link_path, _step_code, _software_code)
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).temp_path()
+        _project_entity_path = self.project_entity().temp_path()
+        _path = "{}/{}/{}".format(_project_entity_path, _step_code, _software_code)
         return _path
     
+    @_Entity._recheck
     def image_path(self):
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).image_path()
-        _path = "{}/{}".format(_link_path, self.path())
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).image_path()
+        _project_entity_path = self.project_entity().image_path()
+        _path = "{}/{}".format(_project_entity_path, self.path())
         return _path
     
+    @_Entity._recheck
     def cache_path(self):
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).cache_path()
-        _path = "{}/{}".format(_link_path, self.path())
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).cache_path()
+        _project_entity_path = self.project_entity().cache_path()
+        _path = "{}/{}".format(_project_entity_path, self.path())
         return _path
     
+    @_Entity._recheck
     def review_path(self):
         """get task review path
 
@@ -668,13 +697,15 @@ class Task(_Entity):
         """
         _step_code = zfused_api.step.ProjectStep(self._data["ProjectStepId"]).code()
         _software_code = zfused_api.software.Software(self._data["SoftwareId"]).code()
-        _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
-                                                self._data["ProjectEntityId"]).review_path()
-        _path = "{}/{}/{}".format(_link_path, _step_code, _software_code)
+        # _link_path = zfused_api.objects.Objects(self._data["ProjectEntityType"],
+        #                                         self._data["ProjectEntityId"]).review_path()
+        _project_entity_path = self.project_entity().review_path()
+        _path = "{}/{}/{}".format(_project_entity_path, _step_code, _software_code)
         return _path
     
     def link_entity(self):
-        return (self.global_dict[self._id]["ProjectEntityType"], self.global_dict[self._id]["ProjectEntityId"])
+        # return (self.global_dict[self._id]["ProjectEntityType"], self.global_dict[self._id]["ProjectEntityId"])
+        return self.project_entity()
     
     def versions(self, refresh=False):
         """ get all task publish veriosns
@@ -1386,15 +1417,14 @@ class Task(_Entity):
         """ get input tasks
         :rtype: dict
         """
-        _s_t = time.clock()
+        _s_t = time.time()
 
         tasks = OrderedDict()
         
         _project_step = self.project_step()
         _input_attrs = _project_step.input_attrs()
         _is_new_attribute_solution = _project_step.is_new_attribute_solution()
-        # get input project step 
-        # _input_attrs = self.get("step_attr_input", filter = {"ProjectStepId":self._data["ProjectStepId"]})
+
         if not _input_attrs:
             return tasks
         if _is_new_attribute_solution:
@@ -1411,10 +1441,9 @@ class Task(_Entity):
                         _attr_output_id = _attr_conn.get("AttrOutputId")
                         _attr_output = zfused_api.attr.Output(_attr_output_id)
                         _attr_output_project_step = _attr_output.project_step()
-                        _tasks = self.get("task", filter={
-                            "ProjectStepId": _attr_output_project_step.id(),
-                            "ProjectEntityType": self.project_entity_type(),
-                            "ProjectEntityId": self.project_entity_id()})
+                        _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                             "ProjectEntityType": self.project_entity_type(),
+                                                             "ProjectEntityId": self.project_entity_id() } )
                         if _tasks:
                             if _attr_conn["Id"] not in tasks:
                                 tasks[_attr_conn["Id"]] = []
@@ -1425,14 +1454,13 @@ class Task(_Entity):
                 
                 elif _rely == "asset" or _rely == "assembly":
 
-                    _e_t = time.clock()
-                    logger.info("task cache time = " + str(1000 * (_e_t - _s_t)) + "ms")
+                    _e_t = time.time()
+                    logger.info("{} task cache time = ".format(_rely) + str(1000 * (_e_t - _s_t)) + "ms")
 
                     _relative_tasks = defaultdict(list)
-                    _relatives = self.get("relative", filter={
-                        "SourceObject": _rely,
-                        "TargetObject": self.project_entity_type(),
-                        "TargetId": self.project_entity_id()})
+                    _relatives = self.get( "relative", filter = { "SourceObject": _rely,
+                                                                  "TargetObject": self.project_entity_type(),
+                                                                  "TargetId": self.project_entity_id() } )
                     if not _relatives:
                         continue
                     
@@ -1451,72 +1479,68 @@ class Task(_Entity):
                                 
                                 _conn_id = _attr_conn["Id"]
                                 if _attr_output_rely == _rely:
-                                    _output_tasks = self.get("task", filter={
-                                        "ProjectStepId": _attr_output_project_step.id(),
-                                        "ProjectEntityType": self.project_entity_type(),
-                                        "ProjectEntityId": self.project_entity_id()})
+                                    _output_tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                                "ProjectEntityType": self.project_entity_type(),
+                                                                                "ProjectEntityId": self.project_entity_id() } )
                                     if _output_tasks:
                                         _output_task = _output_tasks[0]
                                         _output_task["NameSpace"] = _relative.get("NameSpace")
-                                        _files = zfused_api.zFused.get("production_file", filter={
-                                            "ProjectStepId": _attr_output_project_step.id(),
-                                            "ProjectStepAttrId": _attr_output_id,
-                                            "ProjectEntityType": self.project_entity_type(),
-                                            "ProjectEntityId": self.project_entity_id(),
-                                            "TaskId": _output_task.get("Id"),
-                                            "RelativeEntityType": _relative.get("SourceObject"),
-                                            "RelativeEntityId": _relative.get("SourceId"),
-                                            "RelativeNameSpace": _relative.get("NameSpace")},
-                                                                       fields=["Id", "CreatedTime"])
+                                        _files = zfused_api.zFused.get("production_file", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                                                     "ProjectStepAttrId": _attr_output_id,
+                                                                                                     "ProjectEntityType": self.project_entity_type(),
+                                                                                                     "ProjectEntityId": self.project_entity_id(),
+                                                                                                     "TaskId": _output_task.get("Id"),
+                                                                                                     "RelativeEntityType": _relative.get("SourceObject"),
+                                                                                                     "RelativeEntityId": _relative.get("SourceId"),
+                                                                                                     "RelativeNameSpace": _relative.get("NameSpace") },
+                                                                                          fields = ["Id", "CreatedTime"] )
                                         _file_time = None
                                         if _files:
                                             _file_time = _files[-1].get("CreatedTime")
                                         else:
                                             _output_task_entity = zfused_api.task.Task(_output_task.get("Id"))
-                                            _file = '{}/{}/{}{}'.format(_output_task_entity.cache_path(),
-                                                                        _attr_output.code(), _relative.get("NameSpace"),
-                                                                        _attr_output.suffix())
+                                            _file = '{}/{}/{}{}'.format( _output_task_entity.cache_path(),
+                                                                         _attr_output.code(), 
+                                                                         _relative.get("NameSpace"),
+                                                                         _attr_output.suffix() )
                                             if os.path.isfile(_file):
                                                 _file_time = os.path.getmtime(_file)
-                                                _file_time = time.strftime('%Y-%m-%dT%H:%M:%S',
-                                                                           time.localtime(_file_time))
+                                                _file_time = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(_file_time))
                                         if _file_time:
                                             if not _latest_time or _latest_time < _file_time:
                                                 _latest_time = _file_time
                                                 _latest_conn_id = _conn_id
                                                 _latest_task = _output_task
                                 else:
-                                    _output_tasks = self.get("task", filter={
-                                        "ProjectStepId": _attr_output_project_step.id(),
-                                        "ProjectEntityType": _relative.get("SourceObject"),
-                                        "ProjectEntityId": _relative.get("SourceId")})
+                                    _output_tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                                "ProjectEntityType": _relative.get("SourceObject"),
+                                                                                "ProjectEntityId": _relative.get("SourceId") } )
                                     if _output_tasks:
                                         _output_task = _output_tasks[0]
                                         _output_task["NameSpace"] = _relative.get("NameSpace")
-                                        _files = zfused_api.zFused.get("production_file", filter={
-                                            "ProjectStepId": _attr_output_project_step.id(),
-                                            "ProjectStepAttrId": _attr_output_id,
-                                            "ProjectEntityType": self.project_entity_type(),
-                                            "ProjectEntityId": self.project_entity_id(),
-                                            "TaskId": _output_task.get("Id")},
-                                                                       fields=["Id", "CreatedTime"])
+                                        _files = zfused_api.zFused.get("production_file", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                                                     "ProjectStepAttrId": _attr_output_id,
+                                                                                                     "ProjectEntityType": self.project_entity_type(),
+                                                                                                     "ProjectEntityId": self.project_entity_id(),
+                                                                                                     "TaskId": _output_task.get("Id") },
+                                                                                          fields = ["Id", "CreatedTime"] )
                                         if _files:
                                             _file_time = _files[-1].get("CreatedTime")
                                         else:
                                             _output_task_entity = zfused_api.task.Task(_output_task.get("Id"))
-                                            _file = '{}/{}/{}{}'.format(_output_task_entity.cache_path(),
-                                                                        _attr_output.code(), _relative.get("NameSpace"),
-                                                                        _attr_output.suffix())
+                                            _file = '{}/{}/{}{}'.format( _output_task_entity.cache_path(),
+                                                                         _attr_output.code(), 
+                                                                         _relative.get("NameSpace"),
+                                                                         _attr_output.suffix() )
                                             if os.path.isfile(_file):
                                                 _file_time = os.path.getmtime(_file)
-                                                _file_time = time.strftime('%Y-%m-%dT%H:%M:%S',
-                                                                           time.localtime(_file_time))
+                                                _file_time = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime(_file_time))
                                         if _file_time:
                                             if not _latest_time or _latest_time < _file_time:
                                                 _latest_time = _file_time
                                                 _latest_conn_id = _conn_id
                                                 _latest_task = _output_task
-                            
+                            # 
                             if _latest_task:
                                 _relative_tasks[_latest_conn_id].append(_latest_task)
                         else:
@@ -1529,18 +1553,16 @@ class Task(_Entity):
                                 
                                 _task = {}
                                 if _attr_output_rely == _rely:
-                                    _tasks = self.get("task", filter={
-                                        "ProjectStepId": _attr_output_project_step.id(),
-                                        "ProjectEntityType": self.project_entity_type(),
-                                        "ProjectEntityId": self.project_entity_id()})
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                         "ProjectEntityType": self.project_entity_type(),
+                                                                         "ProjectEntityId": self.project_entity_id() } )
                                     if _tasks:
                                         _task = _tasks[0]
                                         _task["NameSpace"] = _relative.get("NameSpace")
                                 else:
-                                    _tasks = self.get("task", filter={
-                                        "ProjectStepId": _attr_output_project_step.id(),
-                                        "ProjectEntityType": _relative.get("SourceObject"),
-                                        "ProjectEntityId": _relative.get("SourceId")})
+                                    _tasks = self.get("task", filter = { "ProjectStepId": _attr_output_project_step.id(),
+                                                                         "ProjectEntityType": _relative.get("SourceObject"),
+                                                                         "ProjectEntityId": _relative.get("SourceId") } )
                                     if _tasks:
                                         _task = _tasks[0]
                                         _task["NameSpace"] = _relative.get("NameSpace")
@@ -1666,7 +1688,7 @@ class Task(_Entity):
                                     if _task:
                                         tasks[_input_attr["Id"]] += _task
         
-        _e_t = time.clock()
+        _e_t = time.time()
         logger.info("get input task cache time = " + str(1000 * (_e_t - _s_t)) + "ms")
         return tasks
     
@@ -1676,8 +1698,7 @@ class Task(_Entity):
         _relatives = zfused_api.zFused.get("relative", filter={
             "TargetObject": "task",
             "TargetId": self._id})
-        return list(set([(_relative["SourceObject"], _relative["SourceId"]) for _relative in _relatives if
-                         _relative["SourceId"] != self._id] if _relatives else []))
+        return list(set([(_relative["SourceObject"], _relative["SourceId"]) for _relative in _relatives if _relative["SourceId"] != self._id] if _relatives else []))
     
     def target_relatives(self):
         """
@@ -1716,25 +1737,27 @@ class Task(_Entity):
             return
         
         _status_handle = zfused_api.status.Status(status_id)
-        
-        # 取消同时只有一个制作任务
-        if _status_handle.data()["IsWorking"] == 1:
-            if self._data["AssignedTo"]:
-                _is_woking_status = zfused_api.zFused.get("status", filter={
-                    "IsWorking": 1})
-                _is_woking_status_ids = [str(_status["Id"]) for _status in _is_woking_status]
-                _is_wating_status = zfused_api.zFused.get("status", filter={
-                    "IsWaiting": 1})
-                _tasks = zfused_api.zFused.get("task", filter={
-                    "StatusId__in": "|".join(_is_woking_status_ids),
-                    "AssignedTo": self._data["AssignedTo"]})
-                if _tasks:
-                    for _task in _tasks:
-                        if _task["Id"] != self._id:
-                            _task["StatusId"] = _is_wating_status[0]["Id"]
-                            self.put("task", _task["Id"], _task, "status_id")
-                            self.global_dict[_task["Id"]] = _task
-        elif _status_handle.category() == "done":
+
+        # # 取消同时只有一个制作任务
+        # if _status_handle.data()["IsWorking"] == 1:
+        #     if self._data["AssignedTo"]:
+        #         _is_woking_status = zfused_api.zFused.get("status", filter={"IsWorking": 1})
+        #         _is_woking_status_ids = [str(_status["Id"]) for _status in _is_woking_status]
+        #         _is_wating_status = zfused_api.zFused.get("status", filter={"IsWaiting": 1})
+        #         _tasks = zfused_api.zFused.get("task", filter={ "StatusId__in": "|".join(_is_woking_status_ids),
+        #                                                         "AssignedTo": self._data["AssignedTo"] })
+        #         if _tasks:
+        #             for _task in _tasks:
+        #                 if _task["Id"] != self._id:
+        #                     _task["StatusId"] = _is_wating_status[0]["Id"]
+        #                     self.put("task", _task["Id"], _task, "status_id")
+        #                     self.global_dict[_task["Id"]] = _task
+        # elif _status_handle.category() == "done":
+        #     # 任务完成状态，修改 is_finished
+        #     self.global_dict[self._id]["IsFinished"] = 1
+        #     self._data["IsFinished"] = 1
+
+        if _status_handle.category() == "done":
             # 任务完成状态，修改 is_finished
             self.global_dict[self._id]["IsFinished"] = 1
             self._data["IsFinished"] = 1
@@ -1742,7 +1765,6 @@ class Task(_Entity):
         self.global_dict[self._id]["StatusId"] = status_id
         self._data["StatusId"] = status_id
         v = self.put("task", self._data["Id"], self._data, "status_id")
-        # self.global_dict[self._id] = self._data
         
         # 更新制作百分比
         _status_handle = zfused_api.status.Status(self.status_id())
@@ -2377,3 +2399,29 @@ class Task(_Entity):
             return True
         else:
             return False
+
+    @_Entity._recheck
+    def farm_temp_path(self, farm):
+        _farm_temp_path = farm.temp_path()
+        return "{}/{}/{}".format(_farm_temp_path, self.project().code(), self.code())
+
+    @_Entity._recheck
+    def new_farm_job(self, title, farm_id, job_id):
+        _created_time = "%s+00:00" % datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        _created_by = zfused_api.zFused.USER_ID
+        
+        _project_farm_job, _status = zfused_api.zFused.post( key = "farm_job", data = { "Name": title,
+                                                                                        "FarmId": farm_id,
+                                                                                        "JobId": job_id,
+                                                                                        "ProjectId": self.project_id(),
+                                                                                        "ProjectEntityType": self.project_entity_type(),
+                                                                                        "ProjectEntityId": self.project_entity_id(),
+                                                                                        "ProjectStepId": self.project_step_id(),
+                                                                                        "TaskId": self.id(),
+                                                                                        "Status": 0,
+                                                                                        "CreatedBy":_created_by,
+                                                                                        "CreatedTime":_created_time } )
+        if _status:
+            return _project_farm_job.get("Id"), True
+        
+        return "{} farm job create error".format(name), False

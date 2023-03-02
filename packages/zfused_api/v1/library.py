@@ -93,7 +93,7 @@ def clear(lis):
 def cache():
     """ init library
     """
-    _s_t = time.clock()
+    _s_t = time.time()
     _librarys = zfused_api.zFused.get("library")
     if _librarys:
         list(map(lambda _library: Library.global_dict.setdefault(_library["Id"], _library), _librarys))
@@ -105,12 +105,12 @@ def cache():
     #     for _tag_link in  _tag_links:
     #         _library_id = _tag_link["LinkId"]
     #         Library.global_tags[_library_id].append(_tag_link["TagId"])
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("library cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _librarys if _librarys else []
 
 def entity_cache(library_id_list = []):
-    _s_t = time.clock()
+    _s_t = time.time()
     _library_entitys = zfused_api.zFused.get("library_entity", sortby = ["code"], order = ["asc"])
 
     if not library_id_list:
@@ -130,7 +130,7 @@ def entity_cache(library_id_list = []):
         for _tag_link in  _tag_links:
             _library_id = _tag_link["LinkId"]
             LibraryEntity.global_tags[_library_id].append(_tag_link["TagId"])
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("library entity cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _library_entitys
 

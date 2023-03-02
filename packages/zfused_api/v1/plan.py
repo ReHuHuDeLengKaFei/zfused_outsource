@@ -20,7 +20,7 @@ def cache(project_id_list = []):
     """ init project assets
     """
 
-    _s_t = time.clock()
+    _s_t = time.time()
     # if extract_freeze:
     #     _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     # else:
@@ -34,7 +34,7 @@ def cache(project_id_list = []):
         _plans = zfused_api.zFused.get("plan", filter = {"ProjectId__in": _project_ids})
     if _plans:
         list(map(lambda _plan: Plan.global_dict.setdefault(_plan["Id"],_plan), _plans))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("plan cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _plans
 

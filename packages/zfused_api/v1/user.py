@@ -127,6 +127,7 @@ def cache(user_ids = []):
         list(map(lambda _post_user: User.global_post[_post_user["UserId"]].add(_post_user["PostId"]), _post_users))
     if _department_users:
         list(map(lambda _department_user: User.global_department[_department_user["UserId"]].add(_department_user["DepartmentId"]), _department_users))
+        _users.sort( key = lambda _user: zfused_api.user.User(_user.get("Id")).last_department_id() )
     return _users
 
 def cache_from_ids(user_ids = []):
@@ -148,6 +149,7 @@ def cache_from_ids(user_ids = []):
         list(map(lambda _post_user: User.global_post[_post_user["UserId"]].add(_post_user["PostId"]), _post_users))
     if _department_users:
         list(map(lambda _department_user: User.global_department[_department_user["UserId"]].add(_department_user["DepartmentId"]), _department_users))
+        _users.sort( key = lambda _user: zfused_api.user.User(_user.get("Id")).last_department_id() )
     return _users
 
 
@@ -194,6 +196,18 @@ class User(_Entity):
             self._data = self.global_dict[self._id]
             self.profile = self.global_profile[self._id]
         self._thumbnail = None
+
+    @_Entity._recheck
+    def login_name(self):
+        if self._id == 0:
+            return "none"
+        return self._data.get("Username")
+
+    @_Entity._recheck
+    def login_password(self):
+        if self._id == 0:
+            return "none"
+        return self._data.get("Password")
 
     @_Entity._recheck
     def code(self):
@@ -373,7 +387,6 @@ class User(_Entity):
 
     def department_ids(self):
         """ get department id
-
         """
         if self._id not in self.global_department:
             _department_users = self.get("department_user", filter = {"UserId": self._id}, fields = ["DepartmentId"])
@@ -382,6 +395,14 @@ class User(_Entity):
             else:
                 self.global_department[self._id] = set([_department_user.get("DepartmentId") for _department_user in _department_users])
         return self.global_department[self._id]
+
+    def last_department_id(self):
+        """ get department id
+        """
+        _department_ids = self.department_ids()
+        if not _department_ids:
+            return 0
+        return list(_department_ids)[-1]
 
     @_Entity._recheck
     def is_online(self):

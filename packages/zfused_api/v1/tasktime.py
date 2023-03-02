@@ -24,7 +24,7 @@ def cache(project_ids = []):
     """ get project tasks 
         init 
     """
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if not project_ids:
         _tasks = zfused_api.zFused.get("task_time",sortby = ["CreatedTime"], order = ["desc"])
@@ -33,7 +33,7 @@ def cache(project_ids = []):
         _tasks = zfused_api.zFused.get("task_time", filter = {"ProjectId__in": _project_ids}, sortby = ["CreatedTime"], order = ["desc"])
     if _tasks:
         list(map(lambda _task: TaskTime.global_dict.setdefault(_task["Id"],_task), _tasks))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("task cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _tasks
 

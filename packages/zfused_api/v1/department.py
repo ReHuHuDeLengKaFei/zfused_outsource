@@ -75,57 +75,58 @@ class Department(_Entity):
     def object(self):
         return "department"
 
-    def id(self):
-        return self._id
+    # def id(self):
+    #     return self._id
 
-    def data(self):
-        return self._data
+    # def data(self):
+    #     return self._data
 
+    @_Entity._recheck
     def code(self):
-        """
-        get code
-
+        """get code
         rtype: str
         """
-        return u"{}".format(self._data["Code"])   
+        return self._data.get("Code")
 
+    @_Entity._recheck
     def name(self):
-        """
-        get name
-
+        """get name
         rtype: str
         """
-        return u"{}".format(self._data["Name"])
+        return self._data.get("Name")
 
+    @_Entity._recheck
     def name_code(self):
         """ get name code
-
         rtype: str
         """ 
         return u"{}({})".format(self.name(),self.code())
-
+    
+    @_Entity._recheck
     def full_code(self):
         """ get full path code
 
         rtype: str
         """
-        _pid = self._data["Pid"]
+        _pid = self._data.get("Pid")
         if _pid:
             _p_handle = Department(_pid)
-            return "{}|{}".format(_p_handle.full_name(), self._data["Code"])
-        return self._data["Code"]
+            return "{}|{}".format(_p_handle.full_name(), self._data.get("Code"))
+        return self._data.get("Code")
 
+    @_Entity._recheck
     def full_name(self):
         """ get full path name
 
         rtype: str
         """
-        _pid = self._data["Pid"]
+        _pid = self._data.get("Pid")
         if _pid:
             _p_handle = Department(_pid)
-            return "{}|{}".format(_p_handle.full_name(), self._data["Name"])
-        return self._data["Name"]
+            return "{}|{}".format(_p_handle.full_name(), self._data.get("Name"))
+        return self._data.get("Name")
 
+    @_Entity._recheck
     def full_name_code(self):
         """ get full path name and code
 

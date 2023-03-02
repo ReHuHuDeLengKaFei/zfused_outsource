@@ -30,7 +30,7 @@ def cache(project_ids = [], extract_freeze = True):
     """ get logins 
         init 
     """
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -43,12 +43,12 @@ def cache(project_ids = [], extract_freeze = True):
         _logins = zfused_api.zFused.get("login", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
     if _logins:
         list(map(lambda _login: Login.global_dict.setdefault(_login["Id"],_login), _logins))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("login cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _loginsLogin
 
 def cache_from_ids(ids, extract_freeze = True):
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -58,7 +58,7 @@ def cache_from_ids(ids, extract_freeze = True):
     _logins = zfused_api.zFused.get("login", filter = {"Id__in": ids, "StatusId__in": _status_ids})
     if _logins:
         list(map(lambda _login: Login.global_dict.setdefault(_login["Id"],_login), _logins))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("login cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _logins
 

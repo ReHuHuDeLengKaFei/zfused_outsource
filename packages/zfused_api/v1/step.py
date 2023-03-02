@@ -57,15 +57,19 @@ class ProjectStepCheck(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def check_id(self):
         return self._data.get("CheckId")
 
+    @_Entity._recheck
     def check(self):
         return zfused_api.check.Check(self._data.get("CheckId"))
 
+    @_Entity._recheck
     def is_ignore(self):
         return self._data.get("IsIgnore")
     
+    @_Entity._recheck
     def update_is_ignore(self, is_ignore):
         self.global_dict[self._id]["IsIgnore"] = is_ignore
         self._data["IsIgnore"] = is_ignore
@@ -79,13 +83,14 @@ class ProjectStepCheck(_Entity):
 class ProjectStep(_Entity):
 
     @classmethod
-    def new(cls, name, code, project_id, project_entity_type, software_id, color):
+    def new(cls, name, code, project_id, project_entity_type, project_software_id, software_id, color):
         _created_time = "%s+00:00"%datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         _created_by = zfused_api.zFused.USER_ID
         _project_step, _status = zfused_api.zFused.post( key = "project_step", data = { "Name": name,
                                                                                            "Code": code,
                                                                                            "ProjectId": project_id,
                                                                                            "Object": project_entity_type,
+                                                                                           "ProjectSoftwareId": project_software_id,
                                                                                            "SoftwareId": software_id,
                                                                                            "Color": color,
                                                                                            "InitScript": "print('init script')",
@@ -151,8 +156,42 @@ class ProjectStep(_Entity):
         return self._data["Sort"]
 
     @_Entity._recheck
+    def project_software(self):
+        return zfused_api.software.ProjectSoftware(self._data.get("ProjectSoftwareId"))
+
+    @_Entity._recheck
+    def project_software_id(self):
+        return self._data.get("ProjectSoftwareId")
+
+    @_Entity._recheck
+    def update_project_software_id(self, project_software_id):
+        self.global_dict[self._id]["ProjectSoftwareId"] = project_software_id
+        self._data["ProjectSoftwareId"] = project_software_id
+        v = self.put("project_step", self._id, self._data)
+        _project_software = zfused_api.software.ProjectSoftware(project_software_id)
+        self.update_software_id(_project_software.software_id())
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
     def software(self):
         return zfused_api.software.Software(self._data.get("SoftwareId"))
+
+    @_Entity._recheck
+    def software_id(self):
+        return self._data.get("SoftwareId")
+
+    @_Entity._recheck
+    def update_software_id(self, software_id):
+        self.global_dict[self._id]["SoftwareId"] = software_id
+        self._data["SoftwareId"] = software_id
+        v = self.put("project_step", self._id, self._data)
+        if v:
+            return True
+        else:
+            return False
 
     @_Entity._recheck
     def project_id(self):

@@ -89,7 +89,7 @@ def cache(project_id_list = [], extract_freeze = True):
     """ init project assemblys
     """
 
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -117,12 +117,12 @@ def cache(project_id_list = [], extract_freeze = True):
         for _tag_link in  _tag_links:
             _assembly_id = _tag_link["LinkId"]
             Assembly.global_tags[_assembly_id].append(_tag_link["TagId"])
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("assembly cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _assemblys
 
 def cache_from_ids(ids, extract_freeze = False):
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -173,34 +173,38 @@ class Assembly(_Entity):
         if self._id not in self.global_dict:
             self.global_dict[self._id] = self._data
 
+    @_Entity._recheck
     def description(self):
-        return self._data["Description"]
-
+        return self._data.get("Description")
+    
+    @_Entity._recheck
     def file_code(self):
         """ task version file name
         :rtype: str
         """
         return self.code().replace("/", "_")
 
+    @_Entity._recheck
     def full_code(self):
         """get full path code
         rtype: str
         """
-        _code = self._data["Code"]
-        if self._data["TypeId"]:
+        _code = self._data.get("Code")
+        if self._data.get("TypeId"):
             _step_code = zfused_api.types.Types(
-                self._data["TypeId"]).data()["Code"]
+                self._data.get("TypeId")).data().get("Code")
             return u"{}/{}".format(_step_code, _code)
         else:
             return _code
 
+    @_Entity._recheck
     def full_name(self):
         """get full path name
         rtype: str
         """
-        _name = self._data["Name"]
-        if self._data["TypeId"]:
-            _step_name = zfused_api.types.Types(self._data["TypeId"]).data()["Name"]
+        _name = self._data.get("Name")
+        if self._data.get("TypeId"):
+            _step_name = zfused_api.types.Types(self._data.get("TypeId")).name()
             return u"{}/{}".format(_step_name, _name)
         else:
             return _name
@@ -211,6 +215,7 @@ class Assembly(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def type(self):
         """get type handle
         rtype: str
@@ -237,15 +242,18 @@ class Assembly(_Entity):
         """
         return self.global_dict[self._id]["StatusId"]
 
+    @_Entity._recheck
     def status(self):
         return zfused_api.status.Status(self._data.get("StatusId"))
 
+    @_Entity._recheck
     def level(self):
         """ get assembly level
         rtype: str
         """
-        return self.global_dict[self._id]["Level"]
+        return self._data.get("Level")
 
+    @_Entity._recheck
     def start_time(self):
         """ get start time
         rtype: datetime.datetime
@@ -256,6 +264,7 @@ class Assembly(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def end_time(self):
         """ get end time
         rtype: datetime.datetime
@@ -266,6 +275,7 @@ class Assembly(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def create_time(self):
         """ get create time
         rtype: datetime.datetime
@@ -279,6 +289,7 @@ class Assembly(_Entity):
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
         # project entity
@@ -353,11 +364,13 @@ class Assembly(_Entity):
         _path = "{}/assembly/{}".format(_review_project_path, self.full_code())
         return _path
 
+    @_Entity._recheck
     def thumbnail(self):
         """ get thumbnai name
         """
-        return self.global_dict[self._id]["Thumbnail"]
+        return self._data.get("Thumbnail")
 
+    @_Entity._recheck
     def get_thumbnail(self, is_version = False):
         _thumbnail_path = self._data.get("ThumbnailPath")
         if _thumbnail_path:
@@ -589,6 +602,31 @@ class Assembly(_Entity):
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
         v = self.put("assembly", self._data["Id"], self._data, "description")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def update_start_time(self, time_str):
+        if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        self.global_dict[self._id]["StartTime"] = time_str
+        self._data["StartTime"] = time_str
+        v = self.put("assembly", self._data["Id"], self._data, "start_time")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def update_end_time(self, time_str):
+        if self._data["EndTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        
+        self.global_dict[self._id]["EndTime"] = time_str
+        self._data["EndTime"] = time_str
+        v = self.put("assembly", self._data["Id"], self._data, "end_time")
         if v:
             return True
         else:

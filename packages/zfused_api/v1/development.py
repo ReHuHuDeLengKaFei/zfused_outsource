@@ -30,7 +30,7 @@ def cache(project_ids = [], extract_freeze = True):
     """ get project developments 
         init 
     """
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -43,12 +43,12 @@ def cache(project_ids = [], extract_freeze = True):
         _developments = zfused_api.zFused.get("development", filter = {"ProjectId__in": _project_ids, "StatusId__in": _status_ids})
     if _developments:
         list(map(lambda _development: Development.global_dict.setdefault(_development["Id"],_development), _developments))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("development cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _developments
 
 def cache_from_ids(ids, extract_freeze = True):
-    _s_t = time.clock()
+    _s_t = time.time()
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
     else:
@@ -58,7 +58,7 @@ def cache_from_ids(ids, extract_freeze = True):
     _developments = zfused_api.zFused.get("development", filter = {"Id__in": ids, "StatusId__in": _status_ids})
     if _developments:
         list(map(lambda _development: Development.global_dict.setdefault(_development["Id"],_development), _developments))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("development cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _developments
 
@@ -145,9 +145,11 @@ class Development(_Entity):
     def project_id(self):
         return self._data.get("ProjectId")    
 
+    @_Entity._recheck
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
     
+    @_Entity._recheck
     def project_step(self):
         _project_step_id = self._data.get("ProjectStepId")
         if _project_step_id:
@@ -157,9 +159,11 @@ class Development(_Entity):
     def project_step_id(self):
         return self.global_dict[self._id]["ProjectStepId"]
 
+    @_Entity._recheck
     def status(self):
         return zfused_api.status.Status(self._data.get("StatusId"))
 
+    @_Entity._recheck
     def status_id(self):
         return self._data.get("StatusId")
 
@@ -182,6 +186,7 @@ class Development(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def user_id(self):
         return self._data.get("AssignedTo")
 
@@ -201,6 +206,7 @@ class Development(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def start_time(self):
         """get start time
         rtype: datetime.datetime
@@ -227,6 +233,7 @@ class Development(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def end_time(self):
         """ 
         get end time

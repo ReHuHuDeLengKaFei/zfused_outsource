@@ -206,6 +206,7 @@ class Project(_Entity):
             self.config = self._config
             self.profile = self._profile
 
+    @_Entity._recheck
     def full_code(self):
         """get full path code
 
@@ -213,6 +214,7 @@ class Project(_Entity):
         """
         return u"{}".format(self._data["Code"])
 
+    @_Entity._recheck
     def full_name(self):
         """get full path name
 
@@ -229,26 +231,26 @@ class Project(_Entity):
 
     def color(self):
         """ return project color
-
         """
+
         _color = self._profile["Color"]
         if not _color:
             return "#FFFFFF"
         return self._profile["Color"]
 
+    @_Entity._recheck
     def status(self):
         return zfused_api.status.Status(self._data.get("StatusId"))
 
+    @_Entity._recheck
     def status_id(self):
         """ get status id 
-        
         """
-        return self._data["StatusId"]
+        return self._data.get("StatusId")
 
     def start_time(self):
         """
         get start time
-
         rtype: datetime.datetime
         """
         _time_text = self._profile["StartTime"]
@@ -400,7 +402,8 @@ class Project(_Entity):
             return True
         else:
             return False
-
+    
+    @_Entity._recheck
     def priority(self):
         return self._data.get("Priority")
 
@@ -434,10 +437,10 @@ class Project(_Entity):
             return [zfused_api.software.Software(_project_software.get("SoftwareId")) for _project_software in _project_softwares]
         return []
 
-    def add_software(self, software_id):
+    def add_software(self, software_id, variant = ""):
         """添加制作软件
         """
-        _softwares = self.get("project_software", filter = {"ProjectId": self._id, "SoftwareId": software_id})
+        _softwares = self.get("project_software", filter = {"ProjectId": self._id, "SoftwareId": software_id, "Variant": variant})
         if _softwares:
             return
 
@@ -447,12 +450,24 @@ class Project(_Entity):
         _value, _status = zfused_api.zFused.post( key = "project_software", 
                                                   data = { "ProjectId": self._id,
                                                            "SoftwareId": software_id,
+                                                           "Variant": variant, 
                                                            "CreatedBy": _create_by_id,
                                                            "CreatedTime": _current_time } )
         if _status:
             _project_software_id = _value["Id"]
             return _project_software_id, True
         return "add software {} error".format(software_id), False
+
+    def farms(self):
+        """return farm list
+        """
+        _project_farms = self.get("project_farm", filter = {"ProjectId": self._id} )
+        if _project_farms:
+            return [zfused_api.farm.Farm(_project_farm.get("FarmId")) for _project_farm in _project_farms]
+        return []
+
+    def add_farm(self):
+        pass
 
     def fps(self):
         return self._config.get("Fps")

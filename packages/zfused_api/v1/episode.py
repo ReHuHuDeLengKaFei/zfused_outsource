@@ -87,7 +87,7 @@ def cache(project_id = [], extract_freeze = True):
     return _episodes
 
 def cache_from_ids(ids, extract_freeze = True):
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status")
@@ -148,6 +148,7 @@ class Episode(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def description(self):
         return self._data["Description"]
 
@@ -158,7 +159,7 @@ class Episode(_Entity):
         """
         return self.full_code().replace("/", "_")
 
-
+    @_Entity._recheck
     def full_code(self):
         """
         get full path code
@@ -167,6 +168,7 @@ class Episode(_Entity):
         """
         return u"{}".format(self._data["Code"]) 
 
+    @_Entity._recheck
     def full_name(self):
         """
         get full path name
@@ -183,6 +185,7 @@ class Episode(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def type(self):
         """get type handle
         """
@@ -191,12 +194,14 @@ class Episode(_Entity):
             return zfused_api.types.Types(_type_id)
         return None
 
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
             return zfused_api.project.Project(_project_id)
-        return None
-
+        return None 
+    
+    @_Entity._recheck
     def project_id(self):
         """ get project id
         """
@@ -206,18 +211,21 @@ class Episode(_Entity):
 
         return self._data.get("ProjectId")
 
+    @_Entity._recheck
     def status_id(self):
         """ get status id 
         
         """
         return self._data["StatusId"]
 
+    @_Entity._recheck
     def level(self):
         """ get asset level
 
         """
         return self._data["Level"]
 
+    @_Entity._recheck
     def start_time(self):
         """ get start time
 
@@ -229,6 +237,7 @@ class Episode(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def end_time(self):
         """ get end time
 
@@ -240,6 +249,7 @@ class Episode(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def create_time(self):
         """ get create time
 
@@ -253,6 +263,7 @@ class Episode(_Entity):
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
         # project entity
@@ -330,11 +341,13 @@ class Episode(_Entity):
         _path = "{}/{}".format(_review_project_path, self.path())
         return _path
 
+    @_Entity._recheck
     def thumbnail(self):
         """ get thumbnai name
         """
         return self._data["Thumbnail"]
 
+    @_Entity._recheck
     def get_thumbnail(self, is_version = False):
         _thumbnail_path = self._data.get("ThumbnailPath")
         if _thumbnail_path:
@@ -542,6 +555,31 @@ class Episode(_Entity):
         self.global_dict[self._id]["ThumbnailPath"] = thumbnail_path
         self._data["ThumbnailPath"] = thumbnail_path
         v = self.put("episode", self._data["Id"], self._data, "thumbnail_path")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def update_start_time(self, time_str):
+        if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        self.global_dict[self._id]["StartTime"] = time_str
+        self._data["StartTime"] = time_str
+        v = self.put("episode", self._data["Id"], self._data, "start_time")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def update_end_time(self, time_str):
+        if self._data["EndTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        
+        self.global_dict[self._id]["EndTime"] = time_str
+        self._data["EndTime"] = time_str
+        v = self.put("episode", self._data["Id"], self._data, "end_time")
         if v:
             return True
         else:

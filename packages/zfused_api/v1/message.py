@@ -141,13 +141,14 @@ class Message(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def submitter_id(self):
         if not isinstance(self._data, dict):
             self._data = self.get_one(self._type, self._id)
             self.global_dict[self._id] = self._data
 
         return self._data.get("SubmitterId")
-
+    
     def message_links(self):
         return self.global_link.get(self._id)
 
@@ -173,6 +174,7 @@ class MessageLink(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def is_read(self):
         if not isinstance(self._data, dict):
             self._data = self.get_one(self._type, self._id)

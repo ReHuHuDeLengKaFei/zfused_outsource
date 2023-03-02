@@ -8,6 +8,7 @@ import shutil
 import datetime
 import logging
 import json
+import tempfile
 
 from . import _Entity
 import zfused_api
@@ -16,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 def delete(shot_id):
     """ delete asset
-
     """
     zfused_api.zFused.delete("shot", shot_id)
 
@@ -100,7 +100,7 @@ def cache(project_id = [], extract_freeze = True):
     return _shots
 
 def cache_from_ids(ids, extract_freeze = True):
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status")
@@ -179,6 +179,7 @@ class Shot(_Entity):
         if self._id not in self.global_dict:
             self.global_dict[self._id] = self._data
 
+    @_Entity._recheck
     def description(self):
         return self._data["Description"]
 
@@ -188,7 +189,8 @@ class Shot(_Entity):
         :rtype: str
         """
         return self.full_code().replace("/", "_")
-        
+    
+    @_Entity._recheck
     def full_code(self):
         """
         get full path code
@@ -205,6 +207,7 @@ class Shot(_Entity):
         else:
             return _code
 
+    @_Entity._recheck
     def full_name(self):
         """
         get full path name
@@ -229,6 +232,7 @@ class Shot(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def type(self):
         """get type handle
         """
@@ -237,12 +241,14 @@ class Shot(_Entity):
             return zfused_api.types.Types(_type_id)
         return None
 
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
             return zfused_api.project.Project(_project_id)
         return None
 
+    @_Entity._recheck
     def project_id(self):
         """ get project id
         """
@@ -252,28 +258,33 @@ class Shot(_Entity):
             
         return self._data["ProjectId"]
 
+    @_Entity._recheck
     def status_id(self):
         """ get status id 
         
         """
         return self._data["StatusId"]
 
+    @_Entity._recheck
     def level(self):
         """ get shot level
 
         """
         return self._data["Level"]
 
+    @_Entity._recheck
     def start_frame(self):
         """ get start frame
         """
         return self._data["FrameStart"]
 
+    @_Entity._recheck
     def end_frame(self):
         """ get end frame
         """
         return self._data["FrameEnd"]
 
+    @_Entity._recheck
     def start_time(self):
         """ get start time
 
@@ -285,6 +296,7 @@ class Shot(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def end_time(self):
         """ get end time
 
@@ -296,6 +308,7 @@ class Shot(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def create_time(self):
         """ get create time
 
@@ -306,6 +319,7 @@ class Shot(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def sequence_id(self):
         return self._data.get("SequenceId")
 
@@ -315,6 +329,7 @@ class Shot(_Entity):
             return zfused_api.sequence.Sequence(_sequence_id)
         return None
 
+    @_Entity._recheck
     def episode_id(self):
         return self._data.get("EpisodeId")
 
@@ -327,6 +342,7 @@ class Shot(_Entity):
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
         # project entity
@@ -406,11 +422,13 @@ class Shot(_Entity):
         _path = "{}/shot/{}".format(_review_project_path, self.full_code())
         return _path
 
+    @_Entity._recheck
     def thumbnail(self):
         """ get thumbnai name
         """
         return self._data["Thumbnail"]
 
+    @_Entity._recheck
     def get_thumbnail(self, is_version = False):
 
         _thumbnail_path = self._data.get("ThumbnailPath")
@@ -676,6 +694,31 @@ class Shot(_Entity):
         else:
             return False
 
+    @_Entity._recheck
+    def update_start_time(self, time_str):
+        if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        self.global_dict[self._id]["StartTime"] = time_str
+        self._data["StartTime"] = time_str
+        v = self.put("shot", self._data["Id"], self._data, "start_time")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def update_end_time(self, time_str):
+        if self._data["EndTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        
+        self.global_dict[self._id]["EndTime"] = time_str
+        self._data["EndTime"] = time_str
+        v = self.put("shot", self._data["Id"], self._data, "end_time")
+        if v:
+            return True
+        else:
+            return False
+
     def create_project_step_task(self, project_step_id):
         """ create default task
 
@@ -746,24 +789,44 @@ class Shot(_Entity):
                                            self.id(),
                                            self.object(),
                                            self.id() )
-
             return _task.id(), "%s create success"%_task_name
         return False,"%s create error"%_task_name    
 
 
-    
-    def update_relative_from_property(self, property_file = True):
+    def update_relative_from_property(self, is_cloud = True):
+        from zcore import transfer
         _json_data = {}
-        if property_file:
-            # get json file from path
+        if is_cloud:
+            # get json file from cloud
+            _production_file = "{}/{}.property".format(self.production_path(), self.file_code())
+            _production_path = os.path.dirname(_production_file)
+            _name = os.path.basename(_production_file)
+            _dir, _path = os.path.splitdrive(_production_path)
+            _dir = _dir.replace(":", "")
+            _cloud_file = "production/{}{}/{}".format( _dir, _path, _name )
+            # download to local
+            _json_file = "{}/{}".format(tempfile.gettempdir(), _name)
+            # filefunc.receive_file(_cloud_file, _json_file, is_cloud = True)
+            transfer.get_file_from_cloud(_cloud_file, _json_file)
+
+            # read json file
+            with open(_json_file, "r") as _handle:
+                data = _handle.read()
+                _json_data = json.loads(data)
+            
+            # send to server
+            transfer.send_file_to_server(_json_file, _production_file)            
+
+        else:
+            # get json file from local server
             _json_file = "{}/{}.property".format(self.production_path(), self.file_code())
             if not os.path.isfile(_json_file):
                 return 
             with open(_json_file, "r") as _handle:
                 data = _handle.read()
                 _json_data = json.loads(data)
-        else:
-            _json_data = self.property()
+        # else:
+        #     _json_data = self.property()
         
         if not _json_data:
             return 
@@ -794,6 +857,10 @@ class Shot(_Entity):
                 if _episode:
                     zfused_api.relative.create_relatives("assembly", _assembly.get("id"), _episode.object(), _episode.id(), "reference", _assembly.get("namespace"))
             self.update_property('assembly',_assemblys)
+        
+        _cameras = _json_data.get("camera")
+        if _cameras:
+            self.update_property('camera',_cameras)
 
     @_Entity._recheck
     def search_match(self):

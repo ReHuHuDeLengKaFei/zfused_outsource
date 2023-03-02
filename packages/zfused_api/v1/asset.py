@@ -88,7 +88,7 @@ def cache(project_id_list = [], extract_freeze = True):
     """ init project assets
     """
 
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
@@ -119,14 +119,14 @@ def cache(project_id_list = [], extract_freeze = True):
             _asset_id = _tag_link["LinkId"]
             Asset.global_tags[_asset_id].append(_tag_link["TagId"])
     
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("asset cache time = " + str(1000*(_e_t - _s_t)) + "ms")
 
     return _assets
 
 
 def cache_from_ids(ids, extract_freeze = False):
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status", fields = ["Id"])
@@ -146,7 +146,7 @@ def cache_from_ids(ids, extract_freeze = False):
         list(map(lambda _task: Asset.global_tasks[_task["ProjectEntityId"]].append(_task), _asset_tasks))
         list(map(lambda _task: task.Task.global_dict.setdefault(_task["Id"],_task), _asset_tasks))
 
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("asset cache time = " + str(1000*(_e_t - _s_t)) + "ms")
 
     return _assets
@@ -182,6 +182,7 @@ class Asset(_Entity):
         if self._id not in self.global_dict:
             self.global_dict[self._id] = self._data
 
+    @_Entity._recheck
     def description(self):
         return self._data["Description"]
 
@@ -191,6 +192,7 @@ class Asset(_Entity):
         """
         return self.code().replace("/", "_")
 
+    @_Entity._recheck
     def full_code(self):
         """get full path code
         rtype: str
@@ -203,6 +205,7 @@ class Asset(_Entity):
         else:
             return _code
 
+    @_Entity._recheck
     def full_name(self):
         """get full path name
         rtype: str
@@ -221,6 +224,7 @@ class Asset(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def type(self):
         """get type handle
         """
@@ -229,6 +233,7 @@ class Asset(_Entity):
             return zfused_api.types.Types(_type_id)
         return None
 
+    @_Entity._recheck
     def type_id(self):
         return self._data.get("TypeId")
 
@@ -250,17 +255,18 @@ class Asset(_Entity):
         """
         return self.global_dict[self._id]["StatusId"]
 
+    @_Entity._recheck
     def status(self):
         return zfused_api.status.Status(self._data.get("StatusId"))
 
     def level(self):
         """ get asset level
         """
-        return self.global_dict[self._id]["Level"]
+        return self._data.get("Level")
 
+    @_Entity._recheck
     def start_time(self):
         """ get start time
-
         rtype: datetime.datetime
         """
         _time_text = self._data["StartTime"]
@@ -269,9 +275,9 @@ class Asset(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def end_time(self):
         """ get end time
-
         rtype: datetime.datetime
         """
         _time_text = self._data["EndTime"]
@@ -280,9 +286,9 @@ class Asset(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def create_time(self):
         """ get create time
-
         """
         _time_text = self._data["CreateTime"]
         if _time_text.startswith("0001"):
@@ -293,9 +299,9 @@ class Asset(_Entity):
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
-        # project entity
         _project_entity = zfused_api.zFused.get("project_entity", filter = { "ProjectId": self._data.get("ProjectId"),
                                                                              "Code": self.object()} )
         if _project_entity:
@@ -367,11 +373,13 @@ class Asset(_Entity):
         _path = "{}/asset/{}".format(_review_project_path, self.full_code())
         return _path
 
+    @_Entity._recheck
     def thumbnail(self):
         """ get thumbnai name
         """
-        return self.global_dict[self._id]["Thumbnail"]
+        return self._data.get("Thumbnail")
 
+    @_Entity._recheck
     def get_thumbnail(self, is_version = False):
         _thumbnail_path = self._data.get("ThumbnailPath")
         if _thumbnail_path:
@@ -593,6 +601,31 @@ class Asset(_Entity):
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
         v = self.put("asset", self._data["Id"], self._data, "description")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def update_start_time(self, time_str):
+        if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        self.global_dict[self._id]["StartTime"] = time_str
+        self._data["StartTime"] = time_str
+        v = self.put("asset", self._data["Id"], self._data, "start_time")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def update_end_time(self, time_str):
+        if self._data["EndTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        
+        self.global_dict[self._id]["EndTime"] = time_str
+        self._data["EndTime"] = time_str
+        v = self.put("asset", self._data["Id"], self._data, "end_time")
         if v:
             return True
         else:

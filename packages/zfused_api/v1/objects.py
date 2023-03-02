@@ -55,7 +55,10 @@ OBJECT = {
     "login": zfused_api.login.Login,
     "note": zfused_api.note.Note,
     "chat_single": zfused_api.chat.Single,
-    "chat_group": zfused_api.chat.Group
+    "chat_group": zfused_api.chat.Group,
+    "file_provide": zfused_api.fileprovide.FileProvide,
+    "farm": zfused_api.farm.Farm,
+    "farm_job": zfused_api.farm_job.FarmJob
 }
 
 
@@ -104,10 +107,13 @@ ENTITY_MAP = {
     "login": zfused_api.login.Login,
     "note": zfused_api.note.Note,
     "chat_single": zfused_api.chat.Single,
-    "chat_group": zfused_api.chat.Group
+    "chat_group": zfused_api.chat.Group,
+    "file_provide": zfused_api.fileprovide.FileProvide,
+    "farm": zfused_api.farm.Farm,
+    "farm_job": zfused_api.farm_job.FarmJob
 }
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 def reset():
     for _, _api in OBJECT.items():
@@ -116,22 +122,34 @@ def reset():
 def Objects(obj, id, data = None):
     return OBJECT[obj](id, data)
 
+# @zfused_api.reset
 def refresh(obj, object_id):
     """ 刷新对象        
     """
     if obj not in OBJECT:
         return
-    try:
-        zfused_api.zFused.RESET = True
-        if hasattr(OBJECT[obj], "global_dict"):
-            logger.info("refresh {} {}".format(obj, object_id))
-            if object_id in OBJECT[obj].global_dict:
-                OBJECT[obj].global_dict.pop(object_id)
-            OBJECT[obj](object_id)
-    except Exception as e:
-        logger.warning(e)
-    finally:
-        zfused_api.zFused.RESET = False
+    if hasattr(OBJECT[obj], "global_dict"):
+        logger.info("refresh {} {}".format(obj, object_id))
+        if object_id in OBJECT[obj].global_dict:
+            OBJECT[obj].global_dict.pop(object_id)
+        OBJECT[obj](object_id)
+
+# def refresh(obj, object_id):
+#     """ 刷新对象        
+#     """
+#     if obj not in OBJECT:
+#         return
+#     try:
+#         zfused_api.zFused.RESET = True
+#         if hasattr(OBJECT[obj], "global_dict"):
+#             # logger.info("refresh {} {}".format(obj, object_id))
+#             if object_id in OBJECT[obj].global_dict:
+#                 OBJECT[obj].global_dict.pop(object_id)
+#             OBJECT[obj](object_id)
+#     except Exception as e:
+#         logger.warning(e)
+#     finally:
+#         zfused_api.zFused.RESET = False
 
 def cache(entity_type, entity_id_list):
     _entity_datas = zfused_api.zFused.get(entity_type, filter = {"Id__in": "|".join(map(str, entity_id_list))})

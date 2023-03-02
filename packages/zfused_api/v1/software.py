@@ -126,7 +126,7 @@ class Software(_Entity):
             for _path in _paths:
                 if os.path.isfile(_path):
                     return _path
-        return None
+        return ""
 
         # return self._data.get("ExecutablePath")
         # _paths = self._data.get("ExecutablePath").split(";")
@@ -169,6 +169,30 @@ class ProjectSoftware(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
+    def name(self):
+        return self._data.get("Env")
+
+    @_Entity._recheck
+    def variant(self):
+        return self._data.get("Variant")
+
+    @_Entity._recheck
+    def rez_package(self):
+        return self._data.get("RezPackage") 
+
+    def update_rez_package(self, rez_packages):
+        if self._data.get("RezPackage") == rez_packages:
+            return True
+        self.global_dict[self._id]["RezPackage"] = rez_packages
+        self._data["RezPackage"] = rez_packages
+        v = self.put("project_software", self._id, self._data, "rez_package")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
     def startup_script(self):
         return self._data.get("StartupScript")
 
@@ -183,15 +207,68 @@ class ProjectSoftware(_Entity):
         else:
             return False
 
+    @_Entity._recheck
     def software(self):
         return zfused_api.software.Software(self._data.get("SoftwareId"))
 
+    @_Entity._recheck
+    def software_id(self):
+        return self._data.get("SoftwareId")
+
+    @_Entity._recheck
     def project(self):
         return zfused_api.project.Project(self._data.get("ProjectId"))
 
+    @_Entity._recheck
     def project_id(self):
-        if not isinstance(self._data, dict):
-            self._data = self.get_one(self._type, self._id)
-            self.global_dict[self._id] = self._data
-            
         return self._data.get("ProjectId")
+
+    @_Entity._recheck
+    def executable_path(self):
+        _executable_path = ""
+        _paths = self._data.get("ExecutablePath").split(";")
+        if _paths:
+            for _path in _paths:
+                if os.path.isfile(_path):
+                    # return _path
+                    _executable_path = _path
+                    break
+        if not _executable_path:
+            _executable_path = self.software().executable_path()
+        return _executable_path
+
+    def update_executable_path(self, path):
+        if self._data.get("ExecutablePath") == path:
+            return True
+        self.global_dict[self._id]["ExecutablePath"] = path
+        self._data["ExecutablePath"] = path
+        v = self.put("project_software", self._id, self._data, "executable_path")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def executable_python_path(self):
+        _executable_path = ""
+        _paths = self._data.get("ExecutablePythonPath").split(";")
+        if _paths:
+            for _path in _paths:
+                if os.path.isfile(_path):
+                    # return _path
+                    _executable_path = _path
+                    break
+        if not _executable_path:
+            _executable_path = self.software().executable_python_path()
+        return _executable_path
+
+    def update_executable_python_path(self, path):
+        if self._data.get("ExecutablePythonPath") == path:
+            return True
+        self.global_dict[self._id]["ExecutablePythonPath"] = path
+        self._data["ExecutablePythonPath"] = path
+        v = self.put("project_software", self._id, self._data, "executable_python_path")
+        if v:
+            return True
+        else:
+            return False

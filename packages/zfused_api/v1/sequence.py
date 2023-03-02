@@ -53,7 +53,7 @@ def new_sequence(project_id, name, code, status_id, episode_id = 0, type_id = 0,
     if _status:
         _sequence = Sequence(_sequence["Id"])
         _sequence.refresh_match()
-        return _sequence["Id"], True
+        return _sequence.id(), True
     return "{} create error".format(name), False
 
 def clear(lis):
@@ -93,7 +93,7 @@ def cache(project_id = [], extract_freeze = True):
     return _sequences
 
 def cache_from_ids(ids, extract_freeze = True):
-    _s_t = time.clock()
+    _s_t = time.time()
 
     if extract_freeze:
         _status_ids = zfused_api.zFused.get("status")
@@ -140,9 +140,10 @@ class Sequence(_Entity):
             else:
                 self._data = self.global_dict[self._id]
 
+    @_Entity._recheck
     def description(self):
         return self._data["Description"]
-
+    
     def file_code(self):
         """ task version file name
 
@@ -150,6 +151,7 @@ class Sequence(_Entity):
         """
         return self.full_code().replace("/", "_")
 
+    @_Entity._recheck
     def full_code(self):
         """
         get full path code
@@ -163,6 +165,7 @@ class Sequence(_Entity):
         else:
             return _code
 
+    @_Entity._recheck
     def full_name(self):
         """
         get full path name
@@ -184,6 +187,7 @@ class Sequence(_Entity):
         """
         return u"{}({})".format(self.full_name(), self.full_code())
 
+    @_Entity._recheck
     def type(self):
         """get type handle
         """
@@ -191,13 +195,15 @@ class Sequence(_Entity):
         if _type_id:
             return zfused_api.types.Types(_type_id)
         return None
-
+    
+    @_Entity._recheck
     def project(self):
         _project_id = self._data.get("ProjectId")
         if _project_id:
             return zfused_api.project.Project(_project_id)
         return None
 
+    @_Entity._recheck
     def project_id(self):
         """ get project id
         """
@@ -207,18 +213,21 @@ class Sequence(_Entity):
             
         return self._data["ProjectId"]
 
+    @_Entity._recheck
     def status_id(self):
         """ get status id 
         
         """
         return self._data["StatusId"]
 
+    @_Entity._recheck
     def level(self):
         """ get sequence level
 
         """
         return self._data["Level"]
 
+    @_Entity._recheck
     def start_time(self):
         """ get start time
 
@@ -230,6 +239,7 @@ class Sequence(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def end_time(self):
         """ get end time
 
@@ -241,6 +251,7 @@ class Sequence(_Entity):
         _time_text = _time_text.split("+")[0].replace("T", " ")
         return datetime.datetime.strptime(_time_text, "%Y-%m-%d %H:%M:%S")
 
+    @_Entity._recheck
     def create_time(self):
         """ get create time
 
@@ -254,6 +265,7 @@ class Sequence(_Entity):
     def default_path(self):
         return r"{}/{}".format(self.object(), self.full_code())
 
+    @_Entity._recheck
     def path(self):
         _path = self.default_path()
         # project entity
@@ -324,6 +336,7 @@ class Sequence(_Entity):
         _path = "{}/{}".format(_cache_path, self.path())
         return _path
 
+    @_Entity._recheck
     def review_path(self):
         """
         get sequence review path
@@ -334,11 +347,13 @@ class Sequence(_Entity):
         _path = "{}/sequence/{}".format(_review_project_path, self.full_code())
         return _path
 
+    @_Entity._recheck
     def thumbnail(self):
         """ get thumbnai name
         """
         return self._data["Thumbnail"]
 
+    @_Entity._recheck
     def get_thumbnail(self, is_version = False):
         
         _thumbnail_path = self._data.get("ThumbnailPath")
@@ -508,7 +523,7 @@ class Sequence(_Entity):
         _relatives = zfused_api.zFused.get("relative", filter = {"SourceObject": "sequence", 
                                                                   "SourceId": self._id})
         return set([(_relative["TargetObject"], _relative["TargetId"]) for _relative in _relatives if _relative["TargetId"] != self._id] if _relatives else [])
-
+    
     def update_status(self, status_id):
         """ update project step check script
         
@@ -549,6 +564,31 @@ class Sequence(_Entity):
         self.global_dict[self._id]["Description"] = _description
         self._data["Description"] = _description
         v = self.put("sequence", self._data["Id"], self._data, "description")
+        if v:
+            return True
+        else:
+            return False
+
+    @_Entity._recheck
+    def update_start_time(self, time_str):
+        if self._data["StartTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        self.global_dict[self._id]["StartTime"] = time_str
+        self._data["StartTime"] = time_str
+        v = self.put("sequence", self._data["Id"], self._data, "start_time")
+        if v:
+            return True
+        else:
+            return False
+    
+    @_Entity._recheck
+    def update_end_time(self, time_str):
+        if self._data["EndTime"].split("+")[0] == time_str.split("+")[0]:
+            return False
+        
+        self.global_dict[self._id]["EndTime"] = time_str
+        self._data["EndTime"] = time_str
+        v = self.put("sequence", self._data["Id"], self._data, "end_time")
         if v:
             return True
         else:

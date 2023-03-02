@@ -46,13 +46,13 @@ def cache(project_id = []):
     return _process_nodes
 
 def cache_from_ids(ids):
-    _s_t = time.clock()
+    _s_t = time.time()
     ids = "|".join(map(str, ids))
     _process_nodes = zfused_api.zFused.get("process_node", filter = {"Id__in": ids})
 
     if _process_nodes:
         list(map(lambda _process_node: process_node.global_dict.setdefault(_process_node["Id"],_process_node), _process_nodes))
-    _e_t = time.clock()
+    _e_t = time.time()
     return _process_nodes
 
 class ProcessNode(zfused_api.zFused):

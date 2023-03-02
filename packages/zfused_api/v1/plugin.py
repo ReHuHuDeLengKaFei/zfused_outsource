@@ -20,7 +20,7 @@ def cache(project_id_list = []):
     """ init project assets
     """
 
-    _s_t = time.clock()
+    _s_t = time.time()
     if not project_id_list:
         _plugins = zfused_api.zFused.get("plugin")
     else:
@@ -28,7 +28,7 @@ def cache(project_id_list = []):
         _plugins = zfused_api.zFused.get("plugin", filter = {"ProjectId__in": _project_ids})
     if _plugins:
         list(map(lambda _plugin: Plugin.global_dict.setdefault(_plugin["Id"],_plugin), _plugins))
-    _e_t = time.clock()
+    _e_t = time.time()
     logger.info("plugin cache time = " + str(1000*(_e_t - _s_t)) + "ms")
     return _plugins
 
